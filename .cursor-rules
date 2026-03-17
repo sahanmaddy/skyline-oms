@@ -1,0 +1,30 @@
+This is Skyline OMS (Order Management System)
+
+Stack:
+Laravel 12
+React + Inertia
+TailwindCSS
+MySQL
+
+Architecture:
+Follow docs/SYSTEM_ARCHITECTURE.md
+
+Business rules:
+Follow docs/BUSINESS_RULES.md
+
+Coding style:
+Follow docs/CODING_STANDARDS.md
+
+Modules:
+Follow docs/MODULES.md
+
+UI Guidlines:
+Follow docs/UI_GUIDELINES.md
+
+Never generate code that violates the business rules.
+
+Always:
+- create migrations for database changes
+- create services for business logic
+- keep controllers thin
+- use form requests for validation
