@@ -225,11 +225,11 @@ export default function Show({ employee, documentTypeOptions }) {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-700">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {d.uploader?.name || 'Unknown user'}
+                                                <div className="text-xs text-gray-500">
+                                                    {d.uploader?.name ? `By ${d.uploader.name}` : ''}
                                                 </div>
                                                 <div className="text-xs text-gray-500">
-                                                    Uploaded on {formatDisplayDateTime(d.created_at)}
+                                                    {formatUploadedDateTime(d.created_at)}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-right text-sm">
@@ -353,7 +353,7 @@ function formatDisplayDate(value) {
     return value;
 }
 
-function formatDisplayDateTime(value) {
+function formatUploadedDateTime(value) {
     if (!value) {
         return '—';
     }
@@ -370,7 +370,7 @@ function formatDisplayDateTime(value) {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-    }).format(parsed).replace(',', ' •');
+    }).format(parsed);
 }
 
 function StatusInfo({ label, value, isPositive }) {
