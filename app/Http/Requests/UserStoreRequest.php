@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
 class UserStoreRequest extends FormRequest
 {
@@ -15,7 +14,7 @@ class UserStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $roleNames = Role::query()->pluck('name')->all();
+        $roleNames = ['Admin', 'Management', 'Sales and Marketing', 'Accounting and Finance', 'Human Resources'];
 
         return [
             'name' => ['required', 'string', 'max:255'],

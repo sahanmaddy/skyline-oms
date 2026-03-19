@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EmployeeDepartment;
 use App\Enums\EmployeeStatus;
 use App\Models\Employee;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,10 +29,11 @@ class EmployeeUpdateRequest extends FormRequest
             'display_name' => ['required', 'string', 'max:200'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('employees', 'email')->ignore($employee->id)],
             'designation' => ['nullable', 'string', 'max:150'],
-            'department' => ['nullable', 'string', 'max:150'],
+            'department' => ['nullable', 'string', Rule::in(EmployeeDepartment::values())],
             'nic' => ['nullable', 'string', 'max:50'],
             'status' => ['required', Rule::in(EmployeeStatus::values())],
             'joined_date' => ['nullable', 'date'],
+            'date_of_birth' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
@@ -43,9 +45,9 @@ class EmployeeUpdateRequest extends FormRequest
             'user_id' => ['nullable', 'integer', 'exists:users,id', Rule::unique('employees', 'user_id')->ignore($employee->id)],
             'is_sales_commission_eligible' => ['boolean'],
             'phone_numbers' => ['array'],
-            'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile'])],
-            'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10'],
-            'phone_numbers.*.phone_number' => ['nullable', 'string', 'max:50'],
+            'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
+            'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.phone_number'],
+            'phone_numbers.*.phone_number' => ['nullable', 'string', 'max:50', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.country_code'],
             'phone_numbers.*.is_primary' => ['boolean'],
         ];
     }

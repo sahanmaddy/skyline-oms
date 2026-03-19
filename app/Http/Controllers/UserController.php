@@ -10,10 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    private const ALLOWED_ROLES = [
+        'Admin',
+        'Management',
+        'Sales and Marketing',
+        'Accounting and Finance',
+        'Human Resources',
+    ];
+
     public function __construct()
     {
         $this->authorizeResource(User::class, 'user');
@@ -49,7 +56,7 @@ class UserController extends Controller
     public function create(): Response
     {
         return Inertia::render('Modules/Users/Pages/Create', [
-            'roles' => Role::query()->orderBy('name')->pluck('name')->all(),
+            'roles' => self::ALLOWED_ROLES,
             'statusOptions' => ['active', 'inactive'],
         ]);
     }
@@ -85,7 +92,7 @@ class UserController extends Controller
 
         return Inertia::render('Modules/Users/Pages/Edit', [
             'user' => $user,
-            'roles' => Role::query()->orderBy('name')->pluck('name')->all(),
+            'roles' => self::ALLOWED_ROLES,
             'statusOptions' => ['active', 'inactive'],
         ]);
     }

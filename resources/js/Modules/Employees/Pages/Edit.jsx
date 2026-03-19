@@ -2,6 +2,27 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { Head, Link, useForm } from '@inertiajs/react';
 
+function normalizeDateInput(value) {
+    if (!value) {
+        return '';
+    }
+
+    if (typeof value === 'string') {
+        if (value.includes('T')) {
+            return value.slice(0, 10);
+        }
+
+        return value;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return '';
+    }
+
+    return parsed.toISOString().slice(0, 10);
+}
+
 export default function Edit({ employee, statusOptions, users }) {
     const { data, setData, put, processing, errors } = useForm({
         employee_code: employee.employee_code || '',
@@ -13,7 +34,8 @@ export default function Edit({ employee, statusOptions, users }) {
         department: employee.department || '',
         nic: employee.nic || '',
         status: employee.status || statusOptions?.[0] || 'active',
-        joined_date: employee.joined_date || '',
+        joined_date: normalizeDateInput(employee.joined_date),
+        date_of_birth: normalizeDateInput(employee.date_of_birth),
         notes: employee.notes || '',
         address_line_1: employee.address_line_1 || '',
         address_line_2: employee.address_line_2 || '',

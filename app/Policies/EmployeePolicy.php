@@ -9,7 +9,7 @@ class EmployeePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['Admin', 'Manager', 'Accountant']);
+        return $user->hasAnyRole(['Admin', 'Management', 'Accounting and Finance']);
     }
 
     public function view(User $user, Employee $employee): bool
@@ -19,16 +19,16 @@ class EmployeePolicy
 
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['Admin', 'Manager']);
+        return $user->hasAnyRole(['Admin', 'Management']);
     }
 
     public function update(User $user, Employee $employee): bool
     {
-        return $user->hasAnyRole(['Admin', 'Manager']);
+        return $user->hasAnyRole(['Admin', 'Management']);
     }
 
     public function delete(User $user, Employee $employee): bool
     {
-        return $user->hasAnyRole(['Admin', 'Manager']);
+        return $user->hasAnyRole(['Admin', 'Management']);
     }
 }

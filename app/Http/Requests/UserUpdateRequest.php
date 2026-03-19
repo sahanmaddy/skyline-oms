@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
 class UserUpdateRequest extends FormRequest
 {
@@ -22,7 +21,7 @@ class UserUpdateRequest extends FormRequest
         /** @var User $userModel */
         $userModel = $this->route('user');
 
-        $roleNames = Role::query()->pluck('name')->all();
+        $roleNames = ['Admin', 'Management', 'Sales and Marketing', 'Accounting and Finance', 'Human Resources'];
 
         return [
             'name' => ['required', 'string', 'max:255'],

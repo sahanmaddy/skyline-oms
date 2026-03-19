@@ -11,7 +11,9 @@ export default function AuthenticatedLayout({ header, children }) {
         useState(false);
 
     const canManageEmployees =
-        roles.includes('Admin') || roles.includes('Manager') || roles.includes('Accountant');
+        roles.includes('Admin') ||
+        roles.includes('Management') ||
+        roles.includes('Accounting and Finance');
     const isAdmin = roles.includes('Admin');
 
     return (

@@ -9,7 +9,7 @@ class EmployeeDocumentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['Admin', 'Manager', 'Accountant']);
+        return $user->hasAnyRole(['Admin', 'Management', 'Accounting and Finance']);
     }
 
     public function view(User $user, EmployeeDocument $employeeDocument): bool

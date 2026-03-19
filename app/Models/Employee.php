@@ -23,6 +23,7 @@ class Employee extends Model
         'nic',
         'status',
         'joined_date',
+        'date_of_birth',
         'notes',
         'address_line_1',
         'address_line_2',
@@ -37,6 +38,7 @@ class Employee extends Model
 
     protected $casts = [
         'joined_date' => 'date',
+        'date_of_birth' => 'date',
         'is_sales_commission_eligible' => 'boolean',
     ];
 
