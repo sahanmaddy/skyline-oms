@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from 'react';
 
 export default function DocumentDropzone({
     documentTypeOptions,
+    employeeCode,
     onUpload,
     processing,
     errors,
@@ -16,21 +17,33 @@ export default function DocumentDropzone({
         documentTypeOptions?.[0] ?? 'NIC',
     );
     const [title, setTitle] = useState('');
+    const [isTitleCustom, setIsTitleCustom] = useState(false);
     const [notes, setNotes] = useState('');
     const [file, setFile] = useState(null);
+
+    const defaultTitle = `${employeeCode ?? ''} - ${documentType}`.trim();
 
     const fileLabel = useMemo(() => {
         if (!file) return 'No file selected';
         return `${file.name} (${Math.round(file.size / 1024)} KB)`;
     }, [file]);
 
-    const chooseFile = () => inputRef.current?.click();
+    const chooseFile = () => {
+        // Clearing ensures re-selecting the same file triggers `onChange`.
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
+
+        inputRef.current?.click();
+    };
 
     const handleFiles = (files) => {
         const f = files?.[0];
         if (!f) return;
         setFile(f);
-        if (!title) setTitle(f.name);
+        if (!isTitleCustom) {
+            setTitle(defaultTitle);
+        }
     };
 
     return (
@@ -52,6 +65,10 @@ export default function DocumentDropzone({
                         onUpload({ document_type: documentType, title, notes, file });
                         setFile(null);
                         setTitle('');
+                        setIsTitleCustom(false);
+                        if (inputRef.current) {
+                            inputRef.current.value = '';
+                        }
                         setNotes('');
                     }}
                 >
@@ -65,7 +82,13 @@ export default function DocumentDropzone({
                     <select
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         value={documentType}
-                        onChange={(e) => setDocumentType(e.target.value)}
+                        onChange={(e) => {
+                            const nextType = e.target.value;
+                            setDocumentType(nextType);
+                            if (!isTitleCustom && file) {
+                                setTitle(`${employeeCode ?? ''} - ${nextType}`.trim());
+                            }
+                        }}
                     >
                         {documentTypeOptions?.map((t) => (
                             <option key={t} value={t}>
@@ -81,7 +104,10 @@ export default function DocumentDropzone({
                     <TextInput
                         className="mt-1 block w-full"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e) => {
+                            setTitle(e.target.value);
+                            setIsTitleCustom(true);
+                        }}
                         placeholder="e.g. NIC - Front"
                     />
                     <InputError className="mt-2" message={errors?.title} />

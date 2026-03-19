@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import CountryCallingCodeCombobox from '@/Components/CountryCallingCodeCombobox';
+import CountryCombobox from '@/Components/CountryCombobox';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
@@ -279,82 +280,79 @@ export default function EmployeeForm({
                     </p>
                 </div>
 
-                <div className="mt-5 rounded-md border border-gray-200 bg-gray-50 p-4">
-                    <div className="text-sm font-medium text-gray-900">Email</div>
-                    <div className="mt-2">
-                        <TextInput
-                            id="email"
-                            type="email"
-                            className="block w-full"
-                            value={data.email || ''}
-                            onChange={(e) => setData('email', e.target.value)}
-                        />
-                    </div>
+                <div className="mt-5">
+                    <InputLabel htmlFor="email" value="Email" />
+                    <TextInput
+                        id="email"
+                        type="email"
+                        className="mt-1 block w-full"
+                        value={data.email || ''}
+                        onChange={(e) => setData('email', e.target.value)}
+                    />
                     <InputError className="mt-2" message={errors.email} />
                 </div>
 
-                <div className="mt-6 space-y-3">
+                <div className="mt-6 border-t border-gray-200 pt-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900">Phone Numbers</h4>
-                            <p className="mt-1 text-xs text-gray-500">
-                                Add Land Phone, Mobile, or WhatsApp numbers.
-                            </p>
+                            <InputLabel value="Phone Numbers" />
                         </div>
                         <PrimaryButton type="button" onClick={addPhone}>
                             Add phone
                         </PrimaryButton>
                     </div>
 
-                    {phoneRows.map((row, idx) => (
-                        <div key={idx} className="rounded-md border border-gray-200 bg-gray-50 p-4">
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
-                                <div className="md:col-span-3">
-                                    <InputLabel value="Type" />
-                                    <select
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        value={row.phone_type || 'Mobile'}
-                                        onChange={(e) =>
-                                            updatePhone(idx, { phone_type: e.target.value })
-                                        }
-                                    >
-                                        <option value="Mobile">Mobile</option>
-                                        <option value="Land Phone">Land Phone</option>
-                                        <option value="WhatsApp">WhatsApp</option>
-                                    </select>
-                                </div>
-                                <div className="md:col-span-3">
-                                    <InputLabel value="Country code" />
-                                    <div className="mt-1">
-                                        <CountryCallingCodeCombobox
-                                            value={row.country_code || '+94'}
-                                            onChange={(cc) => updatePhone(idx, { country_code: cc })}
-                                            options={countryCallingCodes}
+                    <div className="mt-3 space-y-3">
+                        {phoneRows.map((row, idx) => (
+                            <div key={idx} className="rounded-md border border-gray-200 bg-white p-4">
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                    <div className="md:col-span-3">
+                                        <InputLabel value="Type" />
+                                        <select
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            value={row.phone_type || 'Mobile'}
+                                            onChange={(e) =>
+                                                updatePhone(idx, { phone_type: e.target.value })
+                                            }
+                                        >
+                                            <option value="Mobile">Mobile</option>
+                                            <option value="Land Phone">Land Phone</option>
+                                            <option value="WhatsApp">WhatsApp</option>
+                                        </select>
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <InputLabel value="Country code" />
+                                        <div className="mt-1">
+                                            <CountryCallingCodeCombobox
+                                                value={row.country_code || '+94'}
+                                                onChange={(cc) => updatePhone(idx, { country_code: cc })}
+                                                options={countryCallingCodes}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="md:col-span-4">
+                                        <InputLabel value="Phone number" />
+                                        <TextInput
+                                            className="mt-1 block w-full"
+                                            value={row.phone_number || ''}
+                                            onChange={(e) =>
+                                                updatePhone(idx, { phone_number: e.target.value })
+                                            }
                                         />
                                     </div>
-                                </div>
-                                <div className="md:col-span-4">
-                                    <InputLabel value="Phone number" />
-                                    <TextInput
-                                        className="mt-1 block w-full"
-                                        value={row.phone_number || ''}
-                                        onChange={(e) =>
-                                            updatePhone(idx, { phone_number: e.target.value })
-                                        }
-                                    />
-                                </div>
-                                <div className="md:col-span-2 flex items-end justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                                        onClick={() => removePhone(idx)}
-                                    >
-                                        Remove
-                                    </button>
+                                    <div className="md:col-span-2 flex items-end justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                                            onClick={() => removePhone(idx)}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
                 <InputError className="mt-2" message={errors['phone_numbers']} />
             </section>
@@ -395,21 +393,14 @@ export default function EmployeeForm({
                     </div>
                     <div>
                         <InputLabel htmlFor="country" value="Country" />
-                        <TextInput
-                            id="country"
-                            list="country-options"
-                            className="mt-1 block w-full"
-                            value={data.country || ''}
-                            onChange={(e) => setData('country', e.target.value)}
-                            placeholder="Search country..."
-                        />
-                        <datalist id="country-options">
-                            {countries.map((country) => (
-                                <option key={country.iso2} value={country.name}>
-                                    {country.name} ({country.iso2})
-                                </option>
-                            ))}
-                        </datalist>
+                        <div className="mt-1">
+                            <CountryCombobox
+                                value={data.country || ''}
+                                onChange={(name) => setData('country', name)}
+                                options={countries}
+                                placeholder="Search country..."
+                            />
+                        </div>
                         <InputError className="mt-2" message={errors.country} />
                     </div>
                 </div>

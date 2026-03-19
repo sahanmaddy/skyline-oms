@@ -8,7 +8,6 @@ use App\Models\Employee;
 use App\Models\EmployeeDocument;
 use App\Services\EmployeeDocuments\EmployeeDocumentStorageService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 class EmployeeDocumentController extends Controller
@@ -20,12 +19,29 @@ class EmployeeDocumentController extends Controller
     ): RedirectResponse {
         $this->authorize('view', $employee);
 
-        $meta = $storage->store($employee, $request->file('file'));
+        $documentType = $request->string('document_type')->toString();
+        $meta = $storage->store($employee, $request->file('file'), $documentType);
+
+        $employeeCode = trim((string) $employee->employee_code);
+        $requestedTitle = $request->string('title')->toString();
+        $expectedBaseTitle = trim("{$employeeCode} - {$documentType}");
+
+        $finalTitle = $requestedTitle;
+
+        // If the user kept the auto-filled default title and this upload
+        // required a duplicate filename, reflect the (1), (2), ... in the title too.
+        if (trim($requestedTitle) === $expectedBaseTitle) {
+            $fileName = (string) ($meta['file_name'] ?? '');
+            if (preg_match('/\((\d+)\)\.[^.]+$/', $fileName, $m)) {
+                $suffixIndex = (int) $m[1];
+                $finalTitle = trim("{$employeeCode} - {$documentType} ({$suffixIndex})");
+            }
+        }
 
         EmployeeDocument::create([
             'employee_id' => $employee->id,
-            'document_type' => $request->string('document_type')->toString(),
-            'title' => $request->string('title')->toString(),
+            'document_type' => $documentType,
+            'title' => $finalTitle,
             'notes' => $request->input('notes'),
             ...$meta,
             'uploaded_by' => $request->user()->id,
@@ -43,11 +59,18 @@ class EmployeeDocumentController extends Controller
         $this->authorize('view', $employee);
         $this->authorize('update', $document);
 
-        $meta = $storage->replace($document->file_path, $employee, $request->file('file'));
+        $documentType = $request->input('document_type', $document->document_type);
+        $meta = $storage->replace(
+            $document->file_path,
+            $employee,
+            $request->file('file'),
+            $documentType,
+            $document->id
+        );
 
         $document->update([
             ...$meta,
-            'document_type' => $request->input('document_type', $document->document_type),
+            'document_type' => $documentType,
             'title' => $request->input('title', $document->title),
             'notes' => $request->input('notes', $document->notes),
             'uploaded_by' => $request->user()->id,
@@ -67,7 +90,7 @@ class EmployeeDocumentController extends Controller
         return back()->with('success', 'Document deleted.');
     }
 
-    public function download(Employee $employee, EmployeeDocument $document): Response
+    public function download(Employee $employee, EmployeeDocument $document): \Symfony\Component\HttpFoundation\Response
     {
         $this->authorize('view', $employee);
         $this->authorize('view', $document);
@@ -77,7 +100,7 @@ class EmployeeDocumentController extends Controller
         return Storage::disk('local')->download($document->file_path, $document->file_name);
     }
 
-    public function view(Employee $employee, EmployeeDocument $document): Response
+    public function view(Employee $employee, EmployeeDocument $document): \Symfony\Component\HttpFoundation\Response
     {
         $this->authorize('view', $employee);
         $this->authorize('view', $document);

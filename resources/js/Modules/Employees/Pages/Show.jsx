@@ -25,6 +25,7 @@ export default function Show({ employee, documentTypeOptions }) {
             { document_type, title, notes, file },
             {
                 forceFormData: true,
+                preserveScroll: true,
                 onFinish: () => setUploading(false),
                 onError: (errs) => setUploadErrors(errs || {}),
             },
@@ -37,13 +38,16 @@ export default function Show({ employee, documentTypeOptions }) {
             { file },
             {
                 forceFormData: true,
+                preserveScroll: true,
             },
         );
     };
 
     const deleteDoc = (document) => {
         if (!confirm('Delete this document?')) return;
-        router.delete(route('employees.documents.destroy', [employee.id, document.id]));
+        router.delete(route('employees.documents.destroy', [employee.id, document.id]), {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -163,6 +167,7 @@ export default function Show({ employee, documentTypeOptions }) {
                     <div className="lg:col-span-1">
                         {canManageDocuments ? (
                             <DocumentDropzone
+                                employeeCode={employee.employee_code}
                                 documentTypeOptions={documentTypeOptions}
                                 onUpload={upload}
                                 processing={uploading}
@@ -195,7 +200,10 @@ export default function Show({ employee, documentTypeOptions }) {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                            Type / Title
+                                            Type
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Title
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                             Uploaded
@@ -208,20 +216,30 @@ export default function Show({ employee, documentTypeOptions }) {
                                 <tbody className="divide-y divide-gray-200">
                                     {employee.documents?.map((d) => (
                                         <tr key={d.id} className="hover:bg-gray-50">
+                                            <td className="px-4 py-3 w-[110px]">
+                                                <span className="inline-flex rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                                    {d.document_type}
+                                                </span>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <div className="text-sm font-semibold text-gray-900">
-                                                    {d.document_type}
+                                                    {(d.title && d.title.trim()) ||
+                                                        inferDocumentTitleFromFileName(
+                                                            d.file_name,
+                                                        )}
                                                 </div>
-                                                <div className="text-sm text-gray-700">
-                                                    {d.title}
-                                                </div>
-                                                <div className="text-xs text-gray-500">
-                                                    {d.file_name}
-                                                    {d.file_size
-                                                        ? ` • ${Math.round(
-                                                              d.file_size / 1024,
-                                                          )} KB`
-                                                        : ''}
+
+                                                {d.notes && d.notes.trim() ? (
+                                                    <div className="mt-1 text-xs text-gray-600">
+                                                        {d.notes}
+                                                    </div>
+                                                ) : null}
+
+                                                <div className="mt-1 text-xs text-gray-500 whitespace-nowrap">
+                                                    {formatDocumentFileMeta(
+                                                        d.file_name,
+                                                        d.file_size,
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-700">
@@ -233,13 +251,18 @@ export default function Show({ employee, documentTypeOptions }) {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-right text-sm">
-                                                <div className="flex items-center justify-end gap-2">
+                                                <div className="relative z-50 flex items-center justify-end gap-2">
                                                     <a
                                                         className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
-                                                        href={route('employees.documents.view', [
-                                                            employee.id,
-                                                            d.id,
-                                                        ])}
+                                                        href={
+                                                            route('employees.documents.view', [
+                                                                employee.id,
+                                                                d.id,
+                                                            ]) +
+                                                            `?filename=${encodeURIComponent(
+                                                                d.file_name || '',
+                                                            )}`
+                                                        }
                                                         target="_blank"
                                                         rel="noreferrer"
                                                     >
@@ -264,14 +287,22 @@ export default function Show({ employee, documentTypeOptions }) {
                                                         </Dropdown.Trigger>
 
                                                         <Dropdown.Content align="right" width="48">
-                                                            <Dropdown.Link
-                                                                href={route('employees.documents.download', [
-                                                                    employee.id,
-                                                                    d.id,
-                                                                ])}
+                                                            <a
+                                                                className="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                                                href={
+                                                                    route('employees.documents.download', [
+                                                                        employee.id,
+                                                                        d.id,
+                                                                    ]) +
+                                                                    `?filename=${encodeURIComponent(
+                                                                        d.file_name || '',
+                                                                    )}`
+                                                                }
+                                                                target="_blank"
+                                                                rel="noreferrer"
                                                             >
                                                                 Download
-                                                            </Dropdown.Link>
+                                                            </a>
 
                                                             {canManageDocuments && (
                                                                 <>
@@ -313,7 +344,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                     {(!employee.documents || employee.documents.length === 0) && (
                                         <tr>
                                             <td
-                                                colSpan={3}
+                                                colSpan={4}
                                                 className="px-4 py-10 text-center text-sm text-gray-500"
                                             >
                                                 No documents yet.
@@ -393,5 +424,56 @@ function StatusInfo({ label, value, isPositive }) {
             </div>
         </div>
     );
+}
+
+function inferDocumentTitleFromFileName(fileName) {
+    const trimmed = (fileName || '').trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    // Remove extension
+    const lastDot = trimmed.lastIndexOf('.');
+    const base = lastDot > 0 ? trimmed.slice(0, lastDot) : trimmed;
+
+    // Expected format: {employeeCode} - {docTypeNormalized}
+    // (supports both "E-001-Doc" and "E-001 - Doc")
+    const match = base.match(/^(E-\d{1,})\s*-\s*(.+)$/);
+    if (!match) {
+        // Fallback: replace hyphens with spaces for readability.
+        return base.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    const employeeCode = match[1];
+    const docTypeNormalized = match[2];
+    const docTypeReadable = docTypeNormalized
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return `${employeeCode} - ${docTypeReadable}`;
+}
+
+function formatDocumentFileMeta(fileName, fileSize) {
+    const fileNameTrim = (fileName || '').trim();
+    const sizeKB = fileSize ? Math.round(fileSize / 1024) : null;
+
+    const ext = fileNameTrim.includes('.')
+        ? fileNameTrim.split('.').pop().toUpperCase()
+        : '';
+
+    if (!ext && sizeKB === null) {
+        return '—';
+    }
+
+    if (ext && sizeKB !== null) {
+        return `${ext} • ${sizeKB} KB`;
+    }
+
+    if (sizeKB !== null) {
+        return `${sizeKB} KB`;
+    }
+
+    return ext;
 }
 
