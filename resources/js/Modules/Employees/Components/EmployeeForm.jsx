@@ -9,6 +9,38 @@ import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
 import { useEffect, useMemo, useState } from 'react';
 
+function formatMoneyWithCommas(value) {
+    const trimmed = (value ?? '').toString().trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    const num = Number(trimmed);
+    if (Number.isNaN(num)) {
+        return trimmed;
+    }
+
+    return new Intl.NumberFormat('en-LK', {
+        maximumFractionDigits: 2,
+    }).format(num);
+}
+
+function normalizeMoneyInput(value) {
+    const raw = (value ?? '').toString();
+    const cleaned = raw.replace(/[^0-9.]/g, '');
+    if (!cleaned) {
+        return '';
+    }
+
+    // Keep only the first dot.
+    const parts = cleaned.split('.');
+    if (parts.length <= 2) {
+        return parts[1] !== undefined ? `${parts[0]}.${parts[1]}` : parts[0];
+    }
+
+    return `${parts[0]}.${parts.slice(1).join('')}`;
+}
+
 export default function EmployeeForm({
     data,
     setData,
@@ -18,8 +50,13 @@ export default function EmployeeForm({
     users,
     submitLabel,
     onSubmit,
+    profilePhotoUrl,
 }) {
     const [displayNameTouched, setDisplayNameTouched] = useState(false);
+    const [photoPreviewSrc, setPhotoPreviewSrc] = useState(profilePhotoUrl || null);
+    const [emergencyPhoneTouched, setEmergencyPhoneTouched] = useState(false);
+    const [emergencyPhoneCountryCode, setEmergencyPhoneCountryCode] = useState('+94');
+    const [emergencyPhoneNumber, setEmergencyPhoneNumber] = useState('');
 
     useEffect(() => {
         const first = (data.first_name || '').trim();
@@ -33,6 +70,95 @@ export default function EmployeeForm({
     }, [data.first_name, data.last_name]);
 
     const phoneRows = useMemo(() => data.phone_numbers || [], [data.phone_numbers]);
+
+    useEffect(() => {
+        if (data.profile_photo) {
+            const objUrl = URL.createObjectURL(data.profile_photo);
+            setPhotoPreviewSrc(objUrl);
+
+            return () => {
+                URL.revokeObjectURL(objUrl);
+            };
+        }
+
+        setPhotoPreviewSrc(profilePhotoUrl || null);
+    }, [data.profile_photo, profilePhotoUrl]);
+
+    useEffect(() => {
+        if (emergencyPhoneTouched) {
+            return;
+        }
+
+        const raw = (data.emergency_contact_phone || '').trim();
+        if (!raw) {
+            setEmergencyPhoneCountryCode('+94');
+            setEmergencyPhoneNumber('');
+            return;
+        }
+
+        const sortedCodes = [...countryCallingCodes].sort(
+            (a, b) => b.callingCode.length - a.callingCode.length,
+        );
+
+        const match = sortedCodes.find((c) => raw.startsWith(c.callingCode));
+        if (!match) {
+            setEmergencyPhoneCountryCode('+94');
+            setEmergencyPhoneNumber(
+                raw.replace(/[^\d]/g, '').replace(/^0+/, ''),
+            );
+            return;
+        }
+
+        const numberPart = raw
+            .slice(match.callingCode.length)
+            .trim()
+            .replace(/^[-\s]+/, '');
+
+        setEmergencyPhoneCountryCode(match.callingCode);
+        setEmergencyPhoneNumber(
+            numberPart.replace(/[^\d]/g, '').replace(/^0+/, ''),
+        );
+    }, [data.emergency_contact_phone, emergencyPhoneTouched]);
+
+    useEffect(() => {
+        if (!emergencyPhoneTouched) {
+            return;
+        }
+
+        const numberDigitsOnly = (emergencyPhoneNumber || '')
+            .toString()
+            .replace(/[^\d]/g, '');
+
+        if (!numberDigitsOnly) {
+            setData('emergency_contact_phone', null);
+            return;
+        }
+
+        const ccDigits = (emergencyPhoneCountryCode || '')
+            .toString()
+            .replace(/[^\d]/g, '');
+
+        let normalizedDigits = numberDigitsOnly;
+        if (ccDigits && normalizedDigits.startsWith(ccDigits)) {
+            normalizedDigits = normalizedDigits.slice(ccDigits.length);
+        }
+        normalizedDigits = normalizedDigits.replace(/^0+/, '');
+
+        if (!normalizedDigits) {
+            setData('emergency_contact_phone', null);
+            return;
+        }
+
+        setData(
+            'emergency_contact_phone',
+            `${emergencyPhoneCountryCode} ${normalizedDigits}`.trim(),
+        );
+    }, [
+        emergencyPhoneTouched,
+        emergencyPhoneCountryCode,
+        emergencyPhoneNumber,
+        setData,
+    ]);
 
     const addPhone = () => {
         setData('phone_numbers', [
@@ -98,6 +224,45 @@ export default function EmployeeForm({
                         <InputError className="mt-2" message={errors.status} />
                     </div>
 
+                    <div className="sm:col-span-2">
+                        <InputLabel value="Profile Photo" />
+                        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-50">
+                                {photoPreviewSrc ? (
+                                    <img
+                                        src={photoPreviewSrc}
+                                        alt="Profile preview"
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="h-full w-full flex items-center justify-center text-sm font-semibold text-gray-400">
+                                        —
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                                    onChange={(e) =>
+                                        setData(
+                                            'profile_photo',
+                                            e.target.files?.[0] || null,
+                                        )
+                                    }
+                                />
+                                <div className="mt-1 text-xs text-gray-500">
+                                    Upload JPG/JPEG/PNG/WEBP.
+                                </div>
+                                <InputError
+                                    className="mt-2"
+                                    message={errors.profile_photo}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <InputLabel htmlFor="first_name" value="First Name" />
                         <TextInput
@@ -118,6 +283,20 @@ export default function EmployeeForm({
                             onChange={(e) => setData('last_name', e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.last_name} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="given_names" value="Given Names" />
+                        <TextInput
+                            id="given_names"
+                            className="mt-1 block w-full"
+                            value={data.given_names || ''}
+                            onChange={(e) => setData('given_names', e.target.value)}
+                        />
+                        <InputError
+                            className="mt-2"
+                            message={errors.given_names}
+                        />
                     </div>
 
                     <div className="sm:col-span-2">
@@ -143,6 +322,48 @@ export default function EmployeeForm({
                             onChange={(e) => setData('nic', e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.nic} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="gender" value="Gender" />
+                        <select
+                            id="gender"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.gender || ''}
+                            onChange={(e) => setData('gender', e.target.value)}
+                        >
+                            <option value="">—</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                        <InputError className="mt-2" message={errors.gender} />
+                    </div>
+
+                    <div>
+                        <InputLabel
+                            htmlFor="marital_status"
+                            value="Marital Status"
+                        />
+                        <select
+                            id="marital_status"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.marital_status || ''}
+                            onChange={(e) =>
+                                setData('marital_status', e.target.value)
+                            }
+                        >
+                            <option value="">—</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Widowed">Widowed</option>
+                        </select>
+                        <InputError
+                            className="mt-2"
+                            message={errors.marital_status}
+                        />
                     </div>
 
                     <div>
@@ -176,6 +397,7 @@ export default function EmployeeForm({
                         </select>
                         <InputError className="mt-2" message={errors.user_id} />
                     </div>
+
                 </div>
             </section>
 
@@ -213,6 +435,28 @@ export default function EmployeeForm({
                     </div>
 
                     <div>
+                        <InputLabel htmlFor="employment_type" value="Employment Type" />
+                        <select
+                            id="employment_type"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.employment_type || ''}
+                            onChange={(e) =>
+                                setData('employment_type', e.target.value)
+                            }
+                        >
+                            <option value="">—</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Intern">Intern</option>
+                        </select>
+                        <InputError
+                            className="mt-2"
+                            message={errors.employment_type}
+                        />
+                    </div>
+
+                    <div>
                         <InputLabel htmlFor="joined_date" value="Joined Date" />
                         <TextInput
                             id="joined_date"
@@ -222,6 +466,35 @@ export default function EmployeeForm({
                             onChange={(e) => setData('joined_date', e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.joined_date} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="basic_salary" value="Basic Salary" />
+                        <div className="mt-1 flex items-stretch">
+                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
+                                Rs.
+                            </div>
+                            <input
+                                id="basic_salary"
+                                type="text"
+                                inputMode="decimal"
+                                className="block w-full rounded-none rounded-r-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                value={formatMoneyWithCommas(data.basic_salary || '')}
+                                placeholder="0.00"
+                                onChange={(e) =>
+                                    setData(
+                                        'basic_salary',
+                                        normalizeMoneyInput(
+                                            e.target.value,
+                                        ),
+                                    )
+                                }
+                            />
+                        </div>
+                        <InputError
+                            className="mt-2"
+                            message={errors.basic_salary}
+                        />
                     </div>
 
                     <div
@@ -267,6 +540,52 @@ export default function EmployeeForm({
                         <InputError
                             className="mt-2"
                             message={errors.is_sales_commission_eligible}
+                        />
+                    </div>
+
+                    <div
+                        className={
+                            'sm:col-span-2 rounded-md border p-4 transition-colors ' +
+                            (data.is_overtime_eligible
+                                ? 'border-indigo-200 bg-indigo-50'
+                                : 'border-gray-200 bg-white')
+                        }
+                    >
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                checked={!!data.is_overtime_eligible}
+                                onChange={(e) =>
+                                    setData('is_overtime_eligible', e.target.checked)
+                                }
+                            />
+                            <div>
+                                <div
+                                    className={
+                                        'text-sm font-semibold ' +
+                                        (data.is_overtime_eligible
+                                            ? 'text-indigo-900'
+                                            : 'text-gray-900')
+                                    }
+                                >
+                                    Is overtime eligible
+                                </div>
+                                <div
+                                    className={
+                                        'text-xs ' +
+                                        (data.is_overtime_eligible
+                                            ? 'text-indigo-700'
+                                            : 'text-gray-600')
+                                    }
+                                >
+                                    Enable this if the employee can be considered for overtime payments.
+                                </div>
+                            </div>
+                        </div>
+                        <InputError
+                            className="mt-2"
+                            message={errors.is_overtime_eligible}
                         />
                     </div>
                 </div>
@@ -358,6 +677,76 @@ export default function EmployeeForm({
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900">
+                    Emergency Contact
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                    Person and phone number for emergencies.
+                </p>
+
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <InputLabel
+                            htmlFor="emergency_contact_person"
+                            value="Contact Person"
+                        />
+                        <TextInput
+                            id="emergency_contact_person"
+                            className="mt-1 block w-full"
+                            value={data.emergency_contact_person || ''}
+                            onChange={(e) =>
+                                setData(
+                                    'emergency_contact_person',
+                                    e.target.value,
+                                )
+                            }
+                        />
+                        <InputError
+                            className="mt-2"
+                            message={errors.emergency_contact_person}
+                        />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                            <div className="md:col-span-4">
+                                <InputLabel value="Country code" />
+                                <div className="mt-1">
+                                    <CountryCallingCodeCombobox
+                                        value={emergencyPhoneCountryCode || '+94'}
+                                        onChange={(cc) => {
+                                            setEmergencyPhoneTouched(true);
+                                            setEmergencyPhoneCountryCode(
+                                                cc || '+94',
+                                            );
+                                        }}
+                                        options={countryCallingCodes}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-8">
+                                <InputLabel value="Phone number" />
+                                <TextInput
+                                    className="mt-1 block w-full"
+                                    value={emergencyPhoneNumber || ''}
+                                    onChange={(e) => {
+                                        setEmergencyPhoneTouched(true);
+                                        setEmergencyPhoneNumber(e.target.value);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <InputError
+                            className="mt-2"
+                            message={errors.emergency_contact_phone}
+                        />
+                    </div>
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                 <p className="mt-1 text-xs text-gray-500">Primary location and mailing details.</p>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -442,13 +831,34 @@ export default function EmployeeForm({
                         />
                         <InputError className="mt-2" message={errors.bank_account_number} />
                     </div>
+
+                    <div>
+                        <InputLabel htmlFor="epf_number" value="EPF Number" />
+                        <TextInput
+                            id="epf_number"
+                            className="mt-1 block w-full"
+                            value={data.epf_number || ''}
+                            onChange={(e) => setData('epf_number', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.epf_number} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="etf_number" value="ETF Number" />
+                        <TextInput
+                            id="etf_number"
+                            className="mt-1 block w-full"
+                            value={data.etf_number || ''}
+                            onChange={(e) => setData('etf_number', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.etf_number} />
+                    </div>
                 </div>
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Notes</h3>
                 <div className="mt-4">
-                    <InputLabel htmlFor="notes" value="Notes" />
                     <textarea
                         id="notes"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"

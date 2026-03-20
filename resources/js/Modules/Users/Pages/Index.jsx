@@ -22,7 +22,7 @@ export default function Index({ users, filters, statusOptions }) {
                                         { preserveState: true, replace: true },
                                     )
                                 }
-                                placeholder="name or email..."
+                                placeholder="Search by name or email…"
                             />
                         </div>
                         <div>

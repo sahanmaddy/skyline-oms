@@ -5,19 +5,40 @@ namespace App\Actions\Employees;
 use App\Models\Employee;
 use App\Services\Employees\PhoneNumberNormalizer;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UpdateEmployeeAction
 {
     public function __construct(private readonly PhoneNumberNormalizer $phoneNumberNormalizer) {}
 
-    public function execute(Employee $employee, array $employeeData, array $phoneNumbers = []): Employee
+    public function execute(
+        Employee $employee,
+        array $employeeData,
+        array $phoneNumbers = [],
+        ?UploadedFile $profilePhoto = null
+    ): Employee
     {
-        return DB::transaction(function () use ($employee, $employeeData, $phoneNumbers) {
+        return DB::transaction(function () use ($employee, $employeeData, $phoneNumbers, $profilePhoto) {
             unset($employeeData['employee_code']);
 
             $employee->update($employeeData);
 
             $this->syncPhoneNumbers($employee, $phoneNumbers);
+
+            if ($profilePhoto) {
+                if ($employee->profile_photo_path) {
+                    Storage::disk('local')->delete($employee->profile_photo_path);
+                }
+
+                $employee->update([
+                    'profile_photo_path' => $this->storeProfilePhoto(
+                        $employee->employee_code,
+                        $profilePhoto,
+                    ),
+                ]);
+            }
 
             return $employee;
         });
@@ -50,5 +71,24 @@ class UpdateEmployeeAction
         }
 
         $employee->phoneNumbers()->createMany($clean->all());
+    }
+
+    private function storeProfilePhoto(string $employeeCode, UploadedFile $photo): string
+    {
+        $extension = strtolower(trim((string) $photo->getClientOriginalExtension()));
+        $extension = $extension !== '' ? $extension : 'jpg';
+
+        $uuid = (string) Str::uuid();
+        $fileName = "{$employeeCode}-profile-{$uuid}.{$extension}";
+
+        $path = "employees/profile-photos/{$employeeCode}/{$fileName}";
+
+        Storage::disk('local')->putFileAs(
+            dirname($path),
+            $photo,
+            basename($path),
+        );
+
+        return $path;
     }
 }

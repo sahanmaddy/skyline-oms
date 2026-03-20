@@ -28,15 +28,24 @@ export default function Edit({ employee, statusOptions, users }) {
         employee_code: employee.employee_code || '',
         first_name: employee.first_name || '',
         last_name: employee.last_name || '',
+        given_names: employee.given_names || '',
         display_name: employee.display_name || '',
         email: employee.email || '',
         designation: employee.designation || '',
         department: employee.department || '',
+        gender: employee.gender || '',
+        marital_status: employee.marital_status || '',
         nic: employee.nic || '',
         status: employee.status || statusOptions?.[0] || 'active',
         joined_date: normalizeDateInput(employee.joined_date),
         date_of_birth: normalizeDateInput(employee.date_of_birth),
         notes: employee.notes || '',
+        employment_type: employee.employment_type || '',
+        basic_salary:
+            employee.basic_salary !== null && employee.basic_salary !== undefined
+                ? String(employee.basic_salary)
+                : '',
+        is_overtime_eligible: !!employee.is_overtime_eligible,
         address_line_1: employee.address_line_1 || '',
         address_line_2: employee.address_line_2 || '',
         city: employee.city || '',
@@ -44,8 +53,14 @@ export default function Edit({ employee, statusOptions, users }) {
         bank_name: employee.bank_name || '',
         bank_branch: employee.bank_branch || '',
         bank_account_number: employee.bank_account_number || '',
+        epf_number: employee.epf_number || '',
+        etf_number: employee.etf_number || '',
+        emergency_contact_person: employee.emergency_contact_person || '',
+        emergency_contact_phone: employee.emergency_contact_phone || null,
         user_id: employee.user_id || '',
         is_sales_commission_eligible: !!employee.is_sales_commission_eligible,
+        profile_photo_path: employee.profile_photo_path || '',
+        profile_photo: null,
         phone_numbers: (employee.phone_numbers || []).map((p) => ({
             phone_type: p.phone_type,
             country_code: p.country_code,
@@ -75,8 +90,18 @@ export default function Edit({ employee, statusOptions, users }) {
                     processing={processing}
                     statusOptions={statusOptions}
                     users={users}
+                    profilePhotoUrl={
+                        employee.profile_photo_path
+                            ? route('employees.profilePhoto.view', employee.id)
+                            : null
+                    }
                     submitLabel="Save"
-                    onSubmit={() => put(route('employees.update', employee.id))}
+                    onSubmit={() =>
+                        put(route('employees.update', employee.id), {
+                            forceFormData: true,
+                            preserveScroll: true,
+                        })
+                    }
                 />
             </div>
         </AuthenticatedLayout>

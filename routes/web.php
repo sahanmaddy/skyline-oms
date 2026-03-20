@@ -39,6 +39,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('employees.documents.download');
         Route::get('employees/{employee}/documents/{document}/view', [EmployeeDocumentController::class, 'view'])
             ->name('employees.documents.view');
+
+        Route::get('employees/{employee}/profile-photo', [EmployeeController::class, 'profilePhotoView'])
+            ->name('employees.profilePhoto.view');
     });
 
     Route::middleware([\Spatie\Permission\Middleware\RoleMiddleware::class.':Admin'])->group(function () {

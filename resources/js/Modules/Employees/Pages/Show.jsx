@@ -5,12 +5,44 @@ import DocumentDropzone from '@/Modules/Employees/Components/DocumentDropzone';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
+function formatSalary(value) {
+    const trimmed = (value ?? '').toString().trim();
+    if (!trimmed) {
+        return '—';
+    }
+
+    const num = Number(trimmed);
+    if (Number.isNaN(num)) {
+        return trimmed;
+    }
+
+    return `Rs. ${new Intl.NumberFormat('en-LK', {
+        maximumFractionDigits: 2,
+    }).format(num)}`;
+}
+
 export default function Show({ employee, documentTypeOptions }) {
     const roles = usePage().props.auth.roles ?? [];
     const canManageDocuments =
         roles.includes('Admin') ||
         roles.includes('Management') ||
         roles.includes('Accounting and Finance');
+
+    const fullNameWithGivenNames = [
+        employee.first_name,
+        employee.given_names,
+        employee.last_name,
+    ]
+        .filter((p) => (p ?? '').toString().trim().length > 0)
+        .join(' ');
+
+    const employeeInitials = (fullNameWithGivenNames || employee.display_name || '')
+        .split(' ')
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p[0]?.toUpperCase())
+        .join('');
 
     const [uploading, setUploading] = useState(false);
     const [uploadErrors, setUploadErrors] = useState({});
@@ -74,22 +106,46 @@ export default function Show({ employee, documentTypeOptions }) {
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-8">
                         <h3 className="text-sm font-semibold text-gray-900">Employee Information</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                            <Info label="Name" value={employee.display_name || '—'} />
-                            <Info label="Employee Code" value={employee.employee_code || '—'} />
-                            <Info label="NIC" value={employee.nic || '—'} />
-                            <Info label="Designation" value={employee.designation || '—'} />
-                            <Info label="Department" value={employee.department || '—'} />
-                            <Info label="Joined Date" value={formatDisplayDate(employee.joined_date)} />
-                            <Info label="Date of Birth" value={formatDisplayDate(employee.date_of_birth)} />
-                            <StatusInfo
-                                label="Status"
-                                isPositive={employee.status === 'active'}
-                                value={employee.status === 'active' ? 'Active' : 'Inactive'}
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Profile Photo
+                                </div>
+                                <div className="mt-2 flex items-center justify-center">
+                                    {employee.profile_photo_path ? (
+                                        <img
+                                            src={route(
+                                                'employees.profilePhoto.view',
+                                                employee.id,
+                                            )}
+                                            alt="Profile photo"
+                                            className="h-20 w-20 rounded-full object-cover border border-gray-200"
+                                        />
+                                    ) : (
+                                        <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center text-lg font-semibold text-gray-400">
+                                            {employeeInitials || '—'}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <Info
+                                label="Name"
+                                value={fullNameWithGivenNames || employee.display_name || '—'}
                             />
-                            <StatusInfo
-                                label="Sales Commission Eligible"
-                                isPositive={!!employee.is_sales_commission_eligible}
-                                value={employee.is_sales_commission_eligible ? 'Yes' : 'No'}
+                            <Info
+                                label="Employee Code"
+                                value={employee.employee_code || '—'}
+                            />
+                            <Info label="Gender" value={employee.gender || '—'} />
+                            <Info
+                                label="Marital Status"
+                                value={employee.marital_status || '—'}
+                            />
+                            <Info label="NIC" value={employee.nic || '—'} />
+                            <Info
+                                label="Date of Birth"
+                                value={formatDisplayDate(
+                                    employee.date_of_birth,
+                                )}
                             />
                             <Info
                                 label="Linked User / Access"
@@ -100,6 +156,62 @@ export default function Show({ employee, documentTypeOptions }) {
                                 }
                                 className="sm:col-span-2 xl:col-span-3"
                             />
+                        </div>
+
+                        <div className="mt-6 border-t border-gray-200 pt-4">
+                            <div className="text-sm font-semibold text-gray-900">
+                                Employment Information
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                <Info
+                                    label="Designation"
+                                    value={employee.designation || '—'}
+                                />
+                                <Info
+                                    label="Department"
+                                    value={employee.department || '—'}
+                                />
+                                <Info
+                                    label="Joined Date"
+                                    value={formatDisplayDate(
+                                        employee.joined_date,
+                                    )}
+                                />
+                                <StatusInfo
+                                    label="Status"
+                                    isPositive={employee.status === 'active'}
+                                    value={
+                                        employee.status === 'active'
+                                            ? 'Active'
+                                            : 'Inactive'
+                                    }
+                                />
+                                <StatusInfo
+                                    label="Sales Commission Eligible"
+                                    isPositive={!!employee.is_sales_commission_eligible}
+                                    value={
+                                        employee.is_sales_commission_eligible
+                                            ? 'Yes'
+                                            : 'No'
+                                    }
+                                />
+                                <StatusInfo
+                                    label="Overtime Eligibility"
+                                    isPositive={!!employee.is_overtime_eligible}
+                                    value={
+                                        employee.is_overtime_eligible ? 'Yes' : 'No'
+                                    }
+                                />
+                                <Info
+                                    label="Employment Type"
+                                    value={employee.employment_type || '—'}
+                                />
+                                <Info
+                                    label="Basic Salary"
+                                    value={formatSalary(employee.basic_salary)}
+                                />
+                            </div>
                         </div>
                     </section>
 
@@ -118,15 +230,46 @@ export default function Show({ employee, documentTypeOptions }) {
                                                 key={phone.id}
                                                 className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
                                             >
-                                                <div className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-3 sm:items-center">
-                                                    <div className="font-medium text-gray-900">{phone.phone_type}</div>
-                                                    <div className="text-gray-700">{phone.country_code}</div>
-                                                    <div className="font-medium text-gray-900">{phone.phone_number}</div>
+                                                <div className="flex items-center justify-between gap-3 text-sm">
+                                                    <div className="font-medium text-gray-900">
+                                                        {phone.phone_type}
+                                                    </div>
+                                                    <div className="font-medium text-gray-900">
+                                                        {[phone.country_code, phone.phone_number]
+                                                            .filter(Boolean)
+                                                            .join(' ')}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))
                                     ) : (
                                         <div className="text-sm text-gray-500">No phone numbers.</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Emergency Contact
+                                </div>
+
+                                <div className="mt-2 space-y-2">
+                                    {employee.emergency_contact_person ||
+                                    employee.emergency_contact_phone ? (
+                                        <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                                            <div className="flex items-center justify-between gap-3 text-sm">
+                                                <div className="font-medium text-gray-900">
+                                                    {employee.emergency_contact_person || '—'}
+                                                </div>
+                                                <div className="font-medium text-gray-900">
+                                                    {employee.emergency_contact_phone || '—'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-gray-500">
+                                            No emergency contact.
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -152,6 +295,8 @@ export default function Show({ employee, documentTypeOptions }) {
                             <Info label="Bank Name" value={employee.bank_name || '—'} />
                             <Info label="Branch" value={employee.bank_branch || '—'} />
                             <Info label="Account Number" value={employee.bank_account_number || '—'} />
+                            <Info label="EPF Number" value={employee.epf_number || '—'} />
+                            <Info label="ETF Number" value={employee.etf_number || '—'} />
                         </div>
                     </section>
                 </div>
@@ -377,8 +522,43 @@ function formatDisplayDate(value) {
         return '—';
     }
 
-    if (typeof value === 'string' && value.includes('T')) {
-        return value.slice(0, 10);
+    // Handle Date objects (rare, but can happen depending on how props are serialized).
+    if (value instanceof Date) {
+        if (!Number.isNaN(value.getTime())) {
+            return new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Colombo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            }).format(value);
+        }
+
+        return '—';
+    }
+
+    if (typeof value === 'string') {
+        // Keep YYYY-MM-DD as-is if it's already date-only.
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return value;
+        }
+
+        // Laravel may serialize date casts as UTC timestamps.
+        // Example: "1995-04-30" (date) can arrive as "1995-04-29T18:30:00.000000Z"
+        // depending on app timezone, which would be wrong if we just slice.
+        if (value.includes('T')) {
+            const parsed = new Date(value);
+            if (!Number.isNaN(parsed.getTime())) {
+                // Output YYYY-MM-DD in the app timezone so the calendar date is correct.
+                return new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Asia/Colombo',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                }).format(parsed);
+            }
+        }
+
+        return value;
     }
 
     return value;

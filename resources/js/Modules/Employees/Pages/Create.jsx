@@ -7,15 +7,21 @@ export default function Create({ statusOptions, users }) {
         employee_code: '',
         first_name: '',
         last_name: '',
+        given_names: '',
         display_name: '',
         email: '',
         designation: '',
         department: '',
+        gender: '',
+        marital_status: '',
         nic: '',
         status: statusOptions?.[0] ?? 'active',
         joined_date: '',
         date_of_birth: '',
         notes: '',
+        employment_type: '',
+        basic_salary: '',
+        is_overtime_eligible: false,
         address_line_1: '',
         address_line_2: '',
         city: '',
@@ -23,8 +29,14 @@ export default function Create({ statusOptions, users }) {
         bank_name: '',
         bank_branch: '',
         bank_account_number: '',
+        epf_number: '',
+        etf_number: '',
+        emergency_contact_person: '',
+        emergency_contact_phone: null,
         user_id: '',
         is_sales_commission_eligible: false,
+        profile_photo_path: '',
+        profile_photo: null,
         phone_numbers: [],
     });
 
@@ -51,8 +63,14 @@ export default function Create({ statusOptions, users }) {
                     processing={processing}
                     statusOptions={statusOptions}
                     users={users}
+                    profilePhotoUrl={null}
                     submitLabel="Create"
-                    onSubmit={() => post(route('employees.store'))}
+                    onSubmit={() =>
+                        post(route('employees.store'), {
+                            forceFormData: true,
+                            preserveScroll: true,
+                        })
+                    }
                 />
             </div>
         </AuthenticatedLayout>

@@ -5,7 +5,10 @@ namespace App\Actions\Employees;
 use App\Models\Employee;
 use App\Services\Employees\EmployeeCodeGeneratorService;
 use App\Services\Employees\PhoneNumberNormalizer;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CreateEmployeeAction
 {
@@ -14,15 +17,28 @@ class CreateEmployeeAction
         private readonly PhoneNumberNormalizer $phoneNumberNormalizer,
     ) {}
 
-    public function execute(array $employeeData, array $phoneNumbers = []): Employee
+    public function execute(
+        array $employeeData,
+        array $phoneNumbers = [],
+        ?UploadedFile $profilePhoto = null
+    ): Employee
     {
-        return DB::transaction(function () use ($employeeData, $phoneNumbers) {
+        return DB::transaction(function () use ($employeeData, $phoneNumbers, $profilePhoto) {
             $employeeData['employee_code'] = $this->codeGenerator->nextCode();
 
             /** @var Employee $employee */
             $employee = Employee::create($employeeData);
 
             $this->syncPhoneNumbers($employee, $phoneNumbers);
+
+            if ($profilePhoto) {
+                $employee->update([
+                    'profile_photo_path' => $this->storeProfilePhoto(
+                        $employee->employee_code,
+                        $profilePhoto,
+                    ),
+                ]);
+            }
 
             return $employee;
         });
@@ -53,5 +69,24 @@ class CreateEmployeeAction
         }
 
         $employee->phoneNumbers()->createMany($clean->all());
+    }
+
+    private function storeProfilePhoto(string $employeeCode, UploadedFile $photo): string
+    {
+        $extension = strtolower(trim((string) $photo->getClientOriginalExtension()));
+        $extension = $extension !== '' ? $extension : 'jpg';
+
+        $uuid = (string) Str::uuid();
+        $fileName = "{$employeeCode}-profile-{$uuid}.{$extension}";
+
+        $path = "employees/profile-photos/{$employeeCode}/{$fileName}";
+
+        Storage::disk('local')->putFileAs(
+            dirname($path),
+            $photo,
+            basename($path),
+        );
+
+        return $path;
     }
 }
