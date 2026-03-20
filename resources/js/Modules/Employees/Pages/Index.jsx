@@ -74,7 +74,7 @@ export default function Index({ employees, filters, statusOptions }) {
 
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end">
+                    <div className="flex-1 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end max-w-[820px]">
                         <div>
                             <label className="text-xs font-medium text-gray-600">Search</label>
                             <input
@@ -113,7 +113,7 @@ export default function Index({ employees, filters, statusOptions }) {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-end">
+                    <div className="flex items-center justify-end shrink-0">
                         <Link href={route('employees.create')}>
                             <PrimaryButton type="button">New Employee</PrimaryButton>
                         </Link>
