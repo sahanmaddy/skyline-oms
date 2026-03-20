@@ -154,7 +154,9 @@ export default function Index({ employees, filters, statusOptions }) {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
-                                        <div>{e.email || '—'}</div>
+                                        <div className="text-xs text-gray-500">
+                                            {e.email || '—'}
+                                        </div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             {renderPhoneList(e.phone_numbers, 10)}
                                         </div>

@@ -154,7 +154,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                         ? `${employee.user.name} (${employee.user.email})`
                                         : '—'
                                 }
-                                className="sm:col-span-2 xl:col-span-3"
+                                className="sm:col-span-2 xl:col-span-2"
                             />
                         </div>
 
@@ -291,12 +291,32 @@ export default function Show({ employee, documentTypeOptions }) {
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Bank Details</h3>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <Info label="Bank Name" value={employee.bank_name || '—'} />
-                            <Info label="Branch" value={employee.bank_branch || '—'} />
-                            <Info label="Account Number" value={employee.bank_account_number || '—'} />
-                            <Info label="EPF Number" value={employee.epf_number || '—'} />
-                            <Info label="ETF Number" value={employee.etf_number || '—'} />
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-6">
+                            <Info
+                                label="Bank Name"
+                                value={employee.bank_name || '—'}
+                                className="sm:col-span-2"
+                            />
+                            <Info
+                                label="Branch"
+                                value={employee.bank_branch || '—'}
+                                className="sm:col-span-2"
+                            />
+                            <Info
+                                label="Account Number"
+                                value={employee.bank_account_number || '—'}
+                                className="sm:col-span-2"
+                            />
+                            <Info
+                                label="EPF Number"
+                                value={employee.epf_number || '—'}
+                                className="sm:col-span-3"
+                            />
+                            <Info
+                                label="ETF Number"
+                                value={employee.etf_number || '—'}
+                                className="sm:col-span-3"
+                            />
                         </div>
                     </section>
                 </div>
