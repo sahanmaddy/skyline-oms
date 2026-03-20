@@ -22,21 +22,7 @@ class EmployeeDocumentController extends Controller
         $documentType = $request->string('document_type')->toString();
         $meta = $storage->store($employee, $request->file('file'), $documentType);
 
-        $employeeCode = trim((string) $employee->employee_code);
-        $requestedTitle = $request->string('title')->toString();
-        $expectedBaseTitle = trim("{$employeeCode} - {$documentType}");
-
-        $finalTitle = $requestedTitle;
-
-        // If the user kept the auto-filled default title and this upload
-        // required a duplicate filename, reflect the (1), (2), ... in the title too.
-        if (trim($requestedTitle) === $expectedBaseTitle) {
-            $fileName = (string) ($meta['file_name'] ?? '');
-            if (preg_match('/\((\d+)\)\.[^.]+$/', $fileName, $m)) {
-                $suffixIndex = (int) $m[1];
-                $finalTitle = trim("{$employeeCode} - {$documentType} ({$suffixIndex})");
-            }
-        }
+        $finalTitle = $request->string('title')->toString();
 
         EmployeeDocument::create([
             'employee_id' => $employee->id,
