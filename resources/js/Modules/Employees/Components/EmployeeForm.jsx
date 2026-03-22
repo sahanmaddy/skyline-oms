@@ -51,6 +51,7 @@ export default function EmployeeForm({
     submitLabel,
     onSubmit,
     profilePhotoUrl,
+    mode = 'create',
 }) {
     const [displayNameTouched, setDisplayNameTouched] = useState(false);
     const [photoPreviewSrc, setPhotoPreviewSrc] = useState(profilePhotoUrl || null);
@@ -59,6 +60,11 @@ export default function EmployeeForm({
     const [emergencyPhoneNumber, setEmergencyPhoneNumber] = useState('');
 
     useEffect(() => {
+        // Only auto-fill on create; on edit, overwriting display_name breaks saves and custom names.
+        if (mode === 'edit') {
+            return;
+        }
+
         const first = (data.first_name || '').trim();
         const last = (data.last_name || '').trim();
         const auto = `${first} ${last}`.trim();
@@ -67,7 +73,7 @@ export default function EmployeeForm({
             setData('display_name', auto);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.first_name, data.last_name]);
+    }, [data.first_name, data.last_name, mode]);
 
     const phoneRows = useMemo(() => data.phone_numbers || [], [data.phone_numbers]);
 

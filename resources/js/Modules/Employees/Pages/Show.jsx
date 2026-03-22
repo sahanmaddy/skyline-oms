@@ -127,10 +127,22 @@ export default function Show({ employee, documentTypeOptions }) {
                                     )}
                                 </div>
                             </div>
-                            <Info
-                                label="Name"
-                                value={fullNameWithGivenNames || employee.display_name || '—'}
-                            />
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Full name
+                                </div>
+                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                    {fullNameWithGivenNames || '—'}
+                                </div>
+                                <div className="mt-3 border-t border-gray-100 pt-2">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                        Display name
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-gray-900">
+                                        {employee.display_name?.trim() || '—'}
+                                    </div>
+                                </div>
+                            </div>
                             <Info
                                 label="Employee Code"
                                 value={employee.employee_code || '—'}

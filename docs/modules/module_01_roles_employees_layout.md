@@ -10,6 +10,7 @@
 ## Employee Document Rules
 - Document types:
   - NIC
+  - Birth Certificate
   - CV
   - Appointment Letter
   - Contract

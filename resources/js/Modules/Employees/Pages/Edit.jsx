@@ -1,27 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
+import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, Link, useForm } from '@inertiajs/react';
-
-function normalizeDateInput(value) {
-    if (!value) {
-        return '';
-    }
-
-    if (typeof value === 'string') {
-        if (value.includes('T')) {
-            return value.slice(0, 10);
-        }
-
-        return value;
-    }
-
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-        return '';
-    }
-
-    return parsed.toISOString().slice(0, 10);
-}
 
 export default function Edit({ employee, statusOptions, users }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -37,8 +17,8 @@ export default function Edit({ employee, statusOptions, users }) {
         marital_status: employee.marital_status || '',
         nic: employee.nic || '',
         status: employee.status || statusOptions?.[0] || 'active',
-        joined_date: normalizeDateInput(employee.joined_date),
-        date_of_birth: normalizeDateInput(employee.date_of_birth),
+        joined_date: normalizeDateInputForForm(employee.joined_date),
+        date_of_birth: normalizeDateInputForForm(employee.date_of_birth),
         notes: employee.notes || '',
         employment_type: employee.employment_type || '',
         basic_salary:
@@ -84,6 +64,7 @@ export default function Edit({ employee, statusOptions, users }) {
 
             <div className="rounded-lg border border-gray-200 bg-white p-4">
                 <EmployeeForm
+                    mode="edit"
                     data={data}
                     setData={setData}
                     errors={errors}

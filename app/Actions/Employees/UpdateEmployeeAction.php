@@ -40,7 +40,7 @@ class UpdateEmployeeAction
                 ]);
             }
 
-            return $employee;
+            return $employee->refresh();
         });
     }
 

@@ -5,6 +5,7 @@ namespace App\Enums;
 enum EmployeeDocumentType: string
 {
     case Nic = 'NIC';
+    case BirthCertificate = 'Birth Certificate';
     case Cv = 'CV';
     case AppointmentLetter = 'Appointment Letter';
     case Contract = 'Contract';
