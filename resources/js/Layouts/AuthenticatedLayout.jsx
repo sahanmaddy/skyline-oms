@@ -14,6 +14,11 @@ export default function AuthenticatedLayout({ header, children }) {
         roles.includes('Admin') ||
         roles.includes('Management') ||
         roles.includes('Accounting and Finance');
+    const canManageCustomers =
+        roles.includes('Admin') ||
+        roles.includes('Management') ||
+        roles.includes('Sales and Marketing') ||
+        roles.includes('Accounting and Finance');
     const isAdmin = roles.includes('Admin');
 
     return (
@@ -53,6 +58,20 @@ export default function AuthenticatedLayout({ header, children }) {
                                 }
                             >
                                 Employees
+                            </Link>
+                        )}
+
+                        {canManageCustomers && (
+                            <Link
+                                href={route('customers.index')}
+                                className={
+                                    'block rounded-md px-3 py-2 text-sm font-medium ' +
+                                    (route().current('customers.*')
+                                        ? 'bg-indigo-50 text-indigo-700'
+                                        : 'text-gray-700 hover:bg-gray-50')
+                                }
+                            >
+                                Customers
                             </Link>
                         )}
 
@@ -133,6 +152,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                     {canManageEmployees && (
                                         <ResponsiveNavLink href={route('employees.index')} active={route().current('employees.*')}>
                                             Employees
+                                        </ResponsiveNavLink>
+                                    )}
+                                    {canManageCustomers && (
+                                        <ResponsiveNavLink href={route('customers.index')} active={route().current('customers.*')}>
+                                            Customers
                                         </ResponsiveNavLink>
                                     )}
                                     {isAdmin && (

@@ -99,18 +99,43 @@ Relationships:
 ### customers
 - id
 - customer_code
-- name
+- customer_name
+- company_name
 - contact_person
-- phone
 - email
 - address_line_1
 - address_line_2
 - city
+- district
+- country
+- credit_eligible
 - credit_limit
-- payment_terms_days
-- credit_security_type   # none / cheque / mixed / cash_only
-- is_active
+- guarantor
+- status
 - notes
+
+### customer_phone_numbers
+- id
+- customer_id
+- phone_type             # mobile / land phone / whatsapp
+- country_code
+- phone_number
+- is_primary
+
+### customer_documents
+- id
+- customer_id
+- document_type
+- title
+- file_name
+- file_path
+- mime_type
+- file_size
+- notes
+- uploaded_by
+- created_at
+- updated_at
+- deleted_at
 
 ### suppliers
 - id

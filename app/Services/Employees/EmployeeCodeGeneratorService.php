@@ -16,6 +16,6 @@ class EmployeeCodeGeneratorService
 
         $next = ((int) $max) + 1;
 
-        return 'E-'.str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        return 'E-'.$next;
     }
 }
