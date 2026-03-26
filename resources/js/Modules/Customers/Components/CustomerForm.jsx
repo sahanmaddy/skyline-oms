@@ -7,6 +7,37 @@ import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 
+function formatMoneyWithCommas(value) {
+    const trimmed = (value ?? '').toString().trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    const num = Number(trimmed);
+    if (Number.isNaN(num)) {
+        return trimmed;
+    }
+
+    return new Intl.NumberFormat('en-LK', {
+        maximumFractionDigits: 2,
+    }).format(num);
+}
+
+function normalizeMoneyInput(value) {
+    const raw = (value ?? '').toString();
+    const cleaned = raw.replace(/[^0-9.]/g, '');
+    if (!cleaned) {
+        return '';
+    }
+
+    const parts = cleaned.split('.');
+    if (parts.length <= 2) {
+        return parts[1] !== undefined ? `${parts[0]}.${parts[1]}` : parts[0];
+    }
+
+    return `${parts[0]}.${parts.slice(1).join('')}`;
+}
+
 export default function CustomerForm({
     data,
     setData,
@@ -17,6 +48,10 @@ export default function CustomerForm({
     onSubmit,
 }) {
     const phoneRows = data.phone_numbers || [];
+    const normalizedCustomerName = (data.customer_name || '').trim().toLowerCase();
+    const normalizedContactPerson = (data.contact_person || '').trim().toLowerCase();
+    const showContactPersonField =
+        normalizedContactPerson !== '' && normalizedContactPerson !== normalizedCustomerName;
 
     const addPhone = () => {
         setData('phone_numbers', [
@@ -110,102 +145,131 @@ export default function CustomerForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="contact_person" value="Contact Person" />
+                        <InputLabel htmlFor="nic" value="NIC" />
                         <TextInput
-                            id="contact_person"
+                            id="nic"
                             className="mt-1 block w-full"
-                            value={data.contact_person || ''}
-                            onChange={(e) => setData('contact_person', e.target.value)}
+                            value={data.nic || ''}
+                            onChange={(e) => setData('nic', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.contact_person} />
+                        <InputError className="mt-2" message={errors.nic} />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="email" value="Email" />
+                        <InputLabel htmlFor="vat_tax_number" value="VAT/TIN Number" />
                         <TextInput
-                            id="email"
-                            type="email"
+                            id="vat_tax_number"
                             className="mt-1 block w-full"
-                            value={data.email || ''}
-                            onChange={(e) => setData('email', e.target.value)}
+                            value={data.vat_tax_number || ''}
+                            onChange={(e) => setData('vat_tax_number', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.email} />
+                        <InputError className="mt-2" message={errors.vat_tax_number} />
                     </div>
+
                 </div>
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
                 <p className="mt-1 text-xs text-gray-500">
-                    Add one or more customer phone numbers.
+                    Manage customer email and phone contacts.
                 </p>
 
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-xs text-gray-500">
-                        Sri Lanka (+94) is preselected for new rows.
-                    </div>
-                    <PrimaryButton type="button" onClick={addPhone}>
-                        Add phone
-                    </PrimaryButton>
+                <div className="mt-5">
+                    <InputLabel htmlFor="contact_person" value="Contact Person" />
+                    <TextInput
+                        id="contact_person"
+                        className="mt-1 block w-full"
+                        value={data.contact_person || ''}
+                        placeholder="Leave empty if same as customer name"
+                        onChange={(e) => setData('contact_person', e.target.value)}
+                    />
+                    <InputError className="mt-2" message={errors.contact_person} />
+                    {!showContactPersonField && data.contact_person ? (
+                        <div className="mt-2 text-xs text-gray-500">
+                            Contact person matches customer name, so it will not be saved separately.
+                        </div>
+                    ) : null}
                 </div>
 
-                <div className="mt-3 space-y-3">
-                    {phoneRows.map((row, idx) => (
-                        <div key={idx} className="rounded-md border border-gray-200 bg-white p-4">
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
-                                <div className="md:col-span-3">
-                                    <InputLabel value="Type" />
-                                    <select
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        value={row.phone_type || 'Mobile'}
-                                        onChange={(e) => updatePhone(idx, { phone_type: e.target.value })}
-                                    >
-                                        <option value="Mobile">Mobile</option>
-                                        <option value="Land Phone">Land Phone</option>
-                                        <option value="WhatsApp">WhatsApp</option>
-                                    </select>
-                                </div>
+                <div className="mt-4">
+                    <InputLabel htmlFor="email" value="Email" />
+                    <TextInput
+                        id="email"
+                        type="email"
+                        className="mt-1 block w-full"
+                        value={data.email || ''}
+                        onChange={(e) => setData('email', e.target.value)}
+                    />
+                    <InputError className="mt-2" message={errors.email} />
+                </div>
 
-                                <div className="md:col-span-3">
-                                    <InputLabel value="Country code" />
-                                    <div className="mt-1">
-                                        <CountryCallingCodeCombobox
-                                            value={row.country_code || '+94'}
-                                            onChange={(cc) => updatePhone(idx, { country_code: cc })}
-                                            options={countryCallingCodes}
+                <div className="mt-6 border-t border-gray-200 pt-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <InputLabel value="Phone Numbers" />
+                        <PrimaryButton type="button" onClick={addPhone}>
+                            Add phone
+                        </PrimaryButton>
+                    </div>
+
+                    <div className="mt-3 space-y-3">
+                        {phoneRows.map((row, idx) => (
+                            <div key={idx} className="rounded-md border border-gray-200 bg-white p-4">
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                    <div className="md:col-span-3">
+                                        <InputLabel value="Type" />
+                                        <select
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            value={row.phone_type || 'Mobile'}
+                                            onChange={(e) => updatePhone(idx, { phone_type: e.target.value })}
+                                        >
+                                            <option value="Mobile">Mobile</option>
+                                            <option value="Land Phone">Land Phone</option>
+                                            <option value="WhatsApp">WhatsApp</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="md:col-span-3">
+                                        <InputLabel value="Country code" />
+                                        <div className="mt-1">
+                                            <CountryCallingCodeCombobox
+                                                value={row.country_code || '+94'}
+                                                onChange={(cc) => updatePhone(idx, { country_code: cc })}
+                                                options={countryCallingCodes}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="md:col-span-4">
+                                        <InputLabel value="Phone number" />
+                                        <TextInput
+                                            className="mt-1 block w-full"
+                                            value={row.phone_number || ''}
+                                            onChange={(e) => updatePhone(idx, { phone_number: e.target.value })}
                                         />
                                     </div>
-                                </div>
 
-                                <div className="md:col-span-4">
-                                    <InputLabel value="Phone number" />
-                                    <TextInput
-                                        className="mt-1 block w-full"
-                                        value={row.phone_number || ''}
-                                        onChange={(e) => updatePhone(idx, { phone_number: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2 flex items-end justify-end">
-                                    <button
-                                        type="button"
-                                        className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                                        onClick={() => removePhone(idx)}
-                                    >
-                                        Remove
-                                    </button>
+                                    <div className="md:col-span-2 flex items-end justify-end">
+                                        <button
+                                            type="button"
+                                            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                                            onClick={() => removePhone(idx)}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
 
-                <InputError className="mt-2" message={errors.phone_numbers} />
+                    <InputError className="mt-2" message={errors.phone_numbers} />
+                </div>
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Address</h3>
-                <p className="mt-1 text-xs text-gray-500">Primary location details for this customer.</p>
+                <p className="mt-1 text-xs text-gray-500">Primary location and mailing details.</p>
 
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
@@ -231,7 +295,7 @@ export default function CustomerForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="city" value="City" />
+                        <InputLabel htmlFor="city" value="City/District" />
                         <TextInput
                             id="city"
                             className="mt-1 block w-full"
@@ -242,17 +306,6 @@ export default function CustomerForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="district" value="District" />
-                        <TextInput
-                            id="district"
-                            className="mt-1 block w-full"
-                            value={data.district || ''}
-                            onChange={(e) => setData('district', e.target.value)}
-                        />
-                        <InputError className="mt-2" message={errors.district} />
-                    </div>
-
-                    <div className="sm:col-span-2">
                         <InputLabel htmlFor="country" value="Country" />
                         <div className="mt-1">
                             <CountryCombobox
@@ -272,7 +325,14 @@ export default function CustomerForm({
                 <p className="mt-1 text-xs text-gray-500">Credit and guarantor details.</p>
 
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="sm:col-span-2 rounded-md border border-gray-200 bg-white p-4">
+                    <div
+                        className={
+                            'sm:col-span-2 rounded-md border p-4 transition-colors ' +
+                            (data.credit_eligible
+                                ? 'border-indigo-200 bg-indigo-50'
+                                : 'border-gray-200 bg-white')
+                        }
+                    >
                         <div className="flex items-start gap-3">
                             <input
                                 type="checkbox"
@@ -281,10 +341,24 @@ export default function CustomerForm({
                                 onChange={(e) => setData('credit_eligible', e.target.checked)}
                             />
                             <div>
-                                <div className="text-sm font-semibold text-gray-900">
+                                <div
+                                    className={
+                                        'text-sm font-semibold ' +
+                                        (data.credit_eligible
+                                            ? 'text-indigo-900'
+                                            : 'text-gray-900')
+                                    }
+                                >
                                     Credit Eligible
                                 </div>
-                                <div className="text-xs text-gray-600">
+                                <div
+                                    className={
+                                        'text-xs ' +
+                                        (data.credit_eligible
+                                            ? 'text-indigo-700'
+                                            : 'text-gray-600')
+                                    }
+                                >
                                     Enable if this customer can buy on credit.
                                 </div>
                             </div>
@@ -294,13 +368,22 @@ export default function CustomerForm({
 
                     <div>
                         <InputLabel htmlFor="credit_limit" value="Credit Limit" />
-                        <TextInput
-                            id="credit_limit"
-                            className="mt-1 block w-full"
-                            inputMode="decimal"
-                            value={data.credit_limit || ''}
-                            onChange={(e) => setData('credit_limit', e.target.value)}
-                        />
+                        <div className="mt-1 flex items-stretch">
+                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
+                                Rs.
+                            </div>
+                            <input
+                                id="credit_limit"
+                                type="text"
+                                inputMode="decimal"
+                                className="block w-full rounded-none rounded-r-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                value={formatMoneyWithCommas(data.credit_limit || '')}
+                                placeholder="0.00"
+                                onChange={(e) =>
+                                    setData('credit_limit', normalizeMoneyInput(e.target.value))
+                                }
+                            />
+                        </div>
                         <InputError className="mt-2" message={errors.credit_limit} />
                     </div>
 

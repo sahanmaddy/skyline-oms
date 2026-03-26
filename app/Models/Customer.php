@@ -16,6 +16,8 @@ class Customer extends Model
         'customer_name',
         'company_name',
         'contact_person',
+        'nic',
+        'vat_tax_number',
         'email',
         'status',
         'address_line_1',

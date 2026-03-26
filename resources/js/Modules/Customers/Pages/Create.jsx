@@ -2,18 +2,19 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Create({ statusOptions }) {
+export default function Create({ statusOptions, nextCustomerCode }) {
     const { data, setData, post, processing, errors } = useForm({
-        customer_code: '',
+        customer_code: nextCustomerCode || '',
         customer_name: '',
         company_name: '',
         contact_person: '',
+        nic: '',
+        vat_tax_number: '',
         email: '',
         status: statusOptions?.[0] ?? 'active',
         address_line_1: '',
         address_line_2: '',
         city: '',
-        district: '',
         country: 'Sri Lanka',
         credit_eligible: false,
         credit_limit: '',

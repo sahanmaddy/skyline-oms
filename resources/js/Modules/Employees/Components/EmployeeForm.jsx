@@ -777,7 +777,7 @@ export default function EmployeeForm({
                         <InputError className="mt-2" message={errors.address_line_2} />
                     </div>
                     <div>
-                        <InputLabel htmlFor="city" value="City" />
+                        <InputLabel htmlFor="city" value="City/District" />
                         <TextInput
                             id="city"
                             className="mt-1 block w-full"

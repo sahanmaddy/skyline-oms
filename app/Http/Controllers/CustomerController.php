@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\Customers\CustomerCodeGeneratorService;
 
 class CustomerController extends Controller
 {
@@ -35,6 +36,8 @@ class CustomerController extends Controller
                     ->orWhere('customer_name', 'like', "%{$search}%")
                     ->orWhere('company_name', 'like', "%{$search}%")
                     ->orWhere('contact_person', 'like', "%{$search}%")
+                    ->orWhere('nic', 'like', "%{$search}%")
+                    ->orWhere('vat_tax_number', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhereHas('phoneNumbers', function ($p) use ($phoneTerm) {
                         $p->where('phone_number', 'like', "%{$phoneTerm}%");
@@ -62,6 +65,7 @@ class CustomerController extends Controller
     {
         return Inertia::render('Modules/Customers/Pages/Create', [
             'statusOptions' => CustomerStatus::values(),
+            'nextCustomerCode' => app(CustomerCodeGeneratorService::class)->nextCode(),
         ]);
     }
 

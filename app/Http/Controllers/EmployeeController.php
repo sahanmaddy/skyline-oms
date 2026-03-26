@@ -10,6 +10,7 @@ use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\Employees\EmployeeCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -64,6 +65,7 @@ class EmployeeController extends Controller
     {
         return Inertia::render('Modules/Employees/Pages/Create', [
             'statusOptions' => EmployeeStatus::values(),
+            'nextEmployeeCode' => app(EmployeeCodeGeneratorService::class)->nextCode(),
             'users' => User::query()
                 ->whereDoesntHave('employee')
                 ->select(['id', 'name', 'email'])

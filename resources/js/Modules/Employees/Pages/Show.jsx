@@ -306,7 +306,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                 value={[employee.address_line_1, employee.address_line_2].filter(Boolean).join(', ') || '—'}
                                 className="sm:col-span-2"
                             />
-                            <Info label="City" value={employee.city || '—'} />
+                            <Info label="City/District" value={employee.city || '—'} />
                             <Info label="Country" value={employee.country || '—'} />
                         </div>
                     </section>

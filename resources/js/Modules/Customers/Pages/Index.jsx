@@ -138,7 +138,9 @@ export default function Index({ customers, filters, statusOptions }) {
                                                 ? ` • ${c.company_name}`
                                                 : ''}
                                         </div>
-                                        {c.contact_person ? (
+                                        {c.contact_person &&
+                                        c.contact_person.trim().toLowerCase() !==
+                                            (c.customer_name || '').trim().toLowerCase() ? (
                                             <div className="mt-1 text-xs text-gray-500">
                                                 Contact: {c.contact_person}
                                             </div>
@@ -154,7 +156,6 @@ export default function Index({ customers, filters, statusOptions }) {
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="text-sm text-gray-900">{c.city || '—'}</div>
-                                        <div className="mt-1 text-xs text-gray-500">{c.district || '—'}</div>
                                         <div className="mt-1 text-xs text-gray-500">{c.country || '—'}</div>
                                     </td>
                                     <td className="px-4 py-3">

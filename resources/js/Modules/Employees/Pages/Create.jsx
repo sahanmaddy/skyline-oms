@@ -2,9 +2,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Create({ statusOptions, users }) {
+export default function Create({ statusOptions, users, nextEmployeeCode }) {
     const { data, setData, post, processing, errors } = useForm({
-        employee_code: '',
+        employee_code: nextEmployeeCode || '',
         first_name: '',
         last_name: '',
         given_names: '',

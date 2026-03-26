@@ -28,6 +28,9 @@ export default function Show({ customer, documentTypeOptions }) {
     const [uploading, setUploading] = useState(false);
     const [uploadErrors, setUploadErrors] = useState({});
     const replaceInputs = useRef({});
+    const showContactPerson =
+        !!customer.contact_person &&
+        customer.contact_person.trim().toLowerCase() !== (customer.customer_name || '').trim().toLowerCase();
 
     const upload = ({ document_type, title, notes, file }) => {
         setUploading(true);
@@ -87,7 +90,8 @@ export default function Show({ customer, documentTypeOptions }) {
                             <Info label="Customer Code" value={customer.customer_code || '—'} />
                             <Info label="Customer Name" value={customer.customer_name || '—'} />
                             <Info label="Company Name" value={customer.company_name || '—'} />
-                            <Info label="Contact Person" value={customer.contact_person || '—'} />
+                            <Info label="NIC" value={customer.nic || '—'} />
+                            <Info label="VAT/TIN Number" value={customer.vat_tax_number || '—'} />
                             <Info label="Email" value={customer.email || '—'} />
                             <StatusInfo
                                 label="Status"
@@ -99,6 +103,16 @@ export default function Show({ customer, documentTypeOptions }) {
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4">
                         <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
+                        {showContactPerson ? (
+                            <div className="mt-4 rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Contact Person
+                                </div>
+                                <div className="mt-1 text-sm font-medium text-gray-900">
+                                    {customer.contact_person}
+                                </div>
+                            </div>
+                        ) : null}
                         <div className="mt-4 rounded-md border border-gray-200 bg-white p-3">
                             <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Phone Numbers
@@ -139,8 +153,7 @@ export default function Show({ customer, documentTypeOptions }) {
                                 }
                                 className="sm:col-span-2"
                             />
-                            <Info label="City" value={customer.city || '—'} />
-                            <Info label="District" value={customer.district || '—'} />
+                            <Info label="City/District" value={customer.city || '—'} />
                             <Info label="Country" value={customer.country || '—'} className="sm:col-span-2" />
                         </div>
                     </section>

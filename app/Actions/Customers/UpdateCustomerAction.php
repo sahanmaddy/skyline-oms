@@ -14,6 +14,7 @@ class UpdateCustomerAction
     {
         return DB::transaction(function () use ($customer, $customerData, $phoneNumbers) {
             unset($customerData['customer_code']);
+            $customerData['contact_person'] = $this->normalizeContactPerson($customerData);
 
             $customer->update($customerData);
             $this->syncPhoneNumbers($customer, $phoneNumbers);
@@ -49,6 +50,22 @@ class UpdateCustomerAction
         }
 
         $customer->phoneNumbers()->createMany($clean->all());
+    }
+
+    private function normalizeContactPerson(array $customerData): ?string
+    {
+        $customerName = trim((string) ($customerData['customer_name'] ?? ''));
+        $contactPerson = trim((string) ($customerData['contact_person'] ?? ''));
+
+        if ($contactPerson === '') {
+            return null;
+        }
+
+        if ($customerName !== '' && strcasecmp($contactPerson, $customerName) === 0) {
+            return null;
+        }
+
+        return $contactPerson;
     }
 }
 
