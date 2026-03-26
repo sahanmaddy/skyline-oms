@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Create({ roles, statusOptions }) {
+export default function Create({ roles, statusOptions, employeesForLink }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
@@ -10,6 +10,7 @@ export default function Create({ roles, statusOptions }) {
         password_confirmation: '',
         role: roles?.[0] || '',
         status: statusOptions?.[0] || 'active',
+        employee_id: '',
     });
 
     return (
@@ -33,6 +34,7 @@ export default function Create({ roles, statusOptions }) {
                     processing={processing}
                     roles={roles}
                     statusOptions={statusOptions}
+                    employeesForLink={employeesForLink}
                     submitLabel="Create"
                     showPasswordFields
                     onSubmit={() => post(route('users.store'))}

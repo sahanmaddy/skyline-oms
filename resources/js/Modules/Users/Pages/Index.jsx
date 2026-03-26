@@ -2,6 +2,18 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
+function formatLinkedEmployee(employee) {
+    if (!employee) {
+        return null;
+    }
+    const code = employee.employee_code || '';
+    const name = employee.display_name || '';
+    if (!code && !name) {
+        return null;
+    }
+    return [code, name].filter(Boolean).join(' - ');
+}
+
 export default function Index({ users, filters, statusOptions }) {
     return (
         <AuthenticatedLayout header={<span className="text-base font-semibold">Users</span>}>
@@ -9,7 +21,7 @@ export default function Index({ users, filters, statusOptions }) {
 
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex-1 grid grid-cols-1 gap-3 sm:grid-cols-2 max-w-[820px]">
+                    <div className="flex-1 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end max-w-[820px]">
                         <div>
                             <label className="text-xs font-medium text-gray-600">Search</label>
                             <input
@@ -60,7 +72,10 @@ export default function Index({ users, filters, statusOptions }) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    User
+                                    Name
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Email
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Role
@@ -77,59 +92,73 @@ export default function Index({ users, filters, statusOptions }) {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {users.data.map((u) => (
-                                <tr key={u.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3">
-                                        <div className="text-sm font-semibold text-gray-900">
-                                            {u.name}
-                                        </div>
-                                        <div className="text-xs text-gray-500">{u.email}</div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700">
-                                            {u.roles?.[0]?.name || '—'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
-                                        {u.employee ? u.employee.display_name : '—'}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span
-                                            className={
-                                                'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ' +
-                                                (u.status === 'active'
-                                                    ? 'bg-green-50 text-green-700'
-                                                    : 'bg-gray-100 text-gray-700')
-                                            }
-                                        >
-                                            {u.status === 'active' ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm">
-                                        <Link
-                                            href={route('users.show', u.id)}
-                                            className="font-medium text-indigo-600 hover:text-indigo-700"
-                                        >
-                                            View
-                                        </Link>
-                                        <span className="mx-2 text-gray-300">|</span>
-                                        <Link
-                                            href={route('users.edit', u.id)}
-                                            className="font-medium text-gray-700 hover:text-gray-900"
-                                        >
-                                            Edit
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
+                            {users.data.map((u) => {
+                                const linkedLabel = formatLinkedEmployee(u.employee);
+                                return (
+                                    <tr key={u.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3">
+                                            <div className="text-sm font-semibold text-gray-900">
+                                                {u.name}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
+                                        <td className="px-4 py-3">
+                                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700">
+                                                {u.roles?.[0]?.name || '—'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {linkedLabel ? (
+                                                <Link
+                                                    href={route('employees.show', u.employee.id)}
+                                                    className="font-medium text-indigo-600 hover:text-indigo-800"
+                                                >
+                                                    {linkedLabel}
+                                                </Link>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">Not linked</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span
+                                                className={
+                                                    'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ' +
+                                                    (u.status === 'active'
+                                                        ? 'bg-green-50 text-green-700'
+                                                        : 'bg-gray-100 text-gray-700')
+                                                }
+                                            >
+                                                {u.status === 'active' ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-sm">
+                                            <Link
+                                                href={route('users.show', u.id)}
+                                                className="font-medium text-indigo-600 hover:text-indigo-700"
+                                            >
+                                                View
+                                            </Link>
+                                            <span className="mx-2 text-gray-300">|</span>
+                                            <Link
+                                                href={route('users.edit', u.id)}
+                                                className="font-medium text-gray-700 hover:text-gray-900"
+                                            >
+                                                Edit
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
 
                             {users.data.length === 0 && (
                                 <tr>
-                                    <td
-                                        colSpan={5}
-                                        className="px-4 py-10 text-center text-sm text-gray-500"
-                                    >
-                                        No users found.
+                                    <td colSpan={6} className="px-4 py-10 text-center">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            No users found
+                                        </div>
+                                        <div className="mt-1 text-xs text-gray-500">
+                                            Try adjusting your search or status filter.
+                                        </div>
                                     </td>
                                 </tr>
                             )}
@@ -160,4 +189,3 @@ export default function Index({ users, filters, statusOptions }) {
         </AuthenticatedLayout>
     );
 }
-

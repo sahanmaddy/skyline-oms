@@ -10,6 +10,7 @@ export default function UserForm({
     processing,
     roles,
     statusOptions,
+    employeesForLink,
     submitLabel,
     showPasswordFields,
     onSubmit,
@@ -79,6 +80,35 @@ export default function UserForm({
                         ))}
                     </select>
                     <InputError className="mt-2" message={errors.status} />
+                </div>
+
+                <div className="sm:col-span-2">
+                    <InputLabel
+                        htmlFor="employee_id"
+                        value="Linked employee"
+                    />
+                    <select
+                        id="employee_id"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value={data.employee_id ?? ''}
+                        onChange={(e) =>
+                            setData(
+                                'employee_id',
+                                e.target.value === '' ? '' : Number(e.target.value),
+                            )
+                        }
+                    >
+                        <option value="">— Not linked —</option>
+                        {employeesForLink?.map((emp) => (
+                            <option key={emp.id} value={emp.id}>
+                                {emp.employee_code} - {emp.display_name}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                        Each employee can only be linked to one user.
+                    </p>
+                    <InputError className="mt-2" message={errors.employee_id} />
                 </div>
 
                 {showPasswordFields && (

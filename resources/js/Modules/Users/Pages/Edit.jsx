@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Edit({ user, roles, statusOptions }) {
+export default function Edit({ user, roles, statusOptions, employeesForLink }) {
     const { data, setData, put, processing, errors } = useForm({
         name: user.name || '',
         email: user.email || '',
@@ -10,6 +10,7 @@ export default function Edit({ user, roles, statusOptions }) {
         password_confirmation: '',
         role: user.roles?.[0]?.name || roles?.[0] || '',
         status: user.status || statusOptions?.[0] || 'active',
+        employee_id: user.employee?.id ?? '',
     });
 
     return (
@@ -37,6 +38,7 @@ export default function Edit({ user, roles, statusOptions }) {
                     processing={processing}
                     roles={roles}
                     statusOptions={statusOptions}
+                    employeesForLink={employeesForLink}
                     submitLabel="Save"
                     showPasswordFields
                     onSubmit={() => put(route('users.update', user.id))}

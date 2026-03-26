@@ -16,6 +16,13 @@ class UserUpdateRequest extends FormRequest
         return $userModel ? ($this->user()?->can('update', $userModel) ?? false) : false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('employee_id') && $this->input('employee_id') === '') {
+            $this->merge(['employee_id' => null]);
+        }
+    }
+
     public function rules(): array
     {
         /** @var User $userModel */
@@ -29,6 +36,16 @@ class UserUpdateRequest extends FormRequest
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', Rule::in($roleNames)],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'employee_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('employees', 'id')->where(function ($query) use ($userModel) {
+                    $query->where(function ($q) use ($userModel) {
+                        $q->whereNull('user_id')
+                            ->orWhere('user_id', $userModel->id);
+                    });
+                }),
+            ],
         ];
     }
 }

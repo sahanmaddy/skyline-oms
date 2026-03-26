@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Users\SyncUserEmployeeLinkAction;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +30,10 @@ class UserController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = User::query()->with(['roles', 'employee']);
+        $query = User::query()->with([
+            'roles',
+            'employee:id,employee_code,display_name,user_id',
+        ]);
 
         if ($search = trim((string) $request->string('q'))) {
             $query->where(function ($q) use ($search) {
@@ -58,12 +63,16 @@ class UserController extends Controller
         return Inertia::render('Modules/Users/Pages/Create', [
             'roles' => self::ALLOWED_ROLES,
             'statusOptions' => ['active', 'inactive'],
+            'employeesForLink' => $this->employeesAvailableForUserLink(),
         ]);
     }
 
-    public function store(UserStoreRequest $request): RedirectResponse
+    public function store(UserStoreRequest $request, SyncUserEmployeeLinkAction $linkEmployee): RedirectResponse
     {
         $data = $request->validated();
+        $rawEmployeeId = $data['employee_id'] ?? null;
+        unset($data['employee_id']);
+        $employeeId = $rawEmployeeId !== null ? (int) $rawEmployeeId : null;
 
         $user = User::create([
             'name' => $data['name'],
@@ -74,12 +83,17 @@ class UserController extends Controller
 
         $user->syncRoles([$data['role']]);
 
+        $linkEmployee->execute($user, $employeeId);
+
         return redirect()->route('users.show', $user)->with('success', 'User created.');
     }
 
     public function show(User $user): Response
     {
-        $user->load(['roles', 'employee']);
+        $user->load([
+            'roles',
+            'employee:id,employee_code,display_name,user_id',
+        ]);
 
         return Inertia::render('Modules/Users/Pages/Show', [
             'user' => $user,
@@ -88,18 +102,28 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
-        $user->load(['roles', 'employee']);
+        $user->load([
+            'roles',
+            'employee:id,employee_code,display_name,user_id',
+        ]);
 
         return Inertia::render('Modules/Users/Pages/Edit', [
             'user' => $user,
             'roles' => self::ALLOWED_ROLES,
             'statusOptions' => ['active', 'inactive'],
+            'employeesForLink' => $this->employeesAvailableForUserLink($user),
         ]);
     }
 
-    public function update(UserUpdateRequest $request, User $user): RedirectResponse
-    {
+    public function update(
+        UserUpdateRequest $request,
+        User $user,
+        SyncUserEmployeeLinkAction $linkEmployee
+    ): RedirectResponse {
         $data = $request->validated();
+        $rawEmployeeId = $data['employee_id'] ?? null;
+        unset($data['employee_id']);
+        $employeeId = $rawEmployeeId !== null ? (int) $rawEmployeeId : null;
 
         $user->update([
             'name' => $data['name'],
@@ -113,6 +137,27 @@ class UserController extends Controller
 
         $user->syncRoles([$data['role']]);
 
+        $linkEmployee->execute($user, $employeeId);
+
         return redirect()->route('users.show', $user)->with('success', 'User updated.');
+    }
+
+    /**
+     * Employees that can be linked: unlinked, or already linked to the given user (e.g. edit form).
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Employee>
+     */
+    private function employeesAvailableForUserLink(?User $user = null): \Illuminate\Support\Collection
+    {
+        return Employee::query()
+            ->select(['id', 'employee_code', 'display_name'])
+            ->where(function ($q) use ($user) {
+                $q->whereNull('user_id');
+                if ($user) {
+                    $q->orWhere('user_id', $user->id);
+                }
+            })
+            ->orderBy('display_name')
+            ->get();
     }
 }

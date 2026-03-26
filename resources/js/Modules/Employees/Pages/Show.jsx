@@ -162,9 +162,19 @@ export default function Show({ employee, documentTypeOptions }) {
                             <Info
                                 label="Linked User / Access"
                                 value={
-                                    employee.user
-                                        ? `${employee.user.name} (${employee.user.email})`
-                                        : '—'
+                                    employee.user ? (
+                                        <Link
+                                            href={route('users.show', employee.user.id)}
+                                            className="font-medium text-indigo-600 hover:text-indigo-800"
+                                        >
+                                            {employee.user.name}{' '}
+                                            <span className="font-normal text-gray-500">
+                                                ({employee.user.email})
+                                            </span>
+                                        </Link>
+                                    ) : (
+                                        '—'
+                                    )
                                 }
                                 className="sm:col-span-2 xl:col-span-2"
                             />

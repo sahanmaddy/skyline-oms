@@ -155,7 +155,7 @@ export default function Index({ employees, filters, statusOptions }) {
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
                                         <div className="text-xs text-gray-500">
-                                            {e.email || '—'}
+                                            {e.email ? `E-mail: ${e.email}` : 'E-mail: —'}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             {renderPhoneList(e.phone_numbers, 10)}
@@ -212,12 +212,15 @@ export default function Index({ employees, filters, statusOptions }) {
 
                                         <div className="mt-2 text-xs text-gray-500">
                                             {e.user ? (
-                                                <>
-                                                    <span className="font-medium text-gray-700">{e.user.name}</span>{' '}
-                                                    <span className="text-gray-400">
+                                                <Link
+                                                    href={route('users.show', e.user.id)}
+                                                    className="font-medium text-indigo-600 hover:text-indigo-800"
+                                                >
+                                                    {e.user.name}{' '}
+                                                    <span className="font-normal text-gray-500">
                                                         ({e.user.email})
                                                     </span>
-                                                </>
+                                                </Link>
                                             ) : (
                                                 <span className="text-gray-400">Not linked</span>
                                             )}
