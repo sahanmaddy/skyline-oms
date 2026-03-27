@@ -20,9 +20,9 @@ class CustomerUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'display_name' => ['required', 'string', 'max:200'],
             'customer_name' => ['required', 'string', 'max:200'],
             'company_name' => ['nullable', 'string', 'max:200'],
-            'contact_person' => ['nullable', 'string', 'max:150'],
             'nic' => ['nullable', 'string', 'max:50'],
             'vat_tax_number' => ['nullable', 'string', 'max:100'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -42,5 +42,48 @@ class CustomerUpdateRequest extends FormRequest
             'phone_numbers.*.is_primary' => ['boolean'],
         ];
     }
-}
 
+    protected function prepareForValidation(): void
+    {
+        $displayName = trim((string) $this->input('display_name', ''));
+        $customerName = trim((string) $this->input('customer_name', ''));
+
+        if ($displayName === '' && $customerName !== '') {
+            $this->merge([
+                'display_name' => $customerName,
+            ]);
+        }
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            if (! Customer::query()->where('customer_code', Customer::CASH_CUSTOMER_CODE)->exists()) {
+                return;
+            }
+
+            /** @var Customer|null $customer */
+            $customer = $this->route('customer');
+            if (! $customer || $customer->isSystemCashCustomer()) {
+                return;
+            }
+
+            $displayName = trim((string) $this->input('display_name'));
+            $customerName = trim((string) $this->input('customer_name'));
+
+            if (strcasecmp($displayName, Customer::CASH_CUSTOMER_DISPLAY_NAME) === 0) {
+                $validator->errors()->add(
+                    'display_name',
+                    'This display name is reserved for the system Cash Customer.',
+                );
+            }
+
+            if (strcasecmp($customerName, Customer::CASH_CUSTOMER_NAME) === 0) {
+                $validator->errors()->add(
+                    'customer_name',
+                    'This customer name is reserved for the system Cash Customer.',
+                );
+            }
+        });
+    }
+}

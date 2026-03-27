@@ -5,9 +5,9 @@ import { Head, Link, useForm } from '@inertiajs/react';
 export default function Edit({ customer, statusOptions }) {
     const { data, setData, put, processing, errors } = useForm({
         customer_code: customer.customer_code || '',
+        display_name: customer.display_name || customer.customer_name || '',
         customer_name: customer.customer_name || '',
         company_name: customer.company_name || '',
-        contact_person: customer.contact_person || '',
         nic: customer.nic || '',
         vat_tax_number: customer.vat_tax_number || '',
         email: customer.email || '',

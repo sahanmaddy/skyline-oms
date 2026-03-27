@@ -12,9 +12,13 @@ class UpdateCustomerAction
 
     public function execute(Customer $customer, array $customerData, array $phoneNumbers = []): Customer
     {
+        if ($customer->isSystemCashCustomer()) {
+            abort(403);
+        }
+
         return DB::transaction(function () use ($customer, $customerData, $phoneNumbers) {
             unset($customerData['customer_code']);
-            $customerData['contact_person'] = $this->normalizeContactPerson($customerData);
+            $customerData['display_name'] = $this->normalizeDisplayName($customerData);
 
             $customer->update($customerData);
             $this->syncPhoneNumbers($customer, $phoneNumbers);
@@ -52,20 +56,11 @@ class UpdateCustomerAction
         $customer->phoneNumbers()->createMany($clean->all());
     }
 
-    private function normalizeContactPerson(array $customerData): ?string
+    private function normalizeDisplayName(array $customerData): string
     {
+        $displayName = trim((string) ($customerData['display_name'] ?? ''));
         $customerName = trim((string) ($customerData['customer_name'] ?? ''));
-        $contactPerson = trim((string) ($customerData['contact_person'] ?? ''));
 
-        if ($contactPerson === '') {
-            return null;
-        }
-
-        if ($customerName !== '' && strcasecmp($contactPerson, $customerName) === 0) {
-            return null;
-        }
-
-        return $contactPerson;
+        return $displayName !== '' ? $displayName : $customerName;
     }
 }
-

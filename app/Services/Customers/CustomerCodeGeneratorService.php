@@ -16,7 +16,11 @@ class CustomerCodeGeneratorService
 
         $next = ((int) $max) + 1;
 
+        // Reserve C-0 for the system Cash Customer; normal codes start at C-1.
+        if ($next < 1) {
+            $next = 1;
+        }
+
         return 'C-'.$next;
     }
 }
-

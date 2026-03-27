@@ -48,10 +48,6 @@ export default function CustomerForm({
     onSubmit,
 }) {
     const phoneRows = data.phone_numbers || [];
-    const normalizedCustomerName = (data.customer_name || '').trim().toLowerCase();
-    const normalizedContactPerson = (data.contact_person || '').trim().toLowerCase();
-    const showContactPersonField =
-        normalizedContactPerson !== '' && normalizedContactPerson !== normalizedCustomerName;
 
     const addPhone = () => {
         setData('phone_numbers', [
@@ -128,9 +124,31 @@ export default function CustomerForm({
                             id="customer_name"
                             className="mt-1 block w-full"
                             value={data.customer_name || ''}
-                            onChange={(e) => setData('customer_name', e.target.value)}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setData('customer_name', value);
+                                if (!(data.display_name || '').trim()) {
+                                    setData('display_name', value);
+                                }
+                            }}
                         />
                         <InputError className="mt-2" message={errors.customer_name} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="display_name" value="Display Name" />
+                        <TextInput
+                            id="display_name"
+                            className="mt-1 block w-full"
+                            value={data.display_name || ''}
+                            onChange={(e) => setData('display_name', e.target.value)}
+                            onBlur={() => {
+                                if (!(data.display_name || '').trim()) {
+                                    setData('display_name', data.customer_name || '');
+                                }
+                            }}
+                        />
+                        <InputError className="mt-2" message={errors.display_name} />
                     </div>
 
                     <div>
@@ -176,23 +194,6 @@ export default function CustomerForm({
                 </p>
 
                 <div className="mt-5">
-                    <InputLabel htmlFor="contact_person" value="Contact Person" />
-                    <TextInput
-                        id="contact_person"
-                        className="mt-1 block w-full"
-                        value={data.contact_person || ''}
-                        placeholder="Leave empty if same as customer name"
-                        onChange={(e) => setData('contact_person', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.contact_person} />
-                    {!showContactPersonField && data.contact_person ? (
-                        <div className="mt-2 text-xs text-gray-500">
-                            Contact person matches customer name, so it will not be saved separately.
-                        </div>
-                    ) : null}
-                </div>
-
-                <div className="mt-4">
                     <InputLabel htmlFor="email" value="Email" />
                     <TextInput
                         id="email"

@@ -11,11 +11,18 @@ class Customer extends Model
 {
     use SoftDeletes;
 
+    /** System walk-in / cash sales customer (not editable via Customers module). */
+    public const CASH_CUSTOMER_CODE = 'C-0';
+
+    public const CASH_CUSTOMER_DISPLAY_NAME = 'Cash Customer';
+
+    public const CASH_CUSTOMER_NAME = 'Walk-in Customer';
+
     protected $fillable = [
         'customer_code',
+        'display_name',
         'customer_name',
         'company_name',
-        'contact_person',
         'nic',
         'vat_tax_number',
         'email',
@@ -50,5 +57,9 @@ class Customer extends Model
     {
         return $query->where('status', CustomerStatus::Active->value);
     }
-}
 
+    public function isSystemCashCustomer(): bool
+    {
+        return $this->customer_code === self::CASH_CUSTOMER_CODE;
+    }
+}

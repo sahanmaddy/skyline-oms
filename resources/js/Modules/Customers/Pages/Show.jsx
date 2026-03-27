@@ -28,9 +28,6 @@ export default function Show({ customer, documentTypeOptions }) {
     const [uploading, setUploading] = useState(false);
     const [uploadErrors, setUploadErrors] = useState({});
     const replaceInputs = useRef({});
-    const showContactPerson =
-        !!customer.contact_person &&
-        customer.contact_person.trim().toLowerCase() !== (customer.customer_name || '').trim().toLowerCase();
 
     const upload = ({ document_type, title, notes, file }) => {
         setUploading(true);
@@ -66,9 +63,11 @@ export default function Show({ customer, documentTypeOptions }) {
         });
     };
 
+    const primaryDisplayName = customer.display_name || customer.customer_name || '—';
+
     return (
         <AuthenticatedLayout header={<span className="text-base font-semibold">Customer</span>}>
-            <Head title={`Customer - ${customer.customer_name}`} />
+            <Head title={`Customer - ${primaryDisplayName}`} />
 
             <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -88,6 +87,7 @@ export default function Show({ customer, documentTypeOptions }) {
                         <h3 className="text-sm font-semibold text-gray-900">Customer Information</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                             <Info label="Customer Code" value={customer.customer_code || '—'} />
+                            <Info label="Display Name" value={primaryDisplayName} />
                             <Info label="Customer Name" value={customer.customer_name || '—'} />
                             <Info label="Company Name" value={customer.company_name || '—'} />
                             <Info label="NIC" value={customer.nic || '—'} />
@@ -103,16 +103,6 @@ export default function Show({ customer, documentTypeOptions }) {
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4">
                         <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
-                        {showContactPerson ? (
-                            <div className="mt-4 rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Contact Person
-                                </div>
-                                <div className="mt-1 text-sm font-medium text-gray-900">
-                                    {customer.contact_person}
-                                </div>
-                            </div>
-                        ) : null}
                         <div className="mt-4 rounded-md border border-gray-200 bg-white p-3">
                             <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Phone Numbers

@@ -26,6 +26,10 @@ function renderPhoneList(phoneNumbers, max = 3) {
     );
 }
 
+function isSystemCashCustomer(c) {
+    return c?.customer_code === 'C-0';
+}
+
 function formatCreditLimit(value) {
     if (value === null || value === undefined || value === '') {
         return '—';
@@ -128,23 +132,27 @@ export default function Index({ customers, filters, statusOptions }) {
                             {customers.data.map((c) => (
                                 <tr key={c.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3">
-                                        <div className="text-sm font-semibold text-gray-900">
-                                            {c.customer_name}
+                                        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-900">
+                                            <span>{`${c.customer_code} - ${c.display_name || c.customer_name || '—'}`}</span>
+                                            {isSystemCashCustomer(c) ? (
+                                                <>
+                                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                                        System
+                                                    </span>
+                                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                                        Walk-in
+                                                    </span>
+                                                </>
+                                            ) : null}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            <span className="font-medium text-gray-700">{c.customer_code}</span>
+                                            {c.customer_name || '—'}
                                             {c.company_name &&
-                                            c.company_name.trim() !== c.customer_name.trim()
-                                                ? ` • ${c.company_name}`
+                                            c.company_name.trim().toLowerCase() !==
+                                                (c.customer_name || '').trim().toLowerCase()
+                                                ? ` (${c.company_name})`
                                                 : ''}
                                         </div>
-                                        {c.contact_person &&
-                                        c.contact_person.trim().toLowerCase() !==
-                                            (c.customer_name || '').trim().toLowerCase() ? (
-                                            <div className="mt-1 text-xs text-gray-500">
-                                                Contact: {c.contact_person}
-                                            </div>
-                                        ) : null}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
                                         <div className="text-xs text-gray-500">
@@ -192,20 +200,26 @@ export default function Index({ customers, filters, statusOptions }) {
                                             {c.status === 'active' ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm">
-                                        <Link
-                                            href={route('customers.show', c.id)}
-                                            className="font-medium text-indigo-600 hover:text-indigo-700"
-                                        >
-                                            View
-                                        </Link>
-                                        <span className="mx-2 text-gray-300">|</span>
-                                        <Link
-                                            href={route('customers.edit', c.id)}
-                                            className="font-medium text-gray-700 hover:text-gray-900"
-                                        >
-                                            Edit
-                                        </Link>
+                                    <td className="px-4 py-3 text-right text-sm text-gray-500">
+                                        {isSystemCashCustomer(c) ? (
+                                            <span className="text-xs">—</span>
+                                        ) : (
+                                            <>
+                                                <Link
+                                                    href={route('customers.show', c.id)}
+                                                    className="font-medium text-indigo-600 hover:text-indigo-700"
+                                                >
+                                                    View
+                                                </Link>
+                                                <span className="mx-2 text-gray-300">|</span>
+                                                <Link
+                                                    href={route('customers.edit', c.id)}
+                                                    className="font-medium text-gray-700 hover:text-gray-900"
+                                                >
+                                                    Edit
+                                                </Link>
+                                            </>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

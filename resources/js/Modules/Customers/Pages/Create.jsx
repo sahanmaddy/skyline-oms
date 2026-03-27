@@ -5,9 +5,9 @@ import { Head, Link, useForm } from '@inertiajs/react';
 export default function Create({ statusOptions, nextCustomerCode }) {
     const { data, setData, post, processing, errors } = useForm({
         customer_code: nextCustomerCode || '',
+        display_name: '',
         customer_name: '',
         company_name: '',
-        contact_person: '',
         nic: '',
         vat_tax_number: '',
         email: '',

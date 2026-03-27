@@ -18,7 +18,7 @@ class CreateCustomerAction
     {
         return DB::transaction(function () use ($customerData, $phoneNumbers) {
             $customerData['customer_code'] = $this->codeGenerator->nextCode();
-            $customerData['contact_person'] = $this->normalizeContactPerson($customerData);
+            $customerData['display_name'] = $this->normalizeDisplayName($customerData);
 
             /** @var Customer $customer */
             $customer = Customer::create($customerData);
@@ -56,20 +56,11 @@ class CreateCustomerAction
         $customer->phoneNumbers()->createMany($clean->all());
     }
 
-    private function normalizeContactPerson(array $customerData): ?string
+    private function normalizeDisplayName(array $customerData): string
     {
+        $displayName = trim((string) ($customerData['display_name'] ?? ''));
         $customerName = trim((string) ($customerData['customer_name'] ?? ''));
-        $contactPerson = trim((string) ($customerData['contact_person'] ?? ''));
 
-        if ($contactPerson === '') {
-            return null;
-        }
-
-        if ($customerName !== '' && strcasecmp($contactPerson, $customerName) === 0) {
-            return null;
-        }
-
-        return $contactPerson;
+        return $displayName !== '' ? $displayName : $customerName;
     }
 }
-

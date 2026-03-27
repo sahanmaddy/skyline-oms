@@ -9,11 +9,11 @@ use App\Enums\CustomerStatus;
 use App\Http\Requests\CustomerStoreRequest;
 use App\Http\Requests\CustomerUpdateRequest;
 use App\Models\Customer;
+use App\Services\Customers\CustomerCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\Customers\CustomerCodeGeneratorService;
 
 class CustomerController extends Controller
 {
@@ -30,18 +30,29 @@ class CustomerController extends Controller
             $phoneSearch = preg_replace('/\D+/', '', $search) ?? '';
             $phoneSearch = ltrim($phoneSearch, '0');
             $phoneTerm = $phoneSearch !== '' ? $phoneSearch : $search;
+            $searchFold = preg_replace('/[\s\-]+/u', '', mb_strtolower($search));
 
-            $query->where(function ($q) use ($search, $phoneTerm) {
+            $query->where(function ($q) use ($search, $phoneTerm, $searchFold) {
                 $q->where('customer_code', 'like', "%{$search}%")
+                    ->orWhere('display_name', 'like', "%{$search}%")
                     ->orWhere('customer_name', 'like', "%{$search}%")
                     ->orWhere('company_name', 'like', "%{$search}%")
                     ->orWhere('contact_person', 'like', "%{$search}%")
                     ->orWhere('nic', 'like', "%{$search}%")
                     ->orWhere('vat_tax_number', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
                     ->orWhereHas('phoneNumbers', function ($p) use ($phoneTerm) {
                         $p->where('phone_number', 'like', "%{$phoneTerm}%");
                     });
+
+                if ($searchFold !== '') {
+                    $q->orWhereRaw(
+                        "REPLACE(REPLACE(LOWER(CONCAT(COALESCE(display_name,''), COALESCE(customer_name,''), COALESCE(notes,''))), ' ', ''), '-', '') LIKE ?",
+                        ['%'.$searchFold.'%']
+                    );
+                }
             });
         }
 
@@ -52,7 +63,7 @@ class CustomerController extends Controller
         }
 
         return Inertia::render('Modules/Customers/Pages/Index', [
-            'customers' => $query->orderBy('customer_name')->paginate(15)->withQueryString(),
+            'customers' => $query->orderBy('display_name')->paginate(15)->withQueryString(),
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),
@@ -119,4 +130,3 @@ class CustomerController extends Controller
         return redirect()->route('customers.index')->with('success', 'Customer deleted.');
     }
 }
-
