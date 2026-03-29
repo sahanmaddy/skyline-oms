@@ -1,5 +1,8 @@
+import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 function formatLinkedEmployee(employee) {
@@ -16,58 +19,59 @@ function formatLinkedEmployee(employee) {
 
 export default function Index({ users, filters, statusOptions }) {
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Users</span>}>
-            <Head title="Users" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Users" />}>
+            <Head title="Users · Settings" />
 
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex-1 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end max-w-[820px]">
-                        <div>
-                            <label className="text-xs font-medium text-gray-600">Search</label>
-                            <input
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                value={filters?.q || ''}
-                                onChange={(e) =>
-                                    router.get(
-                                        route('users.index'),
-                                        { ...filters, q: e.target.value },
-                                        { preserveState: true, replace: true },
-                                    )
-                                }
-                                placeholder="Search by name or email…"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-medium text-gray-600">Status</label>
-                            <select
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                value={filters?.status || ''}
-                                onChange={(e) =>
-                                    router.get(
-                                        route('users.index'),
-                                        { ...filters, status: e.target.value },
-                                        { preserveState: true, replace: true },
-                                    )
-                                }
-                            >
-                                <option value="">All</option>
-                                {statusOptions?.map((s) => (
-                                    <option key={s} value={s}>
-                                        {s === 'active' ? 'Active' : 'Inactive'}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-end shrink-0">
-                        <Link href={route('users.create')}>
-                            <PrimaryButton type="button">New User</PrimaryButton>
+            <SettingsModuleLayout breadcrumbs={[{ label: 'Users' }]}>
+                <ModuleListToolbar
+                    filters={
+                        <>
+                            <div>
+                                <label className="text-xs font-medium text-gray-600">Search</label>
+                                <input
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    value={filters?.q || ''}
+                                    onChange={(e) =>
+                                        router.get(
+                                            route('settings.users.index'),
+                                            { ...filters, q: e.target.value },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                    placeholder="Search by name or email…"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-gray-600">Status</label>
+                                <select
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    value={filters?.status || ''}
+                                    onChange={(e) =>
+                                        router.get(
+                                            route('settings.users.index'),
+                                            { ...filters, status: e.target.value },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                >
+                                    <option value="">All</option>
+                                    {statusOptions?.map((s) => (
+                                        <option key={s} value={s}>
+                                            {s === 'active' ? 'Active' : 'Inactive'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
+                    }
+                    actions={
+                        <Link href={route('settings.users.create')}>
+                            <PrimaryButton type="button">New user</PrimaryButton>
                         </Link>
-                    </div>
-                </div>
+                    }
+                />
 
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -110,7 +114,7 @@ export default function Index({ users, filters, statusOptions }) {
                                         <td className="px-4 py-3 text-sm">
                                             {linkedLabel ? (
                                                 <Link
-                                                    href={route('employees.show', u.employee.id)}
+                                                    href={route('hr.employees.show', u.employee.id)}
                                                     className="font-medium text-indigo-600 hover:text-indigo-800"
                                                 >
                                                     {linkedLabel}
@@ -133,14 +137,14 @@ export default function Index({ users, filters, statusOptions }) {
                                         </td>
                                         <td className="px-4 py-3 text-right text-sm">
                                             <Link
-                                                href={route('users.show', u.id)}
+                                                href={route('settings.users.show', u.id)}
                                                 className="font-medium text-indigo-600 hover:text-indigo-700"
                                             >
                                                 View
                                             </Link>
                                             <span className="mx-2 text-gray-300">|</span>
                                             <Link
-                                                href={route('users.edit', u.id)}
+                                                href={route('settings.users.edit', u.id)}
                                                 className="font-medium text-gray-700 hover:text-gray-900"
                                             >
                                                 Edit
@@ -185,7 +189,7 @@ export default function Index({ users, filters, statusOptions }) {
                         ))}
                     </div>
                 )}
-            </div>
+            </SettingsModuleLayout>
         </AuthenticatedLayout>
     );
 }

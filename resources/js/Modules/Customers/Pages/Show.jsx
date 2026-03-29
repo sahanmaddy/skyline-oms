@@ -1,6 +1,9 @@
 import Dropdown from '@/Components/Dropdown';
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import DocumentDropzone from '@/Modules/Customers/Components/DocumentDropzone';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -34,7 +37,7 @@ export default function Show({ customer, documentTypeOptions }) {
         setUploadErrors({});
 
         router.post(
-            route('customers.documents.store', customer.id),
+            route('sales.customers.documents.store', customer.id),
             { document_type, title, notes, file },
             {
                 forceFormData: true,
@@ -47,7 +50,7 @@ export default function Show({ customer, documentTypeOptions }) {
 
     const replace = (document, file) => {
         router.post(
-            route('customers.documents.replace', [customer.id, document.id]),
+            route('sales.customers.documents.replace', [customer.id, document.id]),
             { file },
             {
                 forceFormData: true,
@@ -58,7 +61,7 @@ export default function Show({ customer, documentTypeOptions }) {
 
     const deleteDoc = (document) => {
         if (!confirm('Delete this document?')) return;
-        router.delete(route('customers.documents.destroy', [customer.id, document.id]), {
+        router.delete(route('sales.customers.documents.destroy', [customer.id, document.id]), {
             preserveScroll: true,
         });
     };
@@ -66,21 +69,27 @@ export default function Show({ customer, documentTypeOptions }) {
     const primaryDisplayName = customer.display_name || customer.customer_name || '—';
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Customer</span>}>
-            <Head title={`Customer - ${primaryDisplayName}`} />
+        <AuthenticatedLayout
+            header={<ModuleStickyTitle module="Sales" section={primaryDisplayName} />}
+        >
+            <Head title={`${primaryDisplayName} · Sales`} />
 
+            <SalesModuleLayout
+                breadcrumbs={[
+                    { label: 'Customers', href: route('sales.customers.index') },
+                    { label: primaryDisplayName },
+                ]}
+            >
             <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Link
-                        href={route('customers.index')}
-                        className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                    >
-                        ← Back to customers
-                    </Link>
-                    <Link href={route('customers.edit', customer.id)}>
-                        <PrimaryButton type="button">Edit</PrimaryButton>
-                    </Link>
-                </div>
+                <ModuleDetailToolbar
+                    backHref={route('sales.customers.index')}
+                    backLabel="← Back to customers"
+                    actions={
+                        <Link href={route('sales.customers.edit', customer.id)}>
+                            <PrimaryButton type="button">Edit</PrimaryButton>
+                        </Link>
+                    }
+                />
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-8">
@@ -132,6 +141,19 @@ export default function Show({ customer, documentTypeOptions }) {
                     </section>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
+                        <h3 className="text-sm font-semibold text-gray-900">Commercial Information</h3>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <StatusInfo
+                                label="Credit Eligible"
+                                isPositive={!!customer.credit_eligible}
+                                value={customer.credit_eligible ? 'Yes' : 'No'}
+                            />
+                            <Info label="Credit Limit" value={formatCreditLimit(customer.credit_limit)} />
+                            <Info label="Guarantor" value={customer.guarantor || '—'} className="sm:col-span-2" />
+                        </div>
+                    </section>
+
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Info
@@ -144,23 +166,17 @@ export default function Show({ customer, documentTypeOptions }) {
                                 className="sm:col-span-2"
                             />
                             <Info label="City/District" value={customer.city || '—'} />
-                            <Info label="Country" value={customer.country || '—'} className="sm:col-span-2" />
-                        </div>
-                    </section>
-
-                    <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
-                        <h3 className="text-sm font-semibold text-gray-900">Commercial Information</h3>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <StatusInfo
-                                label="Credit Eligible"
-                                isPositive={!!customer.credit_eligible}
-                                value={customer.credit_eligible ? 'Yes' : 'No'}
-                            />
-                            <Info label="Credit Limit" value={formatCreditLimit(customer.credit_limit)} />
-                            <Info label="Guarantor" value={customer.guarantor || '—'} className="sm:col-span-2" />
+                            <Info label="Country" value={customer.country || '—'} />
                         </div>
                     </section>
                 </div>
+
+                {customer.notes?.trim() ? (
+                    <div className="rounded-lg border border-gray-200 bg-white p-4">
+                        <h3 className="text-sm font-semibold text-gray-900">Notes</h3>
+                        <div className="mt-2 text-sm text-gray-700">{customer.notes}</div>
+                    </div>
+                ) : null}
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <div className="lg:col-span-1">
@@ -237,7 +253,7 @@ export default function Show({ customer, documentTypeOptions }) {
                                                 <div className="relative z-50 flex items-center justify-end gap-2">
                                                     <a
                                                         className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
-                                                        href={route('customers.documents.view', [
+                                                        href={route('sales.customers.documents.view', [
                                                             customer.id,
                                                             d.id,
                                                         ])}
@@ -267,7 +283,7 @@ export default function Show({ customer, documentTypeOptions }) {
                                                         <Dropdown.Content align="right" width="48">
                                                             <a
                                                                 className="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                                                href={route('customers.documents.download', [
+                                                                href={route('sales.customers.documents.download', [
                                                                     customer.id,
                                                                     d.id,
                                                                 ])}
@@ -329,12 +345,8 @@ export default function Show({ customer, documentTypeOptions }) {
                         </div>
                     </div>
                 </div>
-
-                <section className="rounded-lg border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900">Notes</h3>
-                    <div className="mt-2 text-sm text-gray-700">{customer.notes || '—'}</div>
-                </section>
             </div>
+            </SalesModuleLayout>
         </AuthenticatedLayout>
     );
 }

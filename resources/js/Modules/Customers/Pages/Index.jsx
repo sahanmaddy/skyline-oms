@@ -1,5 +1,8 @@
+import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 function renderPhoneList(phoneNumbers, max = 3) {
@@ -53,58 +56,65 @@ export default function Index({ customers, filters, statusOptions }) {
     };
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Customers</span>}>
-            <Head title="Customers" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Sales" section="Customers" />}>
+            <Head title="Customers · Sales" />
 
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="grid max-w-[820px] flex-1 grid-cols-1 gap-3 md:grid-cols-2 md:items-end">
-                        <div>
-                            <label className="text-xs font-medium text-gray-600">Search</label>
-                            <input
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                value={filters?.q || ''}
-                                onChange={(e) =>
-                                    router.get(
-                                        route('customers.index'),
-                                        { ...filters, q: e.target.value },
-                                        { preserveState: true, replace: true },
-                                    )
-                                }
-                                placeholder="Search by code, name, company, person, email, or phone…"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-medium text-gray-600">Status</label>
-                            <select
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                value={filters?.status || ''}
-                                onChange={(e) =>
-                                    router.get(
-                                        route('customers.index'),
-                                        { ...filters, status: e.target.value },
-                                        { preserveState: true, replace: true },
-                                    )
-                                }
-                            >
-                                <option value="">All</option>
-                                {statusOptions?.map((s) => (
-                                    <option key={s} value={s}>
-                                        {formatStatusLabel(s)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex shrink-0 items-center justify-end">
-                        <Link href={route('customers.create')}>
-                            <PrimaryButton type="button">New Customer</PrimaryButton>
+            <SalesModuleLayout breadcrumbs={[{ label: 'Customers' }]}>
+                <ModuleListToolbar
+                    filters={
+                        <>
+                            <div>
+                                <label htmlFor="cust-search" className="text-xs font-medium text-gray-600">
+                                    Search
+                                </label>
+                                <input
+                                    id="cust-search"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    value={filters?.q || ''}
+                                    onChange={(e) =>
+                                        router.get(
+                                            route('sales.customers.index'),
+                                            { ...filters, q: e.target.value },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                    placeholder="Search by code, name, company, email, or phone…"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="cust-status" className="text-xs font-medium text-gray-600">
+                                    Status
+                                </label>
+                                <select
+                                    id="cust-status"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    value={filters?.status || ''}
+                                    onChange={(e) =>
+                                        router.get(
+                                            route('sales.customers.index'),
+                                            { ...filters, status: e.target.value },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                >
+                                    <option value="">All</option>
+                                    {statusOptions?.map((s) => (
+                                        <option key={s} value={s}>
+                                            {formatStatusLabel(s)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
+                    }
+                    actions={
+                        <Link href={route('sales.customers.create')}>
+                            <PrimaryButton type="button">New customer</PrimaryButton>
                         </Link>
-                    </div>
-                </div>
+                    }
+                />
 
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -130,20 +140,17 @@ export default function Index({ customers, filters, statusOptions }) {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {customers.data.map((c) => (
-                                <tr key={c.id} className="hover:bg-gray-50">
+                                <tr
+                                    key={c.id}
+                                    className={
+                                        isSystemCashCustomer(c)
+                                            ? 'bg-slate-50 hover:bg-slate-100/90'
+                                            : 'hover:bg-gray-50'
+                                    }
+                                >
                                     <td className="px-4 py-3">
-                                        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-900">
-                                            <span>{`${c.customer_code} - ${c.display_name || c.customer_name || '—'}`}</span>
-                                            {isSystemCashCustomer(c) ? (
-                                                <>
-                                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                                                        System
-                                                    </span>
-                                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                                                        Walk-in
-                                                    </span>
-                                                </>
-                                            ) : null}
+                                        <div className="text-sm font-semibold text-gray-900">
+                                            {`${c.customer_code} - ${c.display_name || c.customer_name || '—'}`}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             {c.customer_name || '—'}
@@ -155,16 +162,28 @@ export default function Index({ customers, filters, statusOptions }) {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
-                                        <div className="text-xs text-gray-500">
-                                            {c.email ? `E-mail: ${c.email}` : 'E-mail: —'}
-                                        </div>
-                                        <div className="mt-1 text-xs text-gray-500">
-                                            {renderPhoneList(c.phone_numbers, 10)}
-                                        </div>
+                                        {isSystemCashCustomer(c) ? (
+                                            <span className="text-xs text-gray-500">—</span>
+                                        ) : (
+                                            <>
+                                                <div className="text-xs text-gray-500">
+                                                    {c.email ? `E-mail: ${c.email}` : 'E-mail: —'}
+                                                </div>
+                                                <div className="mt-1 text-xs text-gray-500">
+                                                    {renderPhoneList(c.phone_numbers, 10)}
+                                                </div>
+                                            </>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="text-sm text-gray-900">{c.city || '—'}</div>
-                                        <div className="mt-1 text-xs text-gray-500">{c.country || '—'}</div>
+                                        {isSystemCashCustomer(c) ? (
+                                            <span className="text-xs text-gray-500">—</span>
+                                        ) : (
+                                            <>
+                                                <div className="text-sm text-gray-900">{c.city || '—'}</div>
+                                                <div className="mt-1 text-xs text-gray-500">{c.country || '—'}</div>
+                                            </>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex flex-wrap items-center gap-2">
@@ -179,9 +198,11 @@ export default function Index({ customers, filters, statusOptions }) {
                                                 {c.credit_eligible ? 'Credit Eligible' : 'No Credit'}
                                             </span>
                                         </div>
-                                        <div className="mt-2 text-xs text-gray-500">
-                                            Limit: {formatCreditLimit(c.credit_limit)}
-                                        </div>
+                                        {!isSystemCashCustomer(c) ? (
+                                            <div className="mt-2 text-xs text-gray-500">
+                                                Limit: {formatCreditLimit(c.credit_limit)}
+                                            </div>
+                                        ) : null}
                                         {c.guarantor ? (
                                             <div className="mt-1 text-xs text-gray-500">
                                                 Guarantor: {c.guarantor}
@@ -206,14 +227,14 @@ export default function Index({ customers, filters, statusOptions }) {
                                         ) : (
                                             <>
                                                 <Link
-                                                    href={route('customers.show', c.id)}
+                                                    href={route('sales.customers.show', c.id)}
                                                     className="font-medium text-indigo-600 hover:text-indigo-700"
                                                 >
                                                     View
                                                 </Link>
                                                 <span className="mx-2 text-gray-300">|</span>
                                                 <Link
-                                                    href={route('customers.edit', c.id)}
+                                                    href={route('sales.customers.edit', c.id)}
                                                     className="font-medium text-gray-700 hover:text-gray-900"
                                                 >
                                                     Edit
@@ -259,7 +280,7 @@ export default function Index({ customers, filters, statusOptions }) {
                         ))}
                     </div>
                 )}
-            </div>
+            </SalesModuleLayout>
         </AuthenticatedLayout>
     );
 }

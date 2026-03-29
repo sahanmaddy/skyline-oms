@@ -1,6 +1,9 @@
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function Create({ statusOptions, nextCustomerCode }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -24,19 +27,22 @@ export default function Create({ statusOptions, nextCustomerCode }) {
     });
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">New Customer</span>}>
-            <Head title="New Customer" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Sales" section="Create customer" />}>
+            <Head title="Create customer · Sales" />
 
-            <div className="mb-4">
-                <Link
-                    href={route('customers.index')}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                    ← Back to customers
-                </Link>
-            </div>
+            <SalesModuleLayout
+                breadcrumbs={[
+                    { label: 'Customers', href: route('sales.customers.index') },
+                    { label: 'Create customer' },
+                ]}
+            >
+            <div className="flex flex-col gap-4">
+                <ModuleDetailToolbar
+                    backHref={route('sales.customers.index')}
+                    backLabel="← Back to customers"
+                />
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <CustomerForm
                     data={data}
                     setData={setData}
@@ -44,9 +50,11 @@ export default function Create({ statusOptions, nextCustomerCode }) {
                     processing={processing}
                     statusOptions={statusOptions}
                     submitLabel="Create"
-                    onSubmit={() => post(route('customers.store'), { preserveScroll: true })}
+                    onSubmit={() => post(route('sales.customers.store'), { preserveScroll: true })}
                 />
             </div>
+            </div>
+            </SalesModuleLayout>
         </AuthenticatedLayout>
     );
 }

@@ -1,5 +1,8 @@
+import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 function formatJoinedDate(value) {
@@ -69,58 +72,65 @@ export default function Index({ employees, filters, statusOptions }) {
     };
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Employees</span>}>
-            <Head title="Employees" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Human Resource" section="Employees" />}>
+            <Head title="Employees · Human Resource" />
 
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="flex-1 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-end max-w-[820px]">
-                        <div>
-                            <label className="text-xs font-medium text-gray-600">Search</label>
-                            <input
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                value={filters?.q || ''}
-                                onChange={(e) =>
-                                    router.get(
-                                        route('employees.index'),
-                                        { ...filters, q: e.target.value },
-                                        { preserveState: true, replace: true },
-                                    )
-                                }
-                                placeholder="Search by code, name, email, or phone…"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-medium text-gray-600">Status</label>
-                            <select
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                value={filters?.status || ''}
-                                onChange={(e) =>
-                                    router.get(
-                                        route('employees.index'),
-                                        { ...filters, status: e.target.value },
-                                        { preserveState: true, replace: true },
-                                    )
-                                }
-                            >
-                                <option value="">All</option>
-                                {statusOptions?.map((s) => (
-                                    <option key={s} value={s}>
-                                        {formatStatusLabel(s)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-end shrink-0">
-                        <Link href={route('employees.create')}>
-                            <PrimaryButton type="button">New Employee</PrimaryButton>
+            <HrModuleLayout breadcrumbs={[{ label: 'Employees' }]}>
+                <ModuleListToolbar
+                    filters={
+                        <>
+                            <div>
+                                <label htmlFor="emp-search" className="text-xs font-medium text-gray-600">
+                                    Search
+                                </label>
+                                <input
+                                    id="emp-search"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    value={filters?.q || ''}
+                                    onChange={(e) =>
+                                        router.get(
+                                            route('hr.employees.index'),
+                                            { ...filters, q: e.target.value },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                    placeholder="Search by code, name, email, or phone…"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="emp-status" className="text-xs font-medium text-gray-600">
+                                    Status
+                                </label>
+                                <select
+                                    id="emp-status"
+                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    value={filters?.status || ''}
+                                    onChange={(e) =>
+                                        router.get(
+                                            route('hr.employees.index'),
+                                            { ...filters, status: e.target.value },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                >
+                                    <option value="">All</option>
+                                    {statusOptions?.map((s) => (
+                                        <option key={s} value={s}>
+                                            {formatStatusLabel(s)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
+                    }
+                    actions={
+                        <Link href={route('hr.employees.create')}>
+                            <PrimaryButton type="button">New employee</PrimaryButton>
                         </Link>
-                    </div>
-                </div>
+                    }
+                />
 
-                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -213,7 +223,7 @@ export default function Index({ employees, filters, statusOptions }) {
                                         <div className="mt-2 text-xs text-gray-500">
                                             {e.user ? (
                                                 <Link
-                                                    href={route('users.show', e.user.id)}
+                                                    href={route('settings.users.show', e.user.id)}
                                                     className="font-medium text-indigo-600 hover:text-indigo-800"
                                                 >
                                                     {e.user.name}{' '}
@@ -228,14 +238,14 @@ export default function Index({ employees, filters, statusOptions }) {
                                     </td>
                                     <td className="px-4 py-3 text-right text-sm">
                                         <Link
-                                            href={route('employees.show', e.id)}
+                                            href={route('hr.employees.show', e.id)}
                                             className="font-medium text-indigo-600 hover:text-indigo-700"
                                         >
                                             View
                                         </Link>
                                         <span className="mx-2 text-gray-300">|</span>
                                         <Link
-                                            href={route('employees.edit', e.id)}
+                                            href={route('hr.employees.edit', e.id)}
                                             className="font-medium text-gray-700 hover:text-gray-900"
                                         >
                                             Edit
@@ -275,14 +285,14 @@ export default function Index({ employees, filters, statusOptions }) {
                                     (l.active
                                         ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
                                         : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50') +
-                                    (l.url ? '' : ' opacity-50 pointer-events-none')
+                                    (l.url ? '' : ' pointer-events-none opacity-50')
                                 }
                                 dangerouslySetInnerHTML={{ __html: l.label }}
                             />
                         ))}
                     </div>
                 )}
-            </div>
+            </HrModuleLayout>
         </AuthenticatedLayout>
     );
 }

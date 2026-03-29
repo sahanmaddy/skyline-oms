@@ -1,6 +1,9 @@
 import Dropdown from '@/Components/Dropdown';
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import DocumentDropzone from '@/Modules/Employees/Components/DocumentDropzone';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -53,7 +56,7 @@ export default function Show({ employee, documentTypeOptions }) {
         setUploadErrors({});
 
         router.post(
-            route('employees.documents.store', employee.id),
+            route('hr.employees.documents.store', employee.id),
             { document_type, title, notes, file },
             {
                 forceFormData: true,
@@ -66,7 +69,7 @@ export default function Show({ employee, documentTypeOptions }) {
 
     const replace = (document, file) => {
         router.post(
-            route('employees.documents.replace', [employee.id, document.id]),
+            route('hr.employees.documents.replace', [employee.id, document.id]),
             { file },
             {
                 forceFormData: true,
@@ -77,30 +80,33 @@ export default function Show({ employee, documentTypeOptions }) {
 
     const deleteDoc = (document) => {
         if (!confirm('Delete this document?')) return;
-        router.delete(route('employees.documents.destroy', [employee.id, document.id]), {
+        router.delete(route('hr.employees.documents.destroy', [employee.id, document.id]), {
             preserveScroll: true,
         });
     };
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Employee</span>}>
-            <Head title={`Employee - ${employee.display_name}`} />
+        <AuthenticatedLayout
+            header={<ModuleStickyTitle module="Human Resource" section={employee.display_name || 'Employee'} />}
+        >
+            <Head title={`${employee.display_name} · Human Resource`} />
 
+            <HrModuleLayout
+                breadcrumbs={[
+                    { label: 'Employees', href: route('hr.employees.index') },
+                    { label: employee.display_name || 'Employee' },
+                ]}
+            >
             <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Link
-                        href={route('employees.index')}
-                        className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                    >
-                        ← Back to employees
-                    </Link>
-
-                    <div className="flex items-center gap-2">
-                        <Link href={route('employees.edit', employee.id)}>
+                <ModuleDetailToolbar
+                    backHref={route('hr.employees.index')}
+                    backLabel="← Back to employees"
+                    actions={
+                        <Link href={route('hr.employees.edit', employee.id)}>
                             <PrimaryButton type="button">Edit</PrimaryButton>
                         </Link>
-                    </div>
-                </div>
+                    }
+                />
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-8">
@@ -114,7 +120,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                     {employee.profile_photo_path ? (
                                         <img
                                             src={route(
-                                                'employees.profilePhoto.view',
+                                                'hr.employees.profilePhoto.view',
                                                 employee.id,
                                             )}
                                             alt="Profile photo"
@@ -164,7 +170,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                 value={
                                     employee.user ? (
                                         <Link
-                                            href={route('users.show', employee.user.id)}
+                                            href={route('settings.users.show', employee.user.id)}
                                             className="font-medium text-indigo-600 hover:text-indigo-800"
                                         >
                                             {employee.user.name}{' '}
@@ -442,7 +448,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                                     <a
                                                         className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
                                                         href={
-                                                            route('employees.documents.view', [
+                                                            route('hr.employees.documents.view', [
                                                                 employee.id,
                                                                 d.id,
                                                             ]) +
@@ -477,7 +483,7 @@ export default function Show({ employee, documentTypeOptions }) {
                                                             <a
                                                                 className="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                                                                 href={
-                                                                    route('employees.documents.download', [
+                                                                    route('hr.employees.documents.download', [
                                                                         employee.id,
                                                                         d.id,
                                                                     ]) +
@@ -544,6 +550,7 @@ export default function Show({ employee, documentTypeOptions }) {
                     </div>
                 </div>
             </div>
+            </HrModuleLayout>
         </AuthenticatedLayout>
     );
 }

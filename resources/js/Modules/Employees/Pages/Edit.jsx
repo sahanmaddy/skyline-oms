@@ -1,7 +1,10 @@
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ employee, statusOptions, users }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -50,19 +53,25 @@ export default function Edit({ employee, statusOptions, users }) {
     });
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Edit Employee</span>}>
-            <Head title="Edit Employee" />
+        <AuthenticatedLayout
+            header={<ModuleStickyTitle module="Human Resource" section={`Edit · ${employee.display_name || 'Employee'}`} />}
+        >
+            <Head title={`Edit ${employee.display_name} · Human Resource`} />
 
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <Link
-                    href={route('employees.show', employee.id)}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                    ← Back to employee
-                </Link>
-            </div>
+            <HrModuleLayout
+                breadcrumbs={[
+                    { label: 'Employees', href: route('hr.employees.index') },
+                    { label: employee.display_name || 'Employee', href: route('hr.employees.show', employee.id) },
+                    { label: 'Edit' },
+                ]}
+            >
+            <div className="flex flex-col gap-4">
+                <ModuleDetailToolbar
+                    backHref={route('hr.employees.show', employee.id)}
+                    backLabel="← Back to employee"
+                />
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <EmployeeForm
                     mode="edit"
                     data={data}
@@ -73,18 +82,20 @@ export default function Edit({ employee, statusOptions, users }) {
                     users={users}
                     profilePhotoUrl={
                         employee.profile_photo_path
-                            ? route('employees.profilePhoto.view', employee.id)
+                            ? route('hr.employees.profilePhoto.view', employee.id)
                             : null
                     }
                     submitLabel="Save"
                     onSubmit={() =>
-                        put(route('employees.update', employee.id), {
+                        put(route('hr.employees.update', employee.id), {
                             forceFormData: true,
                             preserveScroll: true,
                         })
                     }
                 />
             </div>
+            </div>
+            </HrModuleLayout>
         </AuthenticatedLayout>
     );
 }

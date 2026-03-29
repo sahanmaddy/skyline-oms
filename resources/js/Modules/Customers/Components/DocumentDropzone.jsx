@@ -100,7 +100,7 @@ export default function DocumentDropzone({
                             setTitle(e.target.value);
                             setIsTitleCustom(true);
                         }}
-                        placeholder={`${customerCode ?? 'C-X'} - ${documentType}`}
+                        placeholder="e.g. NIC - Front"
                     />
                     <InputError className="mt-2" message={errors?.title} />
                 </div>

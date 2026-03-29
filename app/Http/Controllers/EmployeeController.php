@@ -13,9 +13,9 @@ use App\Models\User;
 use App\Services\Employees\EmployeeCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -84,7 +84,7 @@ class EmployeeController extends Controller
 
         $employee = app(CreateEmployeeAction::class)->execute($validated, $phoneNumbers, $profilePhoto);
 
-        return redirect()->route('employees.show', $employee)->with('success', 'Employee created.');
+        return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee created.');
     }
 
     public function show(Employee $employee): Response
@@ -152,13 +152,13 @@ class EmployeeController extends Controller
 
         app(UpdateEmployeeAction::class)->execute($employee, $validated, $phoneNumbers, $profilePhoto);
 
-        return redirect()->route('employees.show', $employee)->with('success', 'Employee updated.');
+        return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee updated.');
     }
 
     public function destroy(Employee $employee): RedirectResponse
     {
         $employee->delete();
 
-        return redirect()->route('employees.index')->with('success', 'Employee deleted.');
+        return redirect()->route('hr.employees.index')->with('success', 'Employee deleted.');
     }
 }

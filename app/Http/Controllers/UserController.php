@@ -85,7 +85,7 @@ class UserController extends Controller
 
         $linkEmployee->execute($user, $employeeId);
 
-        return redirect()->route('users.show', $user)->with('success', 'User created.');
+        return redirect()->route('settings.users.show', $user)->with('success', 'User created.');
     }
 
     public function show(User $user): Response
@@ -139,7 +139,7 @@ class UserController extends Controller
 
         $linkEmployee->execute($user, $employeeId);
 
-        return redirect()->route('users.show', $user)->with('success', 'User updated.');
+        return redirect()->route('settings.users.show', $user)->with('success', 'User updated.');
     }
 
     /**

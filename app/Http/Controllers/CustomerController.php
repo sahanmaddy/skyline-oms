@@ -88,7 +88,7 @@ class CustomerController extends Controller
 
         $customer = app(CreateCustomerAction::class)->execute($validated, $phoneNumbers);
 
-        return redirect()->route('customers.show', $customer)->with('success', 'Customer created.');
+        return redirect()->route('sales.customers.show', $customer)->with('success', 'Customer created.');
     }
 
     public function show(Customer $customer): Response
@@ -120,13 +120,13 @@ class CustomerController extends Controller
 
         app(UpdateCustomerAction::class)->execute($customer, $validated, $phoneNumbers);
 
-        return redirect()->route('customers.show', $customer)->with('success', 'Customer updated.');
+        return redirect()->route('sales.customers.show', $customer)->with('success', 'Customer updated.');
     }
 
     public function destroy(Customer $customer): RedirectResponse
     {
         $customer->delete();
 
-        return redirect()->route('customers.index')->with('success', 'Customer deleted.');
+        return redirect()->route('sales.customers.index')->with('success', 'Customer deleted.');
     }
 }

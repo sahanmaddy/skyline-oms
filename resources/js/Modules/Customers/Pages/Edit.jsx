@@ -1,6 +1,9 @@
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ customer, statusOptions }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -32,19 +35,33 @@ export default function Edit({ customer, statusOptions }) {
     });
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Edit Customer</span>}>
-            <Head title="Edit Customer" />
+        <AuthenticatedLayout
+            header={
+                <ModuleStickyTitle
+                    module="Sales"
+                    section={`Edit · ${customer.display_name || customer.customer_name || 'Customer'}`}
+                />
+            }
+        >
+            <Head title={`Edit ${customer.display_name || customer.customer_name || 'customer'} · Sales`} />
 
-            <div className="mb-4">
-                <Link
-                    href={route('customers.show', customer.id)}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                    ← Back to customer
-                </Link>
-            </div>
+            <SalesModuleLayout
+                breadcrumbs={[
+                    { label: 'Customers', href: route('sales.customers.index') },
+                    {
+                        label: customer.display_name || customer.customer_name || 'Customer',
+                        href: route('sales.customers.show', customer.id),
+                    },
+                    { label: 'Edit' },
+                ]}
+            >
+            <div className="flex flex-col gap-4">
+                <ModuleDetailToolbar
+                    backHref={route('sales.customers.show', customer.id)}
+                    backLabel="← Back to customer"
+                />
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <CustomerForm
                     data={data}
                     setData={setData}
@@ -53,10 +70,12 @@ export default function Edit({ customer, statusOptions }) {
                     statusOptions={statusOptions}
                     submitLabel="Save"
                     onSubmit={() =>
-                        put(route('customers.update', customer.id), { preserveScroll: true })
+                        put(route('sales.customers.update', customer.id), { preserveScroll: true })
                     }
                 />
             </div>
+            </div>
+            </SalesModuleLayout>
         </AuthenticatedLayout>
     );
 }

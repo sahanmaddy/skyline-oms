@@ -1,6 +1,9 @@
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ user, roles, statusOptions, employeesForLink }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -14,37 +17,42 @@ export default function Edit({ user, roles, statusOptions, employeesForLink }) {
     });
 
     return (
-        <AuthenticatedLayout header={<span className="text-base font-semibold">Edit User</span>}>
-            <Head title="Edit User" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Edit user" />}>
+            <Head title={`Edit ${user.name} · Settings`} />
 
-            <div className="mb-4">
-                <Link
-                    href={route('users.show', user.id)}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                    ← Back to user
-                </Link>
-            </div>
+            <SettingsModuleLayout
+                breadcrumbs={[
+                    { label: 'Users', href: route('settings.users.index') },
+                    { label: user.name, href: route('settings.users.show', user.id) },
+                    { label: 'Edit' },
+                ]}
+            >
+                <div className="flex flex-col gap-4">
+                    <ModuleDetailToolbar
+                        backHref={route('settings.users.show', user.id)}
+                        backLabel="← Back to user"
+                    />
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="mb-4 rounded-md bg-gray-50 p-3 text-sm text-gray-700">
-                    Leave password fields blank to keep the current password.
+                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="mb-4 rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+                        Leave password fields blank to keep the current password.
+                    </div>
+
+                    <UserForm
+                        data={data}
+                        setData={setData}
+                        errors={errors}
+                        processing={processing}
+                        roles={roles}
+                        statusOptions={statusOptions}
+                        employeesForLink={employeesForLink}
+                        submitLabel="Save"
+                        showPasswordFields
+                        onSubmit={() => put(route('settings.users.update', user.id))}
+                    />
                 </div>
-
-                <UserForm
-                    data={data}
-                    setData={setData}
-                    errors={errors}
-                    processing={processing}
-                    roles={roles}
-                    statusOptions={statusOptions}
-                    employeesForLink={employeesForLink}
-                    submitLabel="Save"
-                    showPasswordFields
-                    onSubmit={() => put(route('users.update', user.id))}
-                />
-            </div>
+                </div>
+            </SettingsModuleLayout>
         </AuthenticatedLayout>
     );
 }
-

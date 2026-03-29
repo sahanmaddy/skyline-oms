@@ -3,12 +3,18 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
+function sidebarItemClass(active) {
+    return (
+        'block rounded-md px-3 py-2 text-sm font-medium ' +
+        (active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50')
+    );
+}
+
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const roles = usePage().props.auth.roles ?? [];
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
     const canManageEmployees =
         roles.includes('Admin') ||
@@ -20,6 +26,13 @@ export default function AuthenticatedLayout({ header, children }) {
         roles.includes('Sales and Marketing') ||
         roles.includes('Accounting and Finance');
     const isAdmin = roles.includes('Admin');
+
+    const hrActive = route().current('hr.*');
+    const salesActive = route().current('sales.*');
+    const inventoryActive = route().current('inventory.*');
+    const procurementActive = route().current('procurement.*');
+    const financeActive = route().current('finance.*');
+    const settingsActive = route().current('settings.*');
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -37,57 +50,41 @@ export default function AuthenticatedLayout({ header, children }) {
                     <nav className="flex-1 space-y-1 px-3 py-4">
                         <Link
                             href={route('dashboard')}
-                            className={
-                                'block rounded-md px-3 py-2 text-sm font-medium ' +
-                                (route().current('dashboard')
-                                    ? 'bg-indigo-50 text-indigo-700'
-                                    : 'text-gray-700 hover:bg-gray-50')
-                            }
+                            className={sidebarItemClass(route().current('dashboard'))}
                         >
                             Dashboard
                         </Link>
 
                         {canManageEmployees && (
-                            <Link
-                                href={route('employees.index')}
-                                className={
-                                    'block rounded-md px-3 py-2 text-sm font-medium ' +
-                                    (route().current('employees.*')
-                                        ? 'bg-indigo-50 text-indigo-700'
-                                        : 'text-gray-700 hover:bg-gray-50')
-                                }
-                            >
-                                Employees
+                            <Link href={route('hr.employees.index')} className={sidebarItemClass(hrActive)}>
+                                Human Resource
                             </Link>
                         )}
 
                         {canManageCustomers && (
                             <Link
-                                href={route('customers.index')}
-                                className={
-                                    'block rounded-md px-3 py-2 text-sm font-medium ' +
-                                    (route().current('customers.*')
-                                        ? 'bg-indigo-50 text-indigo-700'
-                                        : 'text-gray-700 hover:bg-gray-50')
-                                }
+                                href={route('sales.customers.index')}
+                                className={sidebarItemClass(salesActive)}
                             >
-                                Customers
+                                Sales
                             </Link>
                         )}
 
-                        {isAdmin && (
-                            <Link
-                                href={route('users.index')}
-                                className={
-                                    'block rounded-md px-3 py-2 text-sm font-medium ' +
-                                    (route().current('users.*')
-                                        ? 'bg-indigo-50 text-indigo-700'
-                                        : 'text-gray-700 hover:bg-gray-50')
-                                }
-                            >
-                                Users
-                            </Link>
-                        )}
+                        <Link href={route('inventory.index')} className={sidebarItemClass(inventoryActive)}>
+                            Inventory
+                        </Link>
+
+                        <Link href={route('procurement.index')} className={sidebarItemClass(procurementActive)}>
+                            Procurement
+                        </Link>
+
+                        <Link href={route('finance.index')} className={sidebarItemClass(financeActive)}>
+                            Finance
+                        </Link>
+
+                        <Link href={route('settings.profile.edit')} className={sidebarItemClass(settingsActive)}>
+                            Settings
+                        </Link>
                     </nav>
                 </aside>
 
@@ -104,15 +101,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                                     </svg>
                                 </button>
-                                <div className="text-sm font-semibold text-gray-900">
-                                    {header ?? ' '}
-                                </div>
+                                <div className="text-sm font-semibold text-gray-900">{header ?? ' '}</div>
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <div className="hidden text-sm text-gray-600 sm:block">
-                                    {user.email}
-                                </div>
+                                <div className="hidden text-sm text-gray-600 sm:block">{user.email}</div>
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
@@ -132,9 +125,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         </span>
                                     </Dropdown.Trigger>
                                     <Dropdown.Content>
-                                        <Dropdown.Link href={route('profile.edit')}>
-                                            Profile
-                                        </Dropdown.Link>
+                                        <Dropdown.Link href={route('settings.profile.edit')}>Profile</Dropdown.Link>
                                         <Dropdown.Link href={route('logout')} method="post" as="button">
                                             Log Out
                                         </Dropdown.Link>
@@ -150,20 +141,27 @@ export default function AuthenticatedLayout({ header, children }) {
                                         Dashboard
                                     </ResponsiveNavLink>
                                     {canManageEmployees && (
-                                        <ResponsiveNavLink href={route('employees.index')} active={route().current('employees.*')}>
-                                            Employees
+                                        <ResponsiveNavLink href={route('hr.employees.index')} active={hrActive}>
+                                            Human Resource
                                         </ResponsiveNavLink>
                                     )}
                                     {canManageCustomers && (
-                                        <ResponsiveNavLink href={route('customers.index')} active={route().current('customers.*')}>
-                                            Customers
+                                        <ResponsiveNavLink href={route('sales.customers.index')} active={salesActive}>
+                                            Sales
                                         </ResponsiveNavLink>
                                     )}
-                                    {isAdmin && (
-                                        <ResponsiveNavLink href={route('users.index')} active={route().current('users.*')}>
-                                            Users
-                                        </ResponsiveNavLink>
-                                    )}
+                                    <ResponsiveNavLink href={route('inventory.index')} active={inventoryActive}>
+                                        Inventory
+                                    </ResponsiveNavLink>
+                                    <ResponsiveNavLink href={route('procurement.index')} active={procurementActive}>
+                                        Procurement
+                                    </ResponsiveNavLink>
+                                    <ResponsiveNavLink href={route('finance.index')} active={financeActive}>
+                                        Finance
+                                    </ResponsiveNavLink>
+                                    <ResponsiveNavLink href={route('settings.profile.edit')} active={settingsActive}>
+                                        Settings
+                                    </ResponsiveNavLink>
                                 </div>
                             </div>
                         )}

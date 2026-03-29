@@ -1,6 +1,9 @@
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
+import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function Create({ statusOptions, users, nextEmployeeCode }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -41,21 +44,22 @@ export default function Create({ statusOptions, users, nextEmployeeCode }) {
     });
 
     return (
-        <AuthenticatedLayout
-            header={<span className="text-base font-semibold">New Employee</span>}
-        >
-            <Head title="New Employee" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Human Resource" section="Create employee" />}>
+            <Head title="Create employee · Human Resource" />
 
-            <div className="mb-4">
-                <Link
-                    href={route('employees.index')}
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                    ← Back to employees
-                </Link>
-            </div>
+            <HrModuleLayout
+                breadcrumbs={[
+                    { label: 'Employees', href: route('hr.employees.index') },
+                    { label: 'Create employee' },
+                ]}
+            >
+            <div className="flex flex-col gap-4">
+                <ModuleDetailToolbar
+                    backHref={route('hr.employees.index')}
+                    backLabel="← Back to employees"
+                />
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <EmployeeForm
                     data={data}
                     setData={setData}
@@ -66,13 +70,15 @@ export default function Create({ statusOptions, users, nextEmployeeCode }) {
                     profilePhotoUrl={null}
                     submitLabel="Create"
                     onSubmit={() =>
-                        post(route('employees.store'), {
+                        post(route('hr.employees.store'), {
                             forceFormData: true,
                             preserveScroll: true,
                         })
                     }
                 />
             </div>
+            </div>
+            </HrModuleLayout>
         </AuthenticatedLayout>
     );
 }

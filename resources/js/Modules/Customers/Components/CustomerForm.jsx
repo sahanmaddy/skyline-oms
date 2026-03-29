@@ -6,6 +6,17 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
+import { useRef } from 'react';
+
+/** True while display name should stay in sync with customer name (until user edits display name). */
+function initialDisplayFollowsCustomer(formData) {
+    const disp = (formData.display_name || '').trim();
+    const cust = (formData.customer_name || '').trim();
+    if (!disp) {
+        return true;
+    }
+    return disp === cust;
+}
 
 function formatMoneyWithCommas(value) {
     const trimmed = (value ?? '').toString().trim();
@@ -47,6 +58,7 @@ export default function CustomerForm({
     submitLabel,
     onSubmit,
 }) {
+    const displayNameFollowsCustomer = useRef(initialDisplayFollowsCustomer(data));
     const phoneRows = data.phone_numbers || [];
 
     const addPhone = () => {
@@ -126,9 +138,14 @@ export default function CustomerForm({
                             value={data.customer_name || ''}
                             onChange={(e) => {
                                 const value = e.target.value;
-                                setData('customer_name', value);
-                                if (!(data.display_name || '').trim()) {
-                                    setData('display_name', value);
+                                if (displayNameFollowsCustomer.current) {
+                                    setData({
+                                        ...data,
+                                        customer_name: value,
+                                        display_name: value,
+                                    });
+                                } else {
+                                    setData('customer_name', value);
                                 }
                             }}
                         />
@@ -141,7 +158,15 @@ export default function CustomerForm({
                             id="display_name"
                             className="mt-1 block w-full"
                             value={data.display_name || ''}
-                            onChange={(e) => setData('display_name', e.target.value)}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setData('display_name', v);
+                                if (!v.trim()) {
+                                    displayNameFollowsCustomer.current = true;
+                                } else {
+                                    displayNameFollowsCustomer.current = false;
+                                }
+                            }}
                             onBlur={() => {
                                 if (!(data.display_name || '').trim()) {
                                     setData('display_name', data.customer_name || '');
