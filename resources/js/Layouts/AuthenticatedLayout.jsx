@@ -13,19 +13,12 @@ function sidebarItemClass(active) {
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const roles = usePage().props.auth.roles ?? [];
+    const permissions = usePage().props.auth.permissions ?? [];
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
-    const canManageEmployees =
-        roles.includes('Admin') ||
-        roles.includes('Management') ||
-        roles.includes('Accounting and Finance');
-    const canManageCustomers =
-        roles.includes('Admin') ||
-        roles.includes('Management') ||
-        roles.includes('Sales and Marketing') ||
-        roles.includes('Accounting and Finance');
-    const isAdmin = roles.includes('Admin');
+    const canAccessHr = permissions.includes('employees.view');
+    const canAccessSales = permissions.includes('customers.view');
 
     const hrActive = route().current('hr.*');
     const salesActive = route().current('sales.*');
@@ -55,17 +48,14 @@ export default function AuthenticatedLayout({ header, children }) {
                             Dashboard
                         </Link>
 
-                        {canManageEmployees && (
-                            <Link href={route('hr.employees.index')} className={sidebarItemClass(hrActive)}>
+                        {canAccessHr && (
+                            <Link href={route('hr.index')} className={sidebarItemClass(hrActive)}>
                                 Human Resource
                             </Link>
                         )}
 
-                        {canManageCustomers && (
-                            <Link
-                                href={route('sales.customers.index')}
-                                className={sidebarItemClass(salesActive)}
-                            >
+                        {canAccessSales && (
+                            <Link href={route('sales.index')} className={sidebarItemClass(salesActive)}>
                                 Sales
                             </Link>
                         )}
@@ -140,13 +130,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
                                         Dashboard
                                     </ResponsiveNavLink>
-                                    {canManageEmployees && (
-                                        <ResponsiveNavLink href={route('hr.employees.index')} active={hrActive}>
+                                    {canAccessHr && (
+                                        <ResponsiveNavLink href={route('hr.index')} active={hrActive}>
                                             Human Resource
                                         </ResponsiveNavLink>
                                     )}
-                                    {canManageCustomers && (
-                                        <ResponsiveNavLink href={route('sales.customers.index')} active={salesActive}>
+                                    {canAccessSales && (
+                                        <ResponsiveNavLink href={route('sales.index')} active={salesActive}>
                                             Sales
                                         </ResponsiveNavLink>
                                     )}

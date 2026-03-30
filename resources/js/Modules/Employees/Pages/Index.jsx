@@ -1,6 +1,7 @@
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -64,7 +65,7 @@ function renderPhoneList(phoneNumbers, max = 3) {
     );
 }
 
-export default function Index({ employees, filters, statusOptions }) {
+export default function Index({ employees, filters, statusOptions, canCreate }) {
     const formatStatusLabel = (value) => {
         if (value === 'active') return 'Active';
         if (value === 'inactive') return 'Inactive';
@@ -124,29 +125,31 @@ export default function Index({ employees, filters, statusOptions }) {
                         </>
                     }
                     actions={
-                        <Link href={route('hr.employees.create')}>
-                            <PrimaryButton type="button">New employee</PrimaryButton>
-                        </Link>
+                        canCreate ? (
+                            <Link href={route('hr.employees.create')}>
+                                <PrimaryButton type="button">New employee</PrimaryButton>
+                            </Link>
+                        ) : null
                     }
                 />
 
                 <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[22%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Employee
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[26%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Contact
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Employment
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[26%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Access & Flags
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[8%] whitespace-nowrap px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Actions
                                 </th>
                             </tr>
@@ -236,20 +239,62 @@ export default function Index({ employees, filters, statusOptions }) {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm">
-                                        <Link
-                                            href={route('hr.employees.show', e.id)}
-                                            className="font-medium text-indigo-600 hover:text-indigo-700"
-                                        >
-                                            View
-                                        </Link>
-                                        <span className="mx-2 text-gray-300">|</span>
-                                        <Link
-                                            href={route('hr.employees.edit', e.id)}
-                                            className="font-medium text-gray-700 hover:text-gray-900"
-                                        >
-                                            Edit
-                                        </Link>
+                                    <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                                        {e.can_view || e.can_edit || e.can_delete ? (
+                                            <div className="relative z-50 flex items-center justify-end">
+                                                <Dropdown>
+                                                    <Dropdown.Trigger>
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                                                            aria-label="More actions"
+                                                        >
+                                                            <svg
+                                                                className="h-4 w-4"
+                                                                viewBox="0 0 20 20"
+                                                                fill="currentColor"
+                                                            >
+                                                                <path d="M10 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" />
+                                                            </svg>
+                                                        </button>
+                                                    </Dropdown.Trigger>
+
+                                                    <Dropdown.Content align="right" width="48">
+                                                        {e.can_view ? (
+                                                            <Link
+                                                                href={route('hr.employees.show', e.id)}
+                                                                className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
+                                                            >
+                                                                View
+                                                            </Link>
+                                                        ) : null}
+                                                        {e.can_edit ? (
+                                                            <Link
+                                                                href={route('hr.employees.edit', e.id)}
+                                                                className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                        ) : null}
+                                                        {e.can_delete ? (
+                                                            <button
+                                                                type="button"
+                                                                className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
+                                                                onClick={() => {
+                                                                    if (confirm('Delete this employee?')) {
+                                                                        router.delete(route('hr.employees.destroy', e.id));
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        ) : null}
+                                                    </Dropdown.Content>
+                                                </Dropdown>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-gray-400">—</span>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

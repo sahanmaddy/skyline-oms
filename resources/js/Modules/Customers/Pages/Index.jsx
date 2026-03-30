@@ -1,6 +1,7 @@
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -48,7 +49,7 @@ function formatCreditLimit(value) {
     }).format(parsed)}`;
 }
 
-export default function Index({ customers, filters, statusOptions }) {
+export default function Index({ customers, filters, statusOptions, canCreate }) {
     const formatStatusLabel = (value) => {
         if (value === 'active') return 'Active';
         if (value === 'inactive') return 'Inactive';
@@ -108,32 +109,34 @@ export default function Index({ customers, filters, statusOptions }) {
                         </>
                     }
                     actions={
-                        <Link href={route('sales.customers.create')}>
-                            <PrimaryButton type="button">New customer</PrimaryButton>
-                        </Link>
+                        canCreate ? (
+                            <Link href={route('sales.customers.create')}>
+                                <PrimaryButton type="button">New customer</PrimaryButton>
+                            </Link>
+                        ) : null
                     }
                 />
 
                 <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="min-w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[24%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Customer
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[22%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Contact
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[14%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Location
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Commercial
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Status
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[10%] whitespace-nowrap px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Actions
                                 </th>
                             </tr>
@@ -221,25 +224,63 @@ export default function Index({ customers, filters, statusOptions }) {
                                             {c.status === 'active' ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm text-gray-500">
+                                    <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500">
                                         {isSystemCashCustomer(c) ? (
                                             <span className="text-xs">—</span>
+                                        ) : c.can_view || c.can_edit || c.can_delete ? (
+                                            <div className="relative z-50 flex items-center justify-end">
+                                                <Dropdown>
+                                                    <Dropdown.Trigger>
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                                                            aria-label="More actions"
+                                                        >
+                                                            <svg
+                                                                className="h-4 w-4"
+                                                                viewBox="0 0 20 20"
+                                                                fill="currentColor"
+                                                            >
+                                                                <path d="M10 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" />
+                                                            </svg>
+                                                        </button>
+                                                    </Dropdown.Trigger>
+
+                                                    <Dropdown.Content align="right" width="48">
+                                                        {c.can_view ? (
+                                                            <Link
+                                                                href={route('sales.customers.show', c.id)}
+                                                                className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
+                                                            >
+                                                                View
+                                                            </Link>
+                                                        ) : null}
+                                                        {c.can_edit ? (
+                                                            <Link
+                                                                href={route('sales.customers.edit', c.id)}
+                                                                className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                        ) : null}
+                                                        {c.can_delete ? (
+                                                            <button
+                                                                type="button"
+                                                                className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
+                                                                onClick={() => {
+                                                                    if (confirm('Delete this customer?')) {
+                                                                        router.delete(route('sales.customers.destroy', c.id));
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        ) : null}
+                                                    </Dropdown.Content>
+                                                </Dropdown>
+                                            </div>
                                         ) : (
-                                            <>
-                                                <Link
-                                                    href={route('sales.customers.show', c.id)}
-                                                    className="font-medium text-indigo-600 hover:text-indigo-700"
-                                                >
-                                                    View
-                                                </Link>
-                                                <span className="mx-2 text-gray-300">|</span>
-                                                <Link
-                                                    href={route('sales.customers.edit', c.id)}
-                                                    className="font-medium text-gray-700 hover:text-gray-900"
-                                                >
-                                                    Edit
-                                                </Link>
-                                            </>
+                                            <span className="text-xs text-gray-400">—</span>
                                         )}
                                     </td>
                                 </tr>

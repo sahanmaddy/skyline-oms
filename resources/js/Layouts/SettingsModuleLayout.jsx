@@ -8,9 +8,14 @@ import { usePage } from '@inertiajs/react';
 const SETTINGS_TITLE = 'Settings';
 
 export default function SettingsModuleLayout({ children, breadcrumbs = [] }) {
-    const roles = usePage().props.auth.roles ?? [];
-    const isAdmin = roles.includes('Admin');
-    const items = settingsSectionNavItems(isAdmin);
+    const permissions = usePage().props.auth.permissions ?? [];
+    const items = settingsSectionNavItems({
+        canViewUsers: permissions.includes('users.view'),
+        canViewRoles: permissions.includes('roles.view'),
+        canViewPermissions: permissions.includes('permissions.view'),
+        canViewCompanySettings: permissions.includes('settings.company.view'),
+        canViewSystemSettings: permissions.includes('settings.system.view'),
+    });
 
     return (
         <ModulePageShell>

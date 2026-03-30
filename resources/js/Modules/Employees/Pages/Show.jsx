@@ -24,7 +24,7 @@ function formatSalary(value) {
     }).format(num)}`;
 }
 
-export default function Show({ employee, documentTypeOptions }) {
+export default function Show({ employee, documentTypeOptions, canEdit, canDelete }) {
     const roles = usePage().props.auth.roles ?? [];
     const canManageDocuments =
         roles.includes('Admin') ||
@@ -102,9 +102,28 @@ export default function Show({ employee, documentTypeOptions }) {
                     backHref={route('hr.employees.index')}
                     backLabel="← Back to employees"
                     actions={
-                        <Link href={route('hr.employees.edit', employee.id)}>
-                            <PrimaryButton type="button">Edit</PrimaryButton>
-                        </Link>
+                        canEdit || canDelete ? (
+                            <div className="flex items-center gap-2">
+                                {canEdit ? (
+                                    <Link href={route('hr.employees.edit', employee.id)}>
+                                        <PrimaryButton type="button">Edit</PrimaryButton>
+                                    </Link>
+                                ) : null}
+                                {canDelete ? (
+                                    <PrimaryButton
+                                        type="button"
+                                        className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
+                                        onClick={() => {
+                                            if (confirm('Delete this employee?')) {
+                                                router.delete(route('hr.employees.destroy', employee.id));
+                                            }
+                                        }}
+                                    >
+                                        Delete
+                                    </PrimaryButton>
+                                ) : null}
+                            </div>
+                        ) : undefined
                     }
                 />
 

@@ -6,23 +6,18 @@ use App\Actions\Users\SyncUserEmployeeLinkAction;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller
 {
-    private const ALLOWED_ROLES = [
-        'Admin',
-        'Management',
-        'Sales and Marketing',
-        'Accounting and Finance',
-        'Human Resources',
-    ];
-
     public function __construct()
     {
         $this->authorizeResource(User::class, 'user');
@@ -48,8 +43,19 @@ class UserController extends Controller
             }
         }
 
+        $users = $query->orderBy('name')->paginate(15)->withQueryString()->through(
+            function (User $user) use ($request) {
+                return array_merge($user->toArray(), [
+                    'can_view' => $request->user()?->can('view', $user) ?? false,
+                    'can_edit' => $request->user()?->can('update', $user) ?? false,
+                    'can_delete' => $request->user()?->can('delete', $user) ?? false,
+                ]);
+            }
+        );
+
         return Inertia::render('Modules/Users/Pages/Index', [
-            'users' => $query->orderBy('name')->paginate(15)->withQueryString(),
+            'users' => $users,
+            'canCreate' => $request->user()?->can('create', User::class) ?? false,
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),
@@ -61,7 +67,7 @@ class UserController extends Controller
     public function create(): Response
     {
         return Inertia::render('Modules/Users/Pages/Create', [
-            'roles' => self::ALLOWED_ROLES,
+            'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->employeesAvailableForUserLink(),
         ]);
@@ -81,7 +87,9 @@ class UserController extends Controller
             'status' => $data['status'],
         ]);
 
-        $user->syncRoles([$data['role']]);
+        $user->syncRoles($data['roles'] ?? []);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $linkEmployee->execute($user, $employeeId);
 
@@ -97,6 +105,8 @@ class UserController extends Controller
 
         return Inertia::render('Modules/Users/Pages/Show', [
             'user' => $user,
+            'canEdit' => request()->user()?->can('update', $user) ?? false,
+            'canDelete' => request()->user()?->can('delete', $user) ?? false,
         ]);
     }
 
@@ -109,7 +119,7 @@ class UserController extends Controller
 
         return Inertia::render('Modules/Users/Pages/Edit', [
             'user' => $user,
-            'roles' => self::ALLOWED_ROLES,
+            'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->employeesAvailableForUserLink($user),
         ]);
@@ -135,11 +145,22 @@ class UserController extends Controller
             $user->update(['password' => Hash::make($data['password'])]);
         }
 
-        $user->syncRoles([$data['role']]);
+        $user->syncRoles($data['roles'] ?? []);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $linkEmployee->execute($user, $employeeId);
 
         return redirect()->route('settings.users.show', $user)->with('success', 'User updated.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        $this->authorize('delete', $user);
+
+        $user->delete();
+
+        return redirect()->route('settings.users.index')->with('success', 'User deleted.');
     }
 
     /**
@@ -159,5 +180,18 @@ class UserController extends Controller
             })
             ->orderBy('display_name')
             ->get();
+    }
+
+    private function assignableRoleNames(): array
+    {
+        $query = Role::query()
+            ->where('guard_name', 'web')
+            ->orderBy('name');
+
+        if (Schema::hasColumn('roles', 'is_active')) {
+            $query->where('is_active', true);
+        }
+
+        return $query->pluck('name')->all();
     }
 }

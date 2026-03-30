@@ -48,24 +48,6 @@ export default function UserForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="role" value="Role" />
-                    <select
-                        id="role"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={data.role || ''}
-                        onChange={(e) => setData('role', e.target.value)}
-                    >
-                        <option value="">—</option>
-                        {roles?.map((r) => (
-                            <option key={r} value={r}>
-                                {r}
-                            </option>
-                        ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.role} />
-                </div>
-
-                <div>
                     <InputLabel htmlFor="status" value="Status" />
                     <select
                         id="status"
@@ -82,11 +64,8 @@ export default function UserForm({
                     <InputError className="mt-2" message={errors.status} />
                 </div>
 
-                <div className="sm:col-span-2">
-                    <InputLabel
-                        htmlFor="employee_id"
-                        value="Linked employee"
-                    />
+                <div>
+                    <InputLabel htmlFor="employee_id" value="Linked employee" />
                     <select
                         id="employee_id"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -109,6 +88,37 @@ export default function UserForm({
                         Each employee can only be linked to one user.
                     </p>
                     <InputError className="mt-2" message={errors.employee_id} />
+                </div>
+
+                <div className="sm:col-span-2">
+                    <InputLabel value="Roles" />
+                    <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2">
+                        <div className="space-y-1.5">
+                            {roles?.map((r) => {
+                                const checked = (data.roles || []).includes(r);
+                                return (
+                                    <label
+                                        key={r}
+                                        className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            checked={checked}
+                                            onChange={(e) => {
+                                                const next = new Set(data.roles || []);
+                                                if (e.target.checked) next.add(r);
+                                                else next.delete(r);
+                                                setData('roles', Array.from(next));
+                                            }}
+                                        />
+                                        <span>{r}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <InputError className="mt-2" message={errors.roles} />
                 </div>
 
                 {showPasswordFields && (

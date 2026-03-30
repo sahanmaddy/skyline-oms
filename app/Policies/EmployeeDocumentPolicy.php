@@ -9,26 +9,26 @@ class EmployeeDocumentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['Admin', 'Management', 'Accounting and Finance']);
+        return $user->can('employees.view');
     }
 
     public function view(User $user, EmployeeDocument $employeeDocument): bool
     {
-        return $this->viewAny($user);
+        return $user->can('employees.view');
     }
 
     public function create(User $user): bool
     {
-        return $this->viewAny($user);
+        return $user->can('employees.edit');
     }
 
     public function update(User $user, EmployeeDocument $employeeDocument): bool
     {
-        return $this->viewAny($user);
+        return $user->can('employees.edit');
     }
 
     public function delete(User $user, EmployeeDocument $employeeDocument): bool
     {
-        return $this->viewAny($user);
+        return $user->can('employees.edit');
     }
 }

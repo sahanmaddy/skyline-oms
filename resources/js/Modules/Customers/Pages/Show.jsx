@@ -20,7 +20,7 @@ function formatCreditLimit(value) {
     }).format(num)}`;
 }
 
-export default function Show({ customer, documentTypeOptions }) {
+export default function Show({ customer, documentTypeOptions, canEdit, canDelete }) {
     const roles = usePage().props.auth.roles ?? [];
     const canManageDocuments =
         roles.includes('Admin') ||
@@ -85,9 +85,28 @@ export default function Show({ customer, documentTypeOptions }) {
                     backHref={route('sales.customers.index')}
                     backLabel="← Back to customers"
                     actions={
-                        <Link href={route('sales.customers.edit', customer.id)}>
-                            <PrimaryButton type="button">Edit</PrimaryButton>
-                        </Link>
+                        canEdit || canDelete ? (
+                            <div className="flex items-center gap-2">
+                                {canEdit ? (
+                                    <Link href={route('sales.customers.edit', customer.id)}>
+                                        <PrimaryButton type="button">Edit</PrimaryButton>
+                                    </Link>
+                                ) : null}
+                                {canDelete ? (
+                                    <PrimaryButton
+                                        type="button"
+                                        className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
+                                        onClick={() => {
+                                            if (confirm('Delete this customer?')) {
+                                                router.delete(route('sales.customers.destroy', customer.id));
+                                            }
+                                        }}
+                                    >
+                                        Delete
+                                    </PrimaryButton>
+                                ) : null}
+                            </div>
+                        ) : undefined
                     }
                 />
 

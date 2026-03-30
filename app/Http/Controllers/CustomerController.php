@@ -62,8 +62,19 @@ class CustomerController extends Controller
             }
         }
 
+        $customers = $query->orderBy('display_name')->paginate(15)->withQueryString()->through(
+            function (Customer $customer) use ($request) {
+                return array_merge($customer->toArray(), [
+                    'can_view' => $request->user()?->can('view', $customer) ?? false,
+                    'can_edit' => $request->user()?->can('update', $customer) ?? false,
+                    'can_delete' => $request->user()?->can('delete', $customer) ?? false,
+                ]);
+            }
+        );
+
         return Inertia::render('Modules/Customers/Pages/Index', [
-            'customers' => $query->orderBy('display_name')->paginate(15)->withQueryString(),
+            'customers' => $customers,
+            'canCreate' => $request->user()?->can('create', Customer::class) ?? false,
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),
@@ -101,6 +112,8 @@ class CustomerController extends Controller
         return Inertia::render('Modules/Customers/Pages/Show', [
             'customer' => $customer,
             'documentTypeOptions' => CustomerDocumentType::values(),
+            'canEdit' => request()->user()?->can('update', $customer) ?? false,
+            'canDelete' => request()->user()?->can('delete', $customer) ?? false,
         ]);
     }
 

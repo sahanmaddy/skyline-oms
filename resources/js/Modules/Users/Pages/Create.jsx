@@ -11,7 +11,7 @@ export default function Create({ roles, statusOptions, employeesForLink }) {
         email: '',
         password: '',
         password_confirmation: '',
-        role: roles?.[0] || '',
+        roles: roles?.length ? [roles[0]] : [],
         status: statusOptions?.[0] || 'active',
         employee_id: '',
     });

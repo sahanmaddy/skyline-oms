@@ -9,27 +9,26 @@ class CustomerDocumentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['Admin', 'Management', 'Sales and Marketing', 'Accounting and Finance']);
+        return $user->can('customers.view');
     }
 
     public function view(User $user, CustomerDocument $customerDocument): bool
     {
-        return $this->viewAny($user);
+        return $user->can('customers.view');
     }
 
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['Admin', 'Management', 'Sales and Marketing', 'Accounting and Finance']);
+        return $user->can('customers.edit');
     }
 
     public function update(User $user, CustomerDocument $customerDocument): bool
     {
-        return $this->create($user);
+        return $user->can('customers.edit');
     }
 
     public function delete(User $user, CustomerDocument $customerDocument): bool
     {
-        return $this->create($user);
+        return $user->can('customers.edit');
     }
 }
-

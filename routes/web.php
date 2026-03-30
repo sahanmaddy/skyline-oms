@@ -4,7 +4,9 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerDocumentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -33,9 +35,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-        Route::middleware([\Spatie\Permission\Middleware\RoleMiddleware::class.':Admin'])->group(function () {
-            Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-        });
+        Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+        Route::resource('roles', RoleController::class);
+        Route::resource('permissions', PermissionController::class);
+
+        Route::get('company', function () {
+            return Inertia::render('Modules/Shared/ModulePlaceholder', [
+                'area' => 'settings',
+                'moduleTitle' => 'Settings',
+                'headTitle' => 'Settings — Company Settings',
+                'breadcrumbs' => [
+                    ['label' => 'Company Settings'],
+                ],
+                'title' => 'Company settings',
+                'description' => 'Manage organization profile, contacts, branding, and defaults.',
+            ]);
+        })->name('company');
+
+        Route::get('system', function () {
+            return Inertia::render('Modules/Shared/ModulePlaceholder', [
+                'area' => 'settings',
+                'moduleTitle' => 'Settings',
+                'headTitle' => 'Settings — System Settings',
+                'breadcrumbs' => [
+                    ['label' => 'System Settings'],
+                ],
+                'title' => 'System settings',
+                'description' => 'Configure platform preferences, system controls, and global behavior.',
+            ]);
+        })->name('system');
     });
 
     Route::permanentRedirect('/profile', '/settings/profile');

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class UserStoreRequest extends FormRequest
@@ -21,13 +23,24 @@ class UserStoreRequest extends FormRequest
 
     public function rules(): array
     {
-        $roleNames = ['Admin', 'Management', 'Sales and Marketing', 'Accounting and Finance', 'Human Resources'];
+        $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
+            ->where(function ($query) {
+                $query->where('guard_name', 'web');
+
+                if (Schema::hasColumn((new Role)->getTable(), 'is_active')) {
+                    $query->where('is_active', true);
+                }
+            });
 
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', Rule::in($roleNames)],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => [
+                'string',
+                $roleExistsRule,
+            ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'employee_id' => [
                 'nullable',

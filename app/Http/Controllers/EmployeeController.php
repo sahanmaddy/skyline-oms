@@ -51,8 +51,19 @@ class EmployeeController extends Controller
             }
         }
 
+        $employees = $query->orderBy('display_name')->paginate(15)->withQueryString()->through(
+            function (Employee $employee) use ($request) {
+                return array_merge($employee->toArray(), [
+                    'can_view' => $request->user()?->can('view', $employee) ?? false,
+                    'can_edit' => $request->user()?->can('update', $employee) ?? false,
+                    'can_delete' => $request->user()?->can('delete', $employee) ?? false,
+                ]);
+            }
+        );
+
         return Inertia::render('Modules/Employees/Pages/Index', [
-            'employees' => $query->orderBy('display_name')->paginate(15)->withQueryString(),
+            'employees' => $employees,
+            'canCreate' => $request->user()?->can('create', Employee::class) ?? false,
             'filters' => [
                 'q' => $request->string('q')->toString(),
                 'status' => $request->string('status')->toString(),
@@ -98,6 +109,8 @@ class EmployeeController extends Controller
         return Inertia::render('Modules/Employees/Pages/Show', [
             'employee' => $employee,
             'documentTypeOptions' => EmployeeDocumentType::values(),
+            'canEdit' => request()->user()?->can('update', $employee) ?? false,
+            'canDelete' => request()->user()?->can('delete', $employee) ?? false,
         ]);
     }
 

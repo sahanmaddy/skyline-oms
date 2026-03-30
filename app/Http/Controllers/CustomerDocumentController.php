@@ -17,7 +17,7 @@ class CustomerDocumentController extends Controller
         Customer $customer,
         CustomerDocumentStorageService $storage
     ): RedirectResponse {
-        $this->authorize('view', $customer);
+        $this->authorize('update', $customer);
 
         $documentType = $request->string('document_type')->toString();
         $title = $request->string('title')->toString();
@@ -42,7 +42,7 @@ class CustomerDocumentController extends Controller
         CustomerDocument $document,
         CustomerDocumentStorageService $storage
     ): RedirectResponse {
-        $this->authorize('view', $customer);
+        $this->authorize('update', $customer);
         $this->authorize('update', $document);
 
         $documentType = $request->input('document_type', $document->document_type);
@@ -72,7 +72,7 @@ class CustomerDocumentController extends Controller
         CustomerDocument $document,
         CustomerDocumentStorageService $storage
     ): RedirectResponse {
-        $this->authorize('view', $customer);
+        $this->authorize('update', $customer);
         $this->authorize('delete', $document);
 
         $storage->delete($document->file_path);
@@ -104,4 +104,3 @@ class CustomerDocumentController extends Controller
         ]);
     }
 }
-

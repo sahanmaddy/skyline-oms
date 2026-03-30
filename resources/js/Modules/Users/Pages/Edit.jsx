@@ -11,7 +11,7 @@ export default function Edit({ user, roles, statusOptions, employeesForLink }) {
         email: user.email || '',
         password: '',
         password_confirmation: '',
-        role: user.roles?.[0]?.name || roles?.[0] || '',
+        roles: user.roles?.map((r) => r.name) || (roles?.length ? [roles[0]] : []),
         status: user.status || statusOptions?.[0] || 'active',
         employee_id: user.employee?.id ?? '',
     });

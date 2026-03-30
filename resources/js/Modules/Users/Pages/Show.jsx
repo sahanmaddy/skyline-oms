@@ -3,10 +3,10 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 
-export default function Show({ user }) {
-    const role = user.roles?.[0]?.name || '—';
+export default function Show({ user, canEdit, canDelete }) {
+    const roles = user.roles || [];
     const emp = user.employee;
     const linkedLine =
         emp
@@ -28,9 +28,28 @@ export default function Show({ user }) {
                         backHref={route('settings.users.index')}
                         backLabel="← Back to users"
                         actions={
-                            <Link href={route('settings.users.edit', user.id)}>
-                                <PrimaryButton type="button">Edit</PrimaryButton>
-                            </Link>
+                            canEdit || canDelete ? (
+                                <div className="flex items-center gap-2">
+                                    {canEdit ? (
+                                        <Link href={route('settings.users.edit', user.id)}>
+                                            <PrimaryButton type="button">Edit</PrimaryButton>
+                                        </Link>
+                                    ) : null}
+                                    {canDelete ? (
+                                        <PrimaryButton
+                                            type="button"
+                                            className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
+                                            onClick={() => {
+                                                if (confirm('Delete this user?')) {
+                                                    router.delete(route('settings.users.destroy', user.id));
+                                                }
+                                            }}
+                                        >
+                                            Delete
+                                        </PrimaryButton>
+                                    ) : null}
+                                </div>
+                            ) : undefined
                         }
                     />
 
@@ -41,12 +60,23 @@ export default function Show({ user }) {
                         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Role
+                                    Roles
                                 </div>
                                 <div className="mt-2 flex min-h-6 items-center">
-                                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
-                                        {role}
-                                    </span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {roles.length > 0 ? (
+                                            roles.map((role) => (
+                                                <span
+                                                    key={role.id ?? role.name}
+                                                    className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700"
+                                                >
+                                                    {role.name}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-400">—</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             <Info

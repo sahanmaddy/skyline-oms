@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class UserUpdateRequest extends FormRequest
@@ -27,14 +29,24 @@ class UserUpdateRequest extends FormRequest
     {
         /** @var User $userModel */
         $userModel = $this->route('user');
+        $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
+            ->where(function ($query) {
+                $query->where('guard_name', 'web');
 
-        $roleNames = ['Admin', 'Management', 'Sales and Marketing', 'Accounting and Finance', 'Human Resources'];
+                if (Schema::hasColumn((new Role)->getTable(), 'is_active')) {
+                    $query->where('is_active', true);
+                }
+            });
 
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userModel->id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', Rule::in($roleNames)],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => [
+                'string',
+                $roleExistsRule,
+            ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'employee_id' => [
                 'nullable',

@@ -1,8 +1,15 @@
 /**
  * Human Resource, Sales, and Settings module sub-navigation. Uses global route() from Ziggy.
+ * Pass `auth.permissions` from Inertia to filter items (Spatie permission names).
  */
 
-export function settingsSectionNavItems(isAdmin = false) {
+export function settingsSectionNavItems({
+    canViewUsers = false,
+    canViewRoles = false,
+    canViewPermissions = false,
+    canViewCompanySettings = false,
+    canViewSystemSettings = false,
+} = {}) {
     const items = [
         {
             key: 'profile',
@@ -12,7 +19,7 @@ export function settingsSectionNavItems(isAdmin = false) {
         },
     ];
 
-    if (isAdmin) {
+    if (canViewUsers) {
         items.push({
             key: 'users',
             label: 'Users',
@@ -21,13 +28,55 @@ export function settingsSectionNavItems(isAdmin = false) {
         });
     }
 
+    if (canViewRoles) {
+        items.push({
+            key: 'roles',
+            label: 'Roles',
+            href: route('settings.roles.index'),
+            activePattern: 'settings.roles.*',
+        });
+    }
+
+    if (canViewPermissions) {
+        items.push({
+            key: 'permissions',
+            label: 'Permissions',
+            href: route('settings.permissions.index'),
+            activePattern: 'settings.permissions.*',
+        });
+    }
+
+    if (canViewCompanySettings) {
+        items.push({
+            key: 'company',
+            label: 'Company Settings',
+            href: route('settings.company'),
+            activePattern: 'settings.company',
+        });
+    }
+
+    if (canViewSystemSettings) {
+        items.push({
+            key: 'system',
+            label: 'System Settings',
+            href: route('settings.system'),
+            activePattern: 'settings.system',
+        });
+    }
+
     return items;
 }
 
 /**
- * Human Resource and Sales module sub-navigation. Uses global route() from Ziggy.
+ * Human Resource module sub-navigation. Requires `employees.view` for Employees; other sections
+ * follow the same gate until they have dedicated permissions.
  */
-export function hrSectionNavItems() {
+export function hrSectionNavItems(permissions = []) {
+    const p = permissions ?? [];
+    if (!p.includes('employees.view')) {
+        return [];
+    }
+
     return [
         {
             key: 'employees',
@@ -62,7 +111,16 @@ export function hrSectionNavItems() {
     ];
 }
 
-export function salesSectionNavItems() {
+/**
+ * Sales module sub-navigation. Customers (and placeholder sections) require `customers.view`
+ * until separate sales permissions exist.
+ */
+export function salesSectionNavItems(permissions = []) {
+    const p = permissions ?? [];
+    if (!p.includes('customers.view')) {
+        return [];
+    }
+
     return [
         {
             key: 'customers',

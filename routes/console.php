@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\Permissions\SyncPermissionsFromCatalog;
+use App\Support\PermissionCatalog;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -7,6 +9,11 @@ use Illuminate\Support\Facades\DB;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('permissions:sync', function () {
+    app(SyncPermissionsFromCatalog::class)->sync();
+    $this->info('Permissions synced from '.PermissionCatalog::class.'.');
+})->purpose('Upsert permission rows from the application permission catalog');
 
 Artisan::command('employees:normalize-codes', function () {
     DB::transaction(function () {
@@ -17,6 +24,7 @@ Artisan::command('employees:normalize-codes', function () {
 
         if ($employees->isEmpty()) {
             $this->info('No employees found.');
+
             return;
         }
 
@@ -52,6 +60,7 @@ Artisan::command('customers:normalize-codes', function () {
 
         if ($customers->isEmpty()) {
             $this->info('No customers found.');
+
             return;
         }
 

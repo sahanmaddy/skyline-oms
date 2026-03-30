@@ -42,7 +42,7 @@ class EmployeeDocumentController extends Controller
         EmployeeDocument $document,
         EmployeeDocumentStorageService $storage
     ): RedirectResponse {
-        $this->authorize('view', $employee);
+        $this->authorize('update', $employee);
         $this->authorize('update', $document);
 
         $documentType = $request->input('document_type', $document->document_type);
@@ -67,7 +67,7 @@ class EmployeeDocumentController extends Controller
 
     public function destroy(Employee $employee, EmployeeDocument $document, EmployeeDocumentStorageService $storage): RedirectResponse
     {
-        $this->authorize('view', $employee);
+        $this->authorize('update', $employee);
         $this->authorize('delete', $document);
 
         $storage->delete($document->file_path);
