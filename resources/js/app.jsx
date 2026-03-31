@@ -1,7 +1,11 @@
 import '../css/app.css';
 import './bootstrap';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 import { createInertiaApp } from '@inertiajs/react';
+import FeedbackProvider from '@/feedback/FeedbackProvider';
 import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -23,7 +27,11 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(
+            <FeedbackProvider initialFlash={props?.initialPage?.props?.flash ?? null}>
+                <App {...props} />
+            </FeedbackProvider>,
+        );
     },
     progress: {
         color: '#4B5563',

@@ -6,6 +6,7 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import DocumentDropzone from '@/Modules/Customers/Components/DocumentDropzone';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
@@ -22,6 +23,7 @@ function formatCreditLimit(value) {
 }
 
 export default function Show({ customer, documentTypeOptions, canEdit, canDelete }) {
+    const { confirm } = useConfirm();
     const roles = usePage().props.auth.roles ?? [];
     const canManageDocuments =
         roles.includes('Admin') ||
@@ -60,8 +62,14 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
         );
     };
 
-    const deleteDoc = (document) => {
-        if (!confirm('Delete this document?')) return;
+    const deleteDoc = async (document) => {
+        const ok = await confirm({
+            title: 'Delete document',
+            message: 'Are you sure you want to delete this document? This action cannot be undone.',
+            confirmText: 'Delete',
+            variant: 'destructive',
+        });
+        if (!ok) return;
         router.delete(route('sales.customers.documents.destroy', [customer.id, document.id]), {
             preserveScroll: true,
         });
@@ -96,10 +104,16 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                                 {canDelete ? (
                                     <DangerButton
                                         type="button"
-                                        onClick={() => {
-                                            if (confirm('Delete this customer?')) {
-                                                router.delete(route('sales.customers.destroy', customer.id));
-                                            }
+                                        onClick={async () => {
+                                            const ok = await confirm({
+                                                title: 'Delete customer',
+                                                message:
+                                                    'Are you sure you want to delete this customer? This action cannot be undone.',
+                                                confirmText: 'Delete',
+                                                variant: 'destructive',
+                                            });
+                                            if (!ok) return;
+                                            router.delete(route('sales.customers.destroy', customer.id));
                                         }}
                                     >
                                         Delete

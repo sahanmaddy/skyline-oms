@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 function renderPhoneList(phoneNumbers, max = 3) {
@@ -50,6 +51,7 @@ function formatCreditLimit(value) {
 }
 
 export default function Index({ customers, filters, statusOptions, canCreate }) {
+    const { confirm } = useConfirm();
     const formatStatusLabel = (value) => {
         if (value === 'active') return 'Active';
         if (value === 'inactive') return 'Inactive';
@@ -267,10 +269,16 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                                             <button
                                                                 type="button"
                                                                 className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
-                                                                onClick={() => {
-                                                                    if (confirm('Delete this customer?')) {
-                                                                        router.delete(route('sales.customers.destroy', c.id));
-                                                                    }
+                                                                onClick={async () => {
+                                                                    const ok = await confirm({
+                                                                        title: 'Delete customer',
+                                                                        message:
+                                                                            'Are you sure you want to delete this customer? This action cannot be undone.',
+                                                                        confirmText: 'Delete',
+                                                                        variant: 'destructive',
+                                                                    });
+                                                                    if (!ok) return;
+                                                                    router.delete(route('sales.customers.destroy', c.id));
                                                                 }}
                                                             >
                                                                 Delete

@@ -4,9 +4,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 export default function Index({ roles, filters, statusOptions, canCreate }) {
+    const { confirm } = useConfirm();
     return (
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Roles" />}>
             <Head title="Roles · Settings" />
@@ -84,10 +86,16 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
                                                             <button
                                                                 type="button"
                                                                 className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
-                                                                onClick={() => {
-                                                                    if (confirm('Delete this role?')) {
-                                                                        router.delete(route('settings.roles.destroy', role.id));
-                                                                    }
+                                                                onClick={async () => {
+                                                                    const ok = await confirm({
+                                                                        title: 'Delete role',
+                                                                        message:
+                                                                            'Are you sure you want to delete this role? This action cannot be undone.',
+                                                                        confirmText: 'Delete',
+                                                                        variant: 'destructive',
+                                                                    });
+                                                                    if (!ok) return;
+                                                                    router.delete(route('settings.roles.destroy', role.id));
                                                                 }}
                                                             >
                                                                 Delete

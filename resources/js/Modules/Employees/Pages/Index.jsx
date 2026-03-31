@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 function formatJoinedDate(value) {
@@ -66,6 +67,7 @@ function renderPhoneList(phoneNumbers, max = 3) {
 }
 
 export default function Index({ employees, filters, statusOptions, canCreate }) {
+    const { confirm } = useConfirm();
     const formatStatusLabel = (value) => {
         if (value === 'active') return 'Active';
         if (value === 'inactive') return 'Inactive';
@@ -280,10 +282,16 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                                             <button
                                                                 type="button"
                                                                 className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
-                                                                onClick={() => {
-                                                                    if (confirm('Delete this employee?')) {
-                                                                        router.delete(route('hr.employees.destroy', e.id));
-                                                                    }
+                                                                onClick={async () => {
+                                                                    const ok = await confirm({
+                                                                        title: 'Delete employee',
+                                                                        message:
+                                                                            'Are you sure you want to delete this employee? This action cannot be undone.',
+                                                                        confirmText: 'Delete',
+                                                                        variant: 'destructive',
+                                                                    });
+                                                                    if (!ok) return;
+                                                                    router.delete(route('hr.employees.destroy', e.id));
                                                                 }}
                                                             >
                                                                 Delete

@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 function formatLinkedEmployee(employee) {
@@ -19,6 +20,7 @@ function formatLinkedEmployee(employee) {
 }
 
 export default function Index({ users, filters, statusOptions, canCreate }) {
+    const { confirm } = useConfirm();
     return (
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Users" />}>
             <Head title="Users · Settings" />
@@ -190,10 +192,16 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                                                 <button
                                                                     type="button"
                                                                     className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
-                                                                    onClick={() => {
-                                                                        if (confirm('Delete this user?')) {
-                                                                            router.delete(route('settings.users.destroy', u.id));
-                                                                        }
+                                                                    onClick={async () => {
+                                                                        const ok = await confirm({
+                                                                            title: 'Delete user',
+                                                                            message:
+                                                                                'Are you sure you want to delete this user? This action cannot be undone.',
+                                                                            confirmText: 'Delete',
+                                                                            variant: 'destructive',
+                                                                        });
+                                                                        if (!ok) return;
+                                                                        router.delete(route('settings.users.destroy', u.id));
                                                                     }}
                                                                 >
                                                                     Delete

@@ -4,9 +4,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 export default function Show({ user, canEdit, canDelete }) {
+    const { confirm } = useConfirm();
     const roles = user.roles || [];
     const emp = user.employee;
     const linkedLine =
@@ -39,10 +41,16 @@ export default function Show({ user, canEdit, canDelete }) {
                                     {canDelete ? (
                                         <DangerButton
                                             type="button"
-                                            onClick={() => {
-                                                if (confirm('Delete this user?')) {
-                                                    router.delete(route('settings.users.destroy', user.id));
-                                                }
+                                            onClick={async () => {
+                                                const ok = await confirm({
+                                                    title: 'Delete user',
+                                                    message:
+                                                        'Are you sure you want to delete this user? This action cannot be undone.',
+                                                    confirmText: 'Delete',
+                                                    variant: 'destructive',
+                                                });
+                                                if (!ok) return;
+                                                router.delete(route('settings.users.destroy', user.id));
                                             }}
                                         >
                                             Delete

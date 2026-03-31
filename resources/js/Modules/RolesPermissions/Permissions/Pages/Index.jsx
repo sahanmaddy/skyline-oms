@@ -4,9 +4,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 export default function Index({ permissions, filters, moduleOptions, canCreate }) {
+    const { confirm } = useConfirm();
     return (
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Permissions" />}>
             <Head title="Permissions · Settings" />
@@ -113,10 +115,16 @@ export default function Index({ permissions, filters, moduleOptions, canCreate }
                                                             <button
                                                                 type="button"
                                                                 className="block w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
-                                                                onClick={() => {
-                                                                    if (confirm('Delete this permission?')) {
-                                                                        router.delete(route('settings.permissions.destroy', permission.id));
-                                                                    }
+                                                                onClick={async () => {
+                                                                    const ok = await confirm({
+                                                                        title: 'Delete permission',
+                                                                        message:
+                                                                            'Are you sure you want to delete this permission? This action cannot be undone.',
+                                                                        confirmText: 'Delete',
+                                                                        variant: 'destructive',
+                                                                    });
+                                                                    if (!ok) return;
+                                                                    router.delete(route('settings.permissions.destroy', permission.id));
                                                                 }}
                                                             >
                                                                 Delete

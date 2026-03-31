@@ -4,9 +4,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
+import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
 export default function Show({ permission, canEdit, canDelete }) {
+    const { confirm } = useConfirm();
     return (
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Permission" />}>
             <Head title={`${permission.name} · Permissions · Settings`} />
@@ -26,10 +28,16 @@ export default function Show({ permission, canEdit, canDelete }) {
                                     {canDelete ? (
                                         <DangerButton
                                             type="button"
-                                            onClick={() => {
-                                                if (confirm('Delete this permission?')) {
-                                                    router.delete(route('settings.permissions.destroy', permission.id));
-                                                }
+                                            onClick={async () => {
+                                                const ok = await confirm({
+                                                    title: 'Delete permission',
+                                                    message:
+                                                        'Are you sure you want to delete this permission? This action cannot be undone.',
+                                                    confirmText: 'Delete',
+                                                    variant: 'destructive',
+                                                });
+                                                if (!ok) return;
+                                                router.delete(route('settings.permissions.destroy', permission.id));
                                             }}
                                         >
                                             Delete
