@@ -52,18 +52,28 @@ export default function Index({ permissions, filters, moduleOptions, canCreate }
                     <table className="min-w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                             <tr>
-                                <th className="w-[48%] px-4 py-3 text-left">Permission</th>
-                                <th className="w-[24%] px-4 py-3 text-left">Module</th>
-                                <th className="w-[16%] px-4 py-3 text-left">Roles</th>
-                                <th className="w-[12%] whitespace-nowrap px-4 py-3 text-right">Actions</th>
+                                <th className="w-[32%] px-4 py-3 text-left">Permission</th>
+                                <th className="w-[32%] px-4 py-3 text-left">Description</th>
+                                <th className="w-[20%] px-4 py-3 text-left">Module</th>
+                                <th className="w-[8%] px-4 py-3 text-left">Roles</th>
+                                <th className="w-[8%] whitespace-nowrap px-4 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {permissions.data.map((permission) => (
                                 <tr key={permission.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3">
-                                        <div className="text-sm font-semibold text-gray-900">{permission.display_name || permission.name}</div>
+                                        <div className="text-sm font-semibold text-gray-900">
+                                            {permission.display_name || permission.name}
+                                        </div>
                                         <div className="text-xs text-gray-500">{permission.name}</div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                        {permission.description ? (
+                                            <span className="line-clamp-2">{permission.description}</span>
+                                        ) : (
+                                            <span className="text-xs text-gray-400">No description</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">{permission.module || 'General'}</td>
                                     <td className="px-4 py-3 text-sm text-gray-700">{permission.roles_count}</td>
