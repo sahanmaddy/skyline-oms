@@ -199,14 +199,25 @@ export default function CustomerForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="vat_tax_number" value="VAT/TIN Number" />
+                        <InputLabel htmlFor="tin_number" value="TIN" />
                         <TextInput
-                            id="vat_tax_number"
+                            id="tin_number"
                             className="mt-1 block w-full"
-                            value={data.vat_tax_number || ''}
-                            onChange={(e) => setData('vat_tax_number', e.target.value)}
+                            value={data.tin_number || ''}
+                            onChange={(e) => setData('tin_number', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.vat_tax_number} />
+                        <InputError className="mt-2" message={errors.tin_number} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="vat_number" value="VAT" />
+                        <TextInput
+                            id="vat_number"
+                            className="mt-1 block w-full"
+                            value={data.vat_number || ''}
+                            onChange={(e) => setData('vat_number', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.vat_number} />
                     </div>
 
                 </div>

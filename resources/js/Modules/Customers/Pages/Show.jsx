@@ -1,4 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
+import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
@@ -93,9 +94,8 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                                     </Link>
                                 ) : null}
                                 {canDelete ? (
-                                    <PrimaryButton
+                                    <DangerButton
                                         type="button"
-                                        className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
                                         onClick={() => {
                                             if (confirm('Delete this customer?')) {
                                                 router.delete(route('sales.customers.destroy', customer.id));
@@ -103,7 +103,7 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                                         }}
                                     >
                                         Delete
-                                    </PrimaryButton>
+                                    </DangerButton>
                                 ) : null}
                             </div>
                         ) : undefined
@@ -119,8 +119,8 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                             <Info label="Customer Name" value={customer.customer_name || '—'} />
                             <Info label="Company Name" value={customer.company_name || '—'} />
                             <Info label="NIC" value={customer.nic || '—'} />
-                            <Info label="VAT/TIN Number" value={customer.vat_tax_number || '—'} />
-                            <Info label="Email" value={customer.email || '—'} />
+                            <Info label="TIN" value={customer.tin_number || '—'} />
+                            <Info label="VAT" value={customer.vat_number || '—'} />
                             <StatusInfo
                                 label="Status"
                                 isPositive={customer.status === 'active'}
@@ -131,6 +131,9 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4">
                         <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
+                        <div className="mt-4">
+                            <Info label="Email" value={customer.email || '—'} />
+                        </div>
                         <div className="mt-4 rounded-md border border-gray-200 bg-white p-3">
                             <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                 Phone Numbers

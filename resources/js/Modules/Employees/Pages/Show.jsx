@@ -1,4 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
+import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
@@ -110,9 +111,8 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                     </Link>
                                 ) : null}
                                 {canDelete ? (
-                                    <PrimaryButton
+                                    <DangerButton
                                         type="button"
-                                        className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
                                         onClick={() => {
                                             if (confirm('Delete this employee?')) {
                                                 router.delete(route('hr.employees.destroy', employee.id));
@@ -120,7 +120,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                         }}
                                     >
                                         Delete
-                                    </PrimaryButton>
+                                    </DangerButton>
                                 ) : null}
                             </div>
                         ) : undefined

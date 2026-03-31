@@ -1,4 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
+import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
@@ -22,9 +23,8 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                                         <Link href={route('settings.roles.edit', role.id)}><PrimaryButton type="button">Edit</PrimaryButton></Link>
                                     ) : null}
                                     {canDelete ? (
-                                        <PrimaryButton
+                                        <DangerButton
                                             type="button"
-                                            className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
                                             onClick={() => {
                                                 if (confirm('Delete this role?')) {
                                                     router.delete(route('settings.roles.destroy', role.id));
@@ -32,7 +32,7 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                                             }}
                                         >
                                             Delete
-                                        </PrimaryButton>
+                                        </DangerButton>
                                     ) : null}
                                 </div>
                             ) : undefined

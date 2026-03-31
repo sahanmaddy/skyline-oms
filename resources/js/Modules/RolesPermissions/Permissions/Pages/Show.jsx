@@ -1,3 +1,4 @@
+import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
@@ -23,9 +24,8 @@ export default function Show({ permission, canEdit, canDelete }) {
                                         </Link>
                                     ) : null}
                                     {canDelete ? (
-                                        <PrimaryButton
+                                        <DangerButton
                                             type="button"
-                                            className="border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:bg-red-50 active:bg-red-100"
                                             onClick={() => {
                                                 if (confirm('Delete this permission?')) {
                                                     router.delete(route('settings.permissions.destroy', permission.id));
@@ -33,7 +33,7 @@ export default function Show({ permission, canEdit, canDelete }) {
                                             }}
                                         >
                                             Delete
-                                        </PrimaryButton>
+                                        </DangerButton>
                                     ) : null}
                                 </div>
                             ) : undefined
