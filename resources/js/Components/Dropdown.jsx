@@ -1,29 +1,33 @@
 import { Transition } from '@headlessui/react';
 import { Link } from '@inertiajs/react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const DropDownContext = createContext();
 
 const Dropdown = ({ children }) => {
     const [open, setOpen] = useState(false);
+    const triggerRef = useRef(null);
 
     const toggleOpen = () => {
         setOpen((previousState) => !previousState);
     };
 
     return (
-        <DropDownContext.Provider value={{ open, setOpen, toggleOpen }}>
+        <DropDownContext.Provider value={{ open, setOpen, toggleOpen, triggerRef }}>
             <div className="relative">{children}</div>
         </DropDownContext.Provider>
     );
 };
 
 const Trigger = ({ children }) => {
-    const { open, setOpen, toggleOpen } = useContext(DropDownContext);
+    const { open, setOpen, toggleOpen, triggerRef } = useContext(DropDownContext);
 
     return (
         <>
-            <div onClick={toggleOpen}>{children}</div>
+            <div ref={triggerRef} onClick={toggleOpen}>
+                {children}
+            </div>
 
             {open && (
                 <div
@@ -41,24 +45,80 @@ const Content = ({
     contentClasses = 'py-1 bg-white',
     children,
 }) => {
-    const { open, setOpen } = useContext(DropDownContext);
+    const { open, setOpen, triggerRef } = useContext(DropDownContext);
+    const contentRef = useRef(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
-    let alignmentClasses = 'origin-top';
+    const computeCoords = () => {
+        const trigger = triggerRef.current;
+        const content = contentRef.current;
+        if (!trigger) {
+            return;
+        }
 
-    if (align === 'left') {
-        alignmentClasses = 'ltr:origin-top-left rtl:origin-top-right start-0';
-    } else if (align === 'right') {
-        alignmentClasses = 'ltr:origin-top-right rtl:origin-top-left end-0';
-    }
+        const triggerRect = trigger.getBoundingClientRect();
+        const contentRect = content?.getBoundingClientRect();
+        const menuWidth = contentRect?.width || (width === '48' ? 192 : triggerRect.width);
+        const menuHeight = contentRect?.height || 0;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const gap = 8;
 
-    let widthClasses = '';
+        let left =
+            align === 'left'
+                ? triggerRect.left
+                : triggerRect.right - menuWidth;
 
-    if (width === '48') {
-        widthClasses = 'w-48';
-    }
+        if (left + menuWidth > viewportWidth - gap) {
+            left = viewportWidth - menuWidth - gap;
+        }
+        if (left < gap) {
+            left = gap;
+        }
 
-    return (
-        <>
+        let top = triggerRect.bottom + gap;
+        if (top + menuHeight > viewportHeight - gap && menuHeight > 0) {
+            top = Math.max(gap, triggerRect.top - menuHeight - gap);
+        }
+
+        setCoords({
+            top,
+            left,
+            width: width === '48' ? 192 : triggerRect.width,
+        });
+    };
+
+    useLayoutEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        computeCoords();
+        const id = requestAnimationFrame(computeCoords);
+
+        return () => cancelAnimationFrame(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, align, width, children]);
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        const handleReposition = () => computeCoords();
+
+        window.addEventListener('resize', handleReposition);
+        window.addEventListener('scroll', handleReposition, true);
+
+        return () => {
+            window.removeEventListener('resize', handleReposition);
+            window.removeEventListener('scroll', handleReposition, true);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, align, width]);
+
+    return createPortal(
+        <div className="fixed inset-0 z-50 pointer-events-none">
             <Transition
                 show={open}
                 enter="transition ease-out duration-200"
@@ -69,7 +129,13 @@ const Content = ({
                 leaveTo="opacity-0 scale-95"
             >
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    ref={contentRef}
+                    className="pointer-events-auto fixed origin-top-right rounded-md shadow-lg"
+                    style={{
+                        top: coords.top,
+                        left: coords.left,
+                        width: coords.width,
+                    }}
                     onClick={() => setOpen(false)}
                 >
                     <div
@@ -82,7 +148,8 @@ const Content = ({
                     </div>
                 </div>
             </Transition>
-        </>
+        </div>,
+        document.body,
     );
 };
 
