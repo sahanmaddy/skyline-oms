@@ -139,10 +139,13 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                     <table className="min-w-full table-auto divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="w-[22%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Employee
                                 </th>
-                                <th className="w-[26%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Branch
+                                </th>
+                                <th className="w-[22%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Contact
                                 </th>
                                 <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -167,6 +170,15 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                             <span className="font-medium text-gray-700">{e.employee_code}</span>
                                             {e.designation ? ` • ${e.designation}` : ''}
                                         </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                        {e.branch ? (
+                                            <span className="font-mono text-xs" title={e.branch.name}>
+                                                {e.branch.code}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400">—</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
                                         <div className="text-xs text-gray-500">
@@ -310,7 +322,7 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                             {employees.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={5}
+                                        colSpan={6}
                                         className="px-4 py-10 text-center"
                                     >
                                         <div className="text-sm font-medium text-gray-900">

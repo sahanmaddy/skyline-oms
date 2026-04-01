@@ -10,6 +10,7 @@ const SETTINGS_TITLE = 'Settings';
 export default function SettingsModuleLayout({ children, breadcrumbs = [] }) {
     const permissions = usePage().props.auth.permissions ?? [];
     const items = settingsSectionNavItems({
+        canViewBranches: permissions.includes('branches.view'),
         canViewUsers: permissions.includes('users.view'),
         canViewRoles: permissions.includes('roles.view'),
         canViewPermissions: permissions.includes('permissions.view'),

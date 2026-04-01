@@ -1,6 +1,6 @@
 import Dropdown from '@/Components/Dropdown';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 function sidebarItemClass(active) {
@@ -13,9 +13,12 @@ function sidebarItemClass(active) {
 }
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
-    const roles = usePage().props.auth.roles ?? [];
-    const permissions = usePage().props.auth.permissions ?? [];
+    const page = usePage();
+    const user = page.props.auth.user;
+    const roles = page.props.auth.roles ?? [];
+    const permissions = page.props.auth.permissions ?? [];
+    const contextBranch = page.props.auth.context_branch;
+    const branchesForContext = page.props.auth.branches_for_context ?? [];
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
@@ -96,8 +99,39 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <div className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">{header ?? ' '}</div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <div className="hidden text-sm text-gray-600 dark:text-cursor-muted sm:block">{user.email}</div>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                {contextBranch ? (
+                                    branchesForContext.length > 1 ? (
+                                        <label className="hidden max-w-[min(100%,14rem)] sm:block">
+                                            <span className="sr-only">Working branch</span>
+                                            <select
+                                                className="block w-full truncate rounded-md border border-gray-200 bg-white py-1.5 ps-2 pe-7 text-xs font-medium text-gray-800 shadow-sm focus:border-cursor-accent focus:outline-none focus:ring-1 focus:ring-cursor-accent dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-bright"
+                                                value={contextBranch.id}
+                                                onChange={(e) => {
+                                                    router.patch(
+                                                        route('settings.context.branch'),
+                                                        { branch_id: Number(e.target.value) },
+                                                        { preserveState: true, preserveScroll: true },
+                                                    );
+                                                }}
+                                            >
+                                                {branchesForContext.map((b) => (
+                                                    <option key={b.id} value={b.id}>
+                                                        {b.code} — {b.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                    ) : (
+                                        <span
+                                            className="hidden max-w-[12rem] truncate text-xs text-gray-600 dark:text-cursor-muted sm:inline"
+                                            title={`${contextBranch.code} — ${contextBranch.name}`}
+                                        >
+                                            {contextBranch.code} · {contextBranch.name}
+                                        </span>
+                                    )
+                                ) : null}
+                                <div className="hidden text-sm text-gray-600 dark:text-cursor-muted md:block">{user.email}</div>
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">

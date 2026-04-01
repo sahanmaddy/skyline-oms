@@ -47,6 +47,7 @@ export default function EmployeeForm({
     errors,
     processing,
     statusOptions,
+    activeBranches,
     users,
     submitLabel,
     onSubmit,
@@ -197,9 +198,32 @@ export default function EmployeeForm({
             className="space-y-6"
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900">Employee Information</h3>
-                <p className="mt-1 text-xs text-gray-500">Core identity and basic profile details.</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Employee Information</h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">Core identity and basic profile details.</p>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="branch_id" value="Branch" />
+                        <select
+                            id="branch_id"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-fg"
+                            value={data.branch_id ?? ''}
+                            onChange={(e) =>
+                                setData(
+                                    'branch_id',
+                                    e.target.value === '' ? '' : Number(e.target.value),
+                                )
+                            }
+                        >
+                            <option value="">Select branch…</option>
+                            {activeBranches?.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                    {b.code} — {b.name}
+                                </option>
+                            ))}
+                        </select>
+                        <InputError className="mt-2" message={errors.branch_id} />
+                    </div>
+
                     <div>
                         <InputLabel htmlFor="employee_code" value="Employee Code" />
                         <TextInput

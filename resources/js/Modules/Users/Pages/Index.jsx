@@ -83,10 +83,13 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                 <th className="w-[16%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Name
                                 </th>
-                                <th className="w-[24%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Email
                                 </th>
-                                <th className="w-[22%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[14%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Branch
+                                </th>
+                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Roles
                                 </th>
                                 <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -111,6 +114,15 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
+                                        <td className="px-4 py-3 text-sm text-gray-700">
+                                            {u.branch ? (
+                                                <span title={u.branch.name}>
+                                                    <span className="font-mono text-xs">{u.branch.code}</span>
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400">—</span>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-wrap gap-1">
                                                 {(u.roles || []).length > 0 ? (
@@ -220,7 +232,7 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
 
                             {users.data.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-10 text-center">
+                                    <td colSpan={7} className="px-4 py-10 text-center">
                                         <div className="text-sm font-medium text-gray-900">
                                             No users found
                                         </div>

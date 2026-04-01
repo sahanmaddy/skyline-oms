@@ -98,6 +98,22 @@ export default function Show({ user, canEdit, canDelete }) {
                             />
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Default branch
+                                </div>
+                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                    {user.branch ? (
+                                        <>
+                                            <span className="font-mono text-xs text-gray-600">{user.branch.code}</span>
+                                            <span className="text-gray-500"> — </span>
+                                            {user.branch.name}
+                                        </>
+                                    ) : (
+                                        <span className="text-gray-400">—</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Linked employee
                                 </div>
                                 <div className="mt-2 flex min-h-6 items-center text-sm font-medium text-gray-900">

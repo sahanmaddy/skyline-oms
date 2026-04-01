@@ -160,6 +160,30 @@ final class PermissionCatalog
                 'module' => 'Settings',
                 'description' => 'Access the System Settings area when it is enabled for the role.',
             ],
+            [
+                'name' => 'branches.view',
+                'display_name' => 'View branches',
+                'module' => 'Settings',
+                'description' => 'Open the branches list and branch detail pages.',
+            ],
+            [
+                'name' => 'branches.create',
+                'display_name' => 'Create branches',
+                'module' => 'Settings',
+                'description' => 'Add new company branches or locations.',
+            ],
+            [
+                'name' => 'branches.edit',
+                'display_name' => 'Edit branches',
+                'module' => 'Settings',
+                'description' => 'Update branch details, contact information, and active status.',
+            ],
+            [
+                'name' => 'branches.delete',
+                'display_name' => 'Delete branches',
+                'module' => 'Settings',
+                'description' => 'Remove branches that are not assigned to users or employees.',
+            ],
         ];
     }
 

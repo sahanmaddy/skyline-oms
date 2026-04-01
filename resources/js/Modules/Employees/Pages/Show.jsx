@@ -186,6 +186,20 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                 label="Employee Code"
                                 value={employee.employee_code || '—'}
                             />
+                            <Info
+                                label="Branch"
+                                value={
+                                    employee.branch ? (
+                                        <>
+                                            <span className="font-mono text-xs">{employee.branch.code}</span>
+                                            <span className="text-gray-500"> — </span>
+                                            {employee.branch.name}
+                                        </>
+                                    ) : (
+                                        '—'
+                                    )
+                                }
+                            />
                             <Info label="Gender" value={employee.gender || '—'} />
                             <Info
                                 label="Marital Status"

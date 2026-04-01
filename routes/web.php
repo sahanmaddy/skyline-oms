@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\BranchContextController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerDocumentController;
 use App\Http\Controllers\EmployeeController;
@@ -55,6 +57,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('system', [SystemSettingsController::class, 'edit'])->name('system');
         Route::patch('system/theme', [SystemSettingsController::class, 'updateTheme'])->name('system.theme');
+
+        Route::patch('context/branch', [BranchContextController::class, 'update'])->name('context.branch');
+        Route::resource('branches', BranchController::class);
     });
 
     Route::permanentRedirect('/profile', '/settings/profile');

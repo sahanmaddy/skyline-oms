@@ -6,8 +6,9 @@ import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Edit({ employee, statusOptions, users }) {
+export default function Edit({ employee, statusOptions, users, activeBranches }) {
     const { data, setData, put, processing, errors } = useForm({
+        branch_id: employee.branch_id ?? employee.branch?.id ?? '',
         employee_code: employee.employee_code || '',
         first_name: employee.first_name || '',
         last_name: employee.last_name || '',
@@ -79,6 +80,7 @@ export default function Edit({ employee, statusOptions, users }) {
                     errors={errors}
                     processing={processing}
                     statusOptions={statusOptions}
+                    activeBranches={activeBranches}
                     users={users}
                     profilePhotoUrl={
                         employee.profile_photo_path

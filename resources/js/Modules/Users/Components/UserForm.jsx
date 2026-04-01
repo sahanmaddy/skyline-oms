@@ -10,6 +10,7 @@ export default function UserForm({
     processing,
     roles,
     statusOptions,
+    activeBranches,
     employeesForLink,
     submitLabel,
     showPasswordFields,
@@ -45,6 +46,32 @@ export default function UserForm({
                         onChange={(e) => setData('email', e.target.value)}
                     />
                     <InputError className="mt-2" message={errors.email} />
+                </div>
+
+                <div className="sm:col-span-2">
+                    <InputLabel htmlFor="branch_id" value="Default branch" />
+                    <select
+                        id="branch_id"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-fg"
+                        value={data.branch_id ?? ''}
+                        onChange={(e) =>
+                            setData(
+                                'branch_id',
+                                e.target.value === '' ? '' : Number(e.target.value),
+                            )
+                        }
+                    >
+                        <option value="">Select branch…</option>
+                        {activeBranches?.map((b) => (
+                            <option key={b.id} value={b.id}>
+                                {b.code} — {b.name}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                        The user&apos;s default branch for this application.
+                    </p>
+                    <InputError className="mt-2" message={errors.branch_id} />
                 </div>
 
                 <div>

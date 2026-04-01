@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\EmployeeDepartment;
 use App\Enums\EmployeeStatus;
+use App\Models\User;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,6 +23,11 @@ class EmployeeStoreRequest extends FormRequest
         $employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Intern'];
 
         return [
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('is_active', true),
+            ],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'display_name' => ['required', 'string', 'max:200'],
@@ -65,5 +72,24 @@ class EmployeeStoreRequest extends FormRequest
             'phone_numbers.*.phone_number' => ['nullable', 'string', 'max:50', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.country_code'],
             'phone_numbers.*.is_primary' => ['boolean'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $branchId = (int) $this->input('branch_id');
+            $userId = $this->input('user_id');
+            if (! $branchId || ! $userId) {
+                return;
+            }
+
+            $user = User::query()->find((int) $userId);
+            if ($user && (int) $user->branch_id !== $branchId) {
+                $validator->errors()->add(
+                    'user_id',
+                    'The linked user must have the same default branch as this employee.',
+                );
+            }
+        });
     }
 }

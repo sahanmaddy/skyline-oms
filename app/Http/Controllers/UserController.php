@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Users\SyncUserEmployeeLinkAction;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
+use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
@@ -27,6 +28,7 @@ class UserController extends Controller
     {
         $query = User::query()->with([
             'roles',
+            'branch:id,code,name',
             'employee:id,employee_code,display_name,user_id',
         ]);
 
@@ -70,6 +72,7 @@ class UserController extends Controller
             'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->employeesAvailableForUserLink(),
+            'activeBranches' => $this->activeBranchesForForms(null),
         ]);
     }
 
@@ -85,6 +88,7 @@ class UserController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'status' => $data['status'],
+            'branch_id' => $data['branch_id'],
         ]);
 
         $user->syncRoles($data['roles'] ?? []);
@@ -100,6 +104,7 @@ class UserController extends Controller
     {
         $user->load([
             'roles',
+            'branch:id,code,name',
             'employee:id,employee_code,display_name,user_id',
         ]);
 
@@ -114,6 +119,7 @@ class UserController extends Controller
     {
         $user->load([
             'roles',
+            'branch:id,code,name',
             'employee:id,employee_code,display_name,user_id',
         ]);
 
@@ -122,6 +128,7 @@ class UserController extends Controller
             'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->employeesAvailableForUserLink($user),
+            'activeBranches' => $this->activeBranchesForForms($user),
         ]);
     }
 
@@ -139,6 +146,7 @@ class UserController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'status' => $data['status'],
+            'branch_id' => $data['branch_id'],
         ]);
 
         if (! empty($data['password'])) {
@@ -193,5 +201,24 @@ class UserController extends Controller
         }
 
         return $query->pluck('name')->all();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, \App\Models\Branch>
+     */
+    private function activeBranchesForForms(?User $user = null): \Illuminate\Support\Collection
+    {
+        $query = Branch::query()->orderBy('name');
+
+        if ($user !== null) {
+            $query->where(function ($q) use ($user) {
+                $q->where('is_active', true)
+                    ->orWhere('id', $user->branch_id);
+            });
+        } else {
+            $query->where('is_active', true);
+        }
+
+        return $query->get(['id', 'code', 'name']);
     }
 }

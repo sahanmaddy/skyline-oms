@@ -18,6 +18,11 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -29,6 +34,7 @@ class User extends Authenticatable
         'password',
         'status',
         'theme_preference',
+        'branch_id',
     ];
 
     /**

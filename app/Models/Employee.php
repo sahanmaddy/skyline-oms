@@ -45,6 +45,7 @@ class Employee extends Model
         'emergency_contact_phone',
         'user_id',
         'is_sales_commission_eligible',
+        'branch_id',
     ];
 
     protected $casts = [
@@ -58,6 +59,11 @@ class Employee extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function documents(): HasMany

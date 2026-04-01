@@ -8,6 +8,7 @@ use App\Enums\EmployeeDocumentType;
 use App\Enums\EmployeeStatus;
 use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
+use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\User;
 use App\Services\Employees\EmployeeCodeGeneratorService;
@@ -26,7 +27,7 @@ class EmployeeController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = Employee::query()->with(['user', 'phoneNumbers']);
+        $query = Employee::query()->with(['user', 'phoneNumbers', 'branch:id,code,name']);
 
         if ($search = trim((string) $request->string('q'))) {
             // Phone numbers are normalized on save (digits-only and leading zeros stripped).
@@ -77,6 +78,7 @@ class EmployeeController extends Controller
         return Inertia::render('Modules/Employees/Pages/Create', [
             'statusOptions' => EmployeeStatus::values(),
             'nextEmployeeCode' => app(EmployeeCodeGeneratorService::class)->nextCode(),
+            'activeBranches' => Branch::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
             'users' => User::query()
                 ->whereDoesntHave('employee')
                 ->select(['id', 'name', 'email'])
@@ -101,6 +103,7 @@ class EmployeeController extends Controller
     public function show(Employee $employee): Response
     {
         $employee->load([
+            'branch:id,code,name',
             'user:id,name,email',
             'phoneNumbers',
             'documents' => fn ($q) => $q->with('uploader:id,name')->latest(),
@@ -149,8 +152,15 @@ class EmployeeController extends Controller
         }
 
         return Inertia::render('Modules/Employees/Pages/Edit', [
-            'employee' => $employee->load(['user:id,name,email', 'phoneNumbers']),
+            'employee' => $employee->load(['branch:id,code,name', 'user:id,name,email', 'phoneNumbers']),
             'statusOptions' => EmployeeStatus::values(),
+            'activeBranches' => Branch::query()
+                ->where(function ($q) use ($employee) {
+                    $q->where('is_active', true)
+                        ->orWhere('id', $employee->branch_id);
+                })
+                ->orderBy('name')
+                ->get(['id', 'code', 'name']),
             'users' => $availableUsers->unique('id')->values(),
         ]);
     }

@@ -5,7 +5,7 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Edit({ user, roles, statusOptions, employeesForLink }) {
+export default function Edit({ user, roles, statusOptions, employeesForLink, activeBranches }) {
     const { data, setData, put, processing, errors } = useForm({
         name: user.name || '',
         email: user.email || '',
@@ -13,6 +13,7 @@ export default function Edit({ user, roles, statusOptions, employeesForLink }) {
         password_confirmation: '',
         roles: user.roles?.map((r) => r.name) || (roles?.length ? [roles[0]] : []),
         status: user.status || statusOptions?.[0] || 'active',
+        branch_id: user.branch_id ?? user.branch?.id ?? '',
         employee_id: user.employee?.id ?? '',
     });
 
@@ -46,6 +47,7 @@ export default function Edit({ user, roles, statusOptions, employeesForLink }) {
                         roles={roles}
                         statusOptions={statusOptions}
                         employeesForLink={employeesForLink}
+                        activeBranches={activeBranches}
                         submitLabel="Save"
                         showPasswordFields
                         onSubmit={() => put(route('settings.users.update', user.id))}

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Employee;
 use App\Models\Role;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -42,6 +44,11 @@ class UserStoreRequest extends FormRequest
                 $roleExistsRule,
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'branch_id' => [
+                'required',
+                'integer',
+                Rule::exists('branches', 'id')->where('is_active', true),
+            ],
             'employee_id' => [
                 'nullable',
                 'integer',
@@ -50,5 +57,24 @@ class UserStoreRequest extends FormRequest
                 }),
             ],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $branchId = (int) $this->input('branch_id');
+            $empId = $this->input('employee_id');
+            if (! $branchId || ! $empId) {
+                return;
+            }
+
+            $employee = Employee::query()->find((int) $empId);
+            if ($employee && (int) $employee->branch_id !== $branchId) {
+                $validator->errors()->add(
+                    'employee_id',
+                    'The linked employee must belong to the same branch as this user.',
+                );
+            }
+        });
     }
 }
