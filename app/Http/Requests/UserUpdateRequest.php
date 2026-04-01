@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
@@ -31,6 +32,11 @@ class UserUpdateRequest extends FormRequest
     {
         /** @var User $userModel */
         $userModel = $this->route('user');
+        $actor = $this->user();
+        $allowedBranches = $actor
+            ? app(BranchScopeService::class)->assignableBranchIdsForValidation($actor, (int) $userModel->branch_id)
+            : [];
+
         $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
             ->where(function ($query) {
                 $query->where('guard_name', 'web');
@@ -50,22 +56,16 @@ class UserUpdateRequest extends FormRequest
                 $roleExistsRule,
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
-            'branch_id' => [
-                'required',
-                'integer',
-                Rule::exists('branches', 'id')->where(function ($query) use ($userModel) {
-                    $query->where('is_active', true)
-                        ->orWhere('id', $userModel->branch_id);
-                }),
-            ],
+            'branch_id' => ['required', 'integer', Rule::in($allowedBranches)],
             'employee_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('employees', 'id')->where(function ($query) use ($userModel) {
-                    $query->where(function ($q) use ($userModel) {
-                        $q->whereNull('user_id')
-                            ->orWhere('user_id', $userModel->id);
-                    });
+                    $query->where('branch_id', (int) $this->input('branch_id'))
+                        ->where(function ($q) use ($userModel) {
+                            $q->whereNull('user_id')
+                                ->orWhere('user_id', $userModel->id);
+                        });
                 }),
             ],
         ];

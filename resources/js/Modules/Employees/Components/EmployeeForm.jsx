@@ -78,6 +78,28 @@ export default function EmployeeForm({
 
     const phoneRows = useMemo(() => data.phone_numbers || [], [data.phone_numbers]);
 
+    const usersInBranch = useMemo(() => {
+        if (!users?.length) {
+            return [];
+        }
+        if (!data.branch_id) {
+            return users;
+        }
+        return users.filter((u) => u.branch_id === data.branch_id);
+    }, [users, data.branch_id]);
+
+    useEffect(() => {
+        if (!data.branch_id || !data.user_id) {
+            return;
+        }
+        const ok = users?.some(
+            (u) => u.id === data.user_id && u.branch_id === data.branch_id,
+        );
+        if (!ok) {
+            setData('user_id', '');
+        }
+    }, [data.branch_id, data.user_id, users, setData]);
+
     useEffect(() => {
         if (data.profile_photo) {
             const objUrl = URL.createObjectURL(data.profile_photo);
@@ -419,7 +441,7 @@ export default function EmployeeForm({
                             }
                         >
                             <option value="">—</option>
-                            {users?.map((u) => (
+                            {usersInBranch.map((u) => (
                                 <option key={u.id} value={u.id}>
                                     {u.name} ({u.email})
                                 </option>

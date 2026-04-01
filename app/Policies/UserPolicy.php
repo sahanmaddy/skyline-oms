@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 
 class UserPolicy
 {
@@ -13,7 +14,15 @@ class UserPolicy
 
     public function view(User $user, User $model): bool
     {
-        return $user->can('users.view');
+        if (! $user->can('users.view')) {
+            return false;
+        }
+
+        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
+            request(),
+            $model->branch_id,
+            $user,
+        );
     }
 
     public function create(User $user): bool
@@ -23,11 +32,27 @@ class UserPolicy
 
     public function update(User $user, User $model): bool
     {
-        return $user->can('users.edit');
+        if (! $user->can('users.edit')) {
+            return false;
+        }
+
+        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
+            request(),
+            $model->branch_id,
+            $user,
+        );
     }
 
     public function delete(User $user, User $model): bool
     {
-        return $user->can('users.delete') && $user->id !== $model->id;
+        if (! $user->can('users.delete') || $user->id === $model->id) {
+            return false;
+        }
+
+        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
+            request(),
+            $model->branch_id,
+            $user,
+        );
     }
 }

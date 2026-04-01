@@ -8,9 +8,9 @@ use App\Enums\EmployeeDocumentType;
 use App\Enums\EmployeeStatus;
 use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
-use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 use App\Services\Employees\EmployeeCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,18 +20,21 @@ use Inertia\Response;
 
 class EmployeeController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly BranchScopeService $branchScope,
+    ) {
         $this->authorizeResource(Employee::class, 'employee');
     }
 
     public function index(Request $request): Response
     {
+        $branchId = $this->branchScope->effectiveBranchId($request);
+
         $query = Employee::query()->with(['user', 'phoneNumbers', 'branch:id,code,name']);
 
+        $this->branchScope->scopeEmployeesToEffectiveBranch($query, $branchId);
+
         if ($search = trim((string) $request->string('q'))) {
-            // Phone numbers are normalized on save (digits-only and leading zeros stripped).
-            // Normalize the search term similarly so queries like "0771234567" match stored "771234567".
             $phoneSearch = preg_replace('/\D+/', '', $search) ?? '';
             $phoneSearch = ltrim($phoneSearch, '0');
             $phoneTerm = $phoneSearch !== '' ? $phoneSearch : $search;
@@ -73,17 +76,17 @@ class EmployeeController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403);
+
         return Inertia::render('Modules/Employees/Pages/Create', [
             'statusOptions' => EmployeeStatus::values(),
             'nextEmployeeCode' => app(EmployeeCodeGeneratorService::class)->nextCode(),
-            'activeBranches' => Branch::query()->active()->orderBy('name')->get(['id', 'code', 'name']),
-            'users' => User::query()
-                ->whereDoesntHave('employee')
-                ->select(['id', 'name', 'email'])
-                ->orderBy('name')
-                ->get(),
+            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, null),
+            'users' => $this->branchScope->usersAvailableForEmployeeForm($request, null),
+            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor),
         ]);
     }
 
@@ -136,32 +139,16 @@ class EmployeeController extends Controller
         );
     }
 
-    public function edit(Employee $employee): Response
+    public function edit(Request $request, Employee $employee): Response
     {
-        $availableUsers = User::query()
-            ->whereDoesntHave('employee')
-            ->select(['id', 'name', 'email'])
-            ->orderBy('name')
-            ->get();
-
-        if ($employee->user_id) {
-            $current = User::query()->select(['id', 'name', 'email'])->find($employee->user_id);
-            if ($current) {
-                $availableUsers->prepend($current);
-            }
-        }
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403);
 
         return Inertia::render('Modules/Employees/Pages/Edit', [
             'employee' => $employee->load(['branch:id,code,name', 'user:id,name,email', 'phoneNumbers']),
             'statusOptions' => EmployeeStatus::values(),
-            'activeBranches' => Branch::query()
-                ->where(function ($q) use ($employee) {
-                    $q->where('is_active', true)
-                        ->orWhere('id', $employee->branch_id);
-                })
-                ->orderBy('name')
-                ->get(['id', 'code', 'name']),
-            'users' => $availableUsers->unique('id')->values(),
+            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, (int) $employee->branch_id),
+            'users' => $this->branchScope->usersAvailableForEmployeeForm($request, $employee),
         ]);
     }
 

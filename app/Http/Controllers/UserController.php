@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\Users\SyncUserEmployeeLinkAction;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
-use App\Models\Branch;
-use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,18 +18,23 @@ use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly BranchScopeService $branchScope,
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
 
     public function index(Request $request): Response
     {
+        $branchId = $this->branchScope->effectiveBranchId($request);
+
         $query = User::query()->with([
             'roles',
             'branch:id,code,name',
             'employee:id,employee_code,display_name,user_id',
         ]);
+
+        $this->branchScope->scopeUsersToEffectiveBranch($query, $branchId);
 
         if ($search = trim((string) $request->string('q'))) {
             $query->where(function ($q) use ($search) {
@@ -66,13 +70,17 @@ class UserController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403);
+
         return Inertia::render('Modules/Users/Pages/Create', [
             'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
-            'employeesForLink' => $this->employeesAvailableForUserLink(),
-            'activeBranches' => $this->activeBranchesForForms(null),
+            'employeesForLink' => $this->branchScope->employeesAvailableForUserForm($request, null),
+            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, null),
+            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor),
         ]);
     }
 
@@ -115,8 +123,11 @@ class UserController extends Controller
         ]);
     }
 
-    public function edit(User $user): Response
+    public function edit(Request $request, User $user): Response
     {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403);
+
         $user->load([
             'roles',
             'branch:id,code,name',
@@ -127,8 +138,8 @@ class UserController extends Controller
             'user' => $user,
             'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
-            'employeesForLink' => $this->employeesAvailableForUserLink($user),
-            'activeBranches' => $this->activeBranchesForForms($user),
+            'employeesForLink' => $this->branchScope->employeesAvailableForUserForm($request, $user),
+            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, (int) $user->branch_id),
         ]);
     }
 
@@ -171,25 +182,6 @@ class UserController extends Controller
         return redirect()->route('settings.users.index')->with('success', 'User deleted.');
     }
 
-    /**
-     * Employees that can be linked: unlinked, or already linked to the given user (e.g. edit form).
-     *
-     * @return \Illuminate\Support\Collection<int, \App\Models\Employee>
-     */
-    private function employeesAvailableForUserLink(?User $user = null): \Illuminate\Support\Collection
-    {
-        return Employee::query()
-            ->select(['id', 'employee_code', 'display_name'])
-            ->where(function ($q) use ($user) {
-                $q->whereNull('user_id');
-                if ($user) {
-                    $q->orWhere('user_id', $user->id);
-                }
-            })
-            ->orderBy('display_name')
-            ->get();
-    }
-
     private function assignableRoleNames(): array
     {
         $query = Role::query()
@@ -201,24 +193,5 @@ class UserController extends Controller
         }
 
         return $query->pluck('name')->all();
-    }
-
-    /**
-     * @return \Illuminate\Support\Collection<int, \App\Models\Branch>
-     */
-    private function activeBranchesForForms(?User $user = null): \Illuminate\Support\Collection
-    {
-        $query = Branch::query()->orderBy('name');
-
-        if ($user !== null) {
-            $query->where(function ($q) use ($user) {
-                $q->where('is_active', true)
-                    ->orWhere('id', $user->branch_id);
-            });
-        } else {
-            $query->where('is_active', true);
-        }
-
-        return $query->get(['id', 'code', 'name']);
     }
 }

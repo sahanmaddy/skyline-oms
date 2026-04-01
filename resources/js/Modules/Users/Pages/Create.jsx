@@ -5,8 +5,11 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Create({ roles, statusOptions, employeesForLink, activeBranches }) {
-    const defaultBranchId = activeBranches?.[0]?.id ?? '';
+export default function Create({ roles, statusOptions, employeesForLink, activeBranches, suggestedBranchId }) {
+    const defaultBranchId =
+        suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
+            ? suggestedBranchId
+            : (activeBranches?.[0]?.id ?? '');
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',

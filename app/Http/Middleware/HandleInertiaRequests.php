@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Branch;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -32,6 +32,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $scope = app(BranchScopeService::class);
 
         $contextBranch = null;
         $branchesForContext = [];
@@ -39,26 +40,24 @@ class HandleInertiaRequests extends Middleware
         if ($user instanceof User) {
             $user->loadMissing(['branch:id,code,name,is_active']);
 
-            $allowedIds = $this->allowedBranchIdsForUser($user);
-            $branchId = (int) session('current_branch_id', $user->branch_id);
-
-            if (! in_array($branchId, $allowedIds, true)) {
-                $branchId = (int) $user->branch_id;
-                session(['current_branch_id' => $branchId]);
+            $contextBranchModel = $scope->resolveContextBranch($request, $user);
+            if ($contextBranchModel) {
+                $request->session()->put('current_branch_id', (int) $contextBranchModel->id);
             }
 
-            $contextBranch = Branch::query()->whereKey($branchId)->first()
-                ?? $user->branch;
+            $contextBranch = $contextBranchModel ? [
+                'id' => $contextBranchModel->id,
+                'code' => $contextBranchModel->code,
+                'name' => $contextBranchModel->name,
+                'is_active' => $contextBranchModel->is_active,
+            ] : null;
 
-            if ($contextBranch) {
-                session(['current_branch_id' => (int) $contextBranch->id]);
-            }
-
-            $branchesForContext = Branch::query()
-                ->active()
-                ->when(! $user->can('branches.view'), fn ($q) => $q->whereKey($user->branch_id))
-                ->orderBy('name')
-                ->get(['id', 'code', 'name'])
+            $branchesForContext = $scope->branchesForNavbar($user)
+                ->map(fn ($b) => [
+                    'id' => $b->id,
+                    'code' => $b->code,
+                    'name' => $b->name,
+                ])
                 ->values()
                 ->all();
         }
@@ -69,12 +68,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'roles' => $user ? $user->getRoleNames()->values() : [],
                 'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values() : [],
-                'context_branch' => $contextBranch ? [
-                    'id' => $contextBranch->id,
-                    'code' => $contextBranch->code,
-                    'name' => $contextBranch->name,
-                    'is_active' => $contextBranch->is_active,
-                ] : null,
+                'context_branch' => $contextBranch,
                 'branches_for_context' => $branchesForContext,
             ],
             'flash' => [
@@ -84,22 +78,5 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
         ];
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function allowedBranchIdsForUser(User $user): array
-    {
-        $ids = [(int) $user->branch_id];
-
-        if ($user->can('branches.view')) {
-            $ids = array_merge(
-                $ids,
-                Branch::query()->active()->pluck('id')->map(fn ($id) => (int) $id)->all(),
-            );
-        }
-
-        return array_values(array_unique($ids));
     }
 }

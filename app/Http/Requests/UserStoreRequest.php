@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Employee;
 use App\Models\Role;
+use App\Services\Branches\BranchScopeService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +26,11 @@ class UserStoreRequest extends FormRequest
 
     public function rules(): array
     {
+        $actor = $this->user();
+        $allowedBranches = $actor
+            ? app(BranchScopeService::class)->assignableBranchIdsForValidation($actor, null)
+            : [];
+
         $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
             ->where(function ($query) {
                 $query->where('guard_name', 'web');
@@ -44,16 +50,13 @@ class UserStoreRequest extends FormRequest
                 $roleExistsRule,
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
-            'branch_id' => [
-                'required',
-                'integer',
-                Rule::exists('branches', 'id')->where('is_active', true),
-            ],
+            'branch_id' => ['required', 'integer', Rule::in($allowedBranches)],
             'employee_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('employees', 'id')->where(function ($query) {
-                    $query->whereNull('user_id');
+                    $query->whereNull('user_id')
+                        ->where('branch_id', (int) $this->input('branch_id'));
                 }),
             ],
         ];

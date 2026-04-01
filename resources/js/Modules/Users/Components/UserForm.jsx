@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { useEffect, useMemo } from 'react';
 
 export default function UserForm({
     data,
@@ -16,6 +17,28 @@ export default function UserForm({
     showPasswordFields,
     onSubmit,
 }) {
+    const employeesInBranch = useMemo(() => {
+        if (!employeesForLink?.length) {
+            return [];
+        }
+        if (!data.branch_id) {
+            return employeesForLink;
+        }
+        return employeesForLink.filter((e) => e.branch_id === data.branch_id);
+    }, [employeesForLink, data.branch_id]);
+
+    useEffect(() => {
+        if (!data.branch_id || !data.employee_id) {
+            return;
+        }
+        const ok = employeesForLink?.some(
+            (e) => e.id === data.employee_id && e.branch_id === data.branch_id,
+        );
+        if (!ok) {
+            setData('employee_id', '');
+        }
+    }, [data.branch_id, data.employee_id, employeesForLink, setData]);
+
     return (
         <form
             onSubmit={(e) => {
@@ -105,7 +128,7 @@ export default function UserForm({
                         }
                     >
                         <option value="">— Not linked —</option>
-                        {employeesForLink?.map((emp) => (
+                        {employeesInBranch.map((emp) => (
                             <option key={emp.id} value={emp.id}>
                                 {emp.employee_code} - {emp.display_name}
                             </option>

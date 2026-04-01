@@ -111,7 +111,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     router.patch(
                                                         route('settings.context.branch'),
                                                         { branch_id: Number(e.target.value) },
-                                                        { preserveState: true, preserveScroll: true },
+                                                        { preserveScroll: true },
                                                     );
                                                 }}
                                             >
@@ -163,6 +163,34 @@ export default function AuthenticatedLayout({ header, children }) {
                         {showingNavigationDropdown && (
                             <div className="border-t border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface lg:hidden">
                                 <div className="space-y-1 px-4 py-3">
+                                    {contextBranch && branchesForContext.length > 1 ? (
+                                        <div className="mb-3 border-b border-gray-100 pb-3 dark:border-cursor-border">
+                                            <div className="mb-1 text-xs font-medium text-gray-500 dark:text-cursor-muted">
+                                                Working branch
+                                            </div>
+                                            <select
+                                                className="block w-full rounded-md border border-gray-200 bg-white py-2 ps-2 pe-2 text-sm text-gray-800 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-bright"
+                                                value={contextBranch.id}
+                                                onChange={(e) => {
+                                                    router.patch(
+                                                        route('settings.context.branch'),
+                                                        { branch_id: Number(e.target.value) },
+                                                        { preserveScroll: true },
+                                                    );
+                                                }}
+                                            >
+                                                {branchesForContext.map((b) => (
+                                                    <option key={b.id} value={b.id}>
+                                                        {b.code} — {b.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : contextBranch ? (
+                                        <div className="mb-3 border-b border-gray-100 pb-3 text-xs text-gray-600 dark:border-cursor-border dark:text-cursor-muted">
+                                            Branch: {contextBranch.code} · {contextBranch.name}
+                                        </div>
+                                    ) : null}
                                     <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
                                         Dashboard
                                     </ResponsiveNavLink>

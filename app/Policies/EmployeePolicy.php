@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 
 class EmployeePolicy
 {
@@ -14,7 +15,15 @@ class EmployeePolicy
 
     public function view(User $user, Employee $employee): bool
     {
-        return $user->can('employees.view');
+        if (! $user->can('employees.view')) {
+            return false;
+        }
+
+        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
+            request(),
+            $employee->branch_id,
+            $user,
+        );
     }
 
     public function create(User $user): bool
@@ -24,11 +33,27 @@ class EmployeePolicy
 
     public function update(User $user, Employee $employee): bool
     {
-        return $user->can('employees.edit');
+        if (! $user->can('employees.edit')) {
+            return false;
+        }
+
+        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
+            request(),
+            $employee->branch_id,
+            $user,
+        );
     }
 
     public function delete(User $user, Employee $employee): bool
     {
-        return $user->can('employees.delete');
+        if (! $user->can('employees.delete')) {
+            return false;
+        }
+
+        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
+            request(),
+            $employee->branch_id,
+            $user,
+        );
     }
 }

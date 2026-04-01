@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Services\Branches\BranchScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -10,14 +11,14 @@ use Illuminate\Validation\Rule;
 class BranchContextController extends Controller
 {
     /**
-     * Session-based working branch for users who may switch context (e.g. branches.view).
+     * Session-based working branch for authorized users.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, BranchScopeService $scope): RedirectResponse
     {
         $user = $request->user();
         abort_unless($user, 403);
 
-        $validated = $request->validate([
+        $request->validate([
             'branch_id' => [
                 'required',
                 'integer',
@@ -25,16 +26,15 @@ class BranchContextController extends Controller
             ],
         ]);
 
-        $branchId = (int) $validated['branch_id'];
+        $branchId = (int) $request->input('branch_id');
 
-        if (! $user->can('branches.view')) {
-            if ($branchId !== (int) $user->branch_id) {
-                abort(403);
-            }
-        }
+        abort_unless(
+            in_array($branchId, $scope->allowedSwitcherBranchIds($user), true),
+            403,
+        );
 
-        session(['current_branch_id' => $branchId]);
+        $request->session()->put('current_branch_id', $branchId);
 
-        return back();
+        return back()->with('success', 'Working branch updated.');
     }
 }
