@@ -149,8 +149,8 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                     key={c.id}
                                     className={
                                         isSystemCashCustomer(c)
-                                            ? 'bg-slate-50 hover:bg-slate-100/90'
-                                            : 'hover:bg-gray-50'
+                                            ? 'bg-slate-50 hover:bg-slate-100/90 dark:bg-cursor-raised/50 dark:hover:bg-cursor-raised'
+                                            : 'hover:bg-gray-50 dark:hover:bg-cursor-raised/40'
                                     }
                                 >
                                     <td className="px-4 py-3">

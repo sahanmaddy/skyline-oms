@@ -7,6 +7,7 @@ use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -52,18 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ]);
         })->name('company');
 
-        Route::get('system', function () {
-            return Inertia::render('Modules/Shared/ModulePlaceholder', [
-                'area' => 'settings',
-                'moduleTitle' => 'Settings',
-                'headTitle' => 'Settings — System Settings',
-                'breadcrumbs' => [
-                    ['label' => 'System Settings'],
-                ],
-                'title' => 'System settings',
-                'description' => 'Configure platform preferences, system controls, and global behavior.',
-            ]);
-        })->name('system');
+        Route::get('system', [SystemSettingsController::class, 'edit'])->name('system');
+        Route::patch('system/theme', [SystemSettingsController::class, 'updateTheme'])->name('system.theme');
     });
 
     Route::permanentRedirect('/profile', '/settings/profile');

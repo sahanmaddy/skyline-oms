@@ -5,6 +5,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <script>
+            (function () {
+                var storageKey = 'skyline:theme-mode';
+                var userTheme = @json(auth()->user()?->theme_preference);
+                var mode = userTheme || null;
+
+                if (!mode) {
+                    try {
+                        var stored = localStorage.getItem(storageKey);
+                        if (stored === 'light' || stored === 'dark' || stored === 'system') {
+                            mode = stored;
+                        }
+                    } catch (e) {}
+                }
+
+                if (!mode) mode = 'light';
+
+                var applied = mode;
+                if (mode === 'system') {
+                    applied = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+
+                var root = document.documentElement;
+                root.classList.toggle('dark', applied === 'dark');
+                root.setAttribute('data-theme-mode', mode);
+                root.setAttribute('data-theme-applied', applied);
+            })();
+        </script>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

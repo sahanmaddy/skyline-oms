@@ -5,8 +5,10 @@ import { useState } from 'react';
 
 function sidebarItemClass(active) {
     return (
-        'block rounded-md px-3 py-2 text-sm font-medium ' +
-        (active ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50')
+        'block rounded-md border-l-[3px] py-2 ps-[calc(0.75rem-3px)] pe-3 text-sm font-medium transition-colors ' +
+        (active
+            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-cursor-accent dark:bg-cursor-raised dark:text-cursor-bright'
+            : 'border-transparent text-gray-700 hover:bg-gray-50 dark:text-cursor-fg dark:hover:bg-cursor-raised')
     );
 }
 
@@ -28,14 +30,14 @@ export default function AuthenticatedLayout({ header, children }) {
     const settingsActive = route().current('settings.*');
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-cursor-bg">
             <div className="flex min-h-screen">
-                <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white lg:flex">
+                <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface lg:flex">
                     <div className="flex h-16 items-center justify-between px-4">
-                        <Link href={route('dashboard')} className="text-sm font-semibold text-gray-900">
+                        <Link href={route('dashboard')} className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                             Skyline OMS
                         </Link>
-                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-cursor-raised dark:text-cursor-fg">
                             {roles[0] ?? 'User'}
                         </span>
                     </div>
@@ -79,29 +81,29 @@ export default function AuthenticatedLayout({ header, children }) {
                 </aside>
 
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="sticky top-0 z-20 border-b border-gray-200 bg-white">
+                    <div className="sticky top-0 z-20 border-b border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface">
                         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                             <div className="flex items-center gap-3">
                                 <button
                                     type="button"
-                                    className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 lg:hidden"
+                                    className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-cursor-muted dark:hover:bg-cursor-raised dark:hover:text-cursor-bright lg:hidden"
                                     onClick={() => setShowingNavigationDropdown((v) => !v)}
                                 >
                                     <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                                     </svg>
                                 </button>
-                                <div className="text-sm font-semibold text-gray-900">{header ?? ' '}</div>
+                                <div className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">{header ?? ' '}</div>
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <div className="hidden text-sm text-gray-600 sm:block">{user.email}</div>
+                                <div className="hidden text-sm text-gray-600 dark:text-cursor-muted sm:block">{user.email}</div>
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none"
+                                                className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                             >
                                                 {user.name}
                                                 <svg className="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -125,7 +127,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         {showingNavigationDropdown && (
-                            <div className="border-t border-gray-200 bg-white lg:hidden">
+                            <div className="border-t border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface lg:hidden">
                                 <div className="space-y-1 px-4 py-3">
                                     <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
                                         Dashboard

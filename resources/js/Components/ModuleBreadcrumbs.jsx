@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 function Chevron() {
     return (
         <svg
-            className="mx-1 h-3.5 w-3.5 shrink-0 text-gray-300"
+            className="mx-1 h-3.5 w-3.5 shrink-0 text-gray-300 dark:text-cursor-border-muted"
             viewBox="0 0 20 20"
             fill="currentColor"
             aria-hidden
@@ -34,13 +34,13 @@ export default function ModuleBreadcrumbs({ items }) {
                         {item.href ? (
                             <Link
                                 href={item.href}
-                                className="font-medium text-gray-600 underline-offset-2 hover:text-indigo-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                className="font-medium text-gray-600 underline-offset-2 hover:text-indigo-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:text-cursor-muted dark:hover:text-cursor-accent-soft"
                             >
                                 {item.label}
                             </Link>
                         ) : (
                             <span
-                                className="font-semibold text-gray-900"
+                                className="font-semibold text-gray-900 dark:text-cursor-bright"
                                 aria-current={i === items.length - 1 ? 'page' : undefined}
                             >
                                 {item.label}

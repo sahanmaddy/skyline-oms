@@ -19,7 +19,7 @@ export default function SettingsModuleLayout({ children, breadcrumbs = [] }) {
 
     return (
         <ModulePageShell>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
                 <ModuleHeader title={SETTINGS_TITLE} />
                 <ModuleSubnav items={items} ariaLabel="Settings sections" />
             </div>
