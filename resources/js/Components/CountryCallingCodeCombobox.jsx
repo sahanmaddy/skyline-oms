@@ -1,3 +1,8 @@
+import {
+    dropdownMenuItemClass,
+    dropdownMenuPanelRingClass,
+    formComboboxInputClass,
+} from '@/lib/dropdownMenuStyles';
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
 import { useMemo, useState } from 'react';
 
@@ -30,33 +35,34 @@ export default function CountryCallingCodeCombobox({
         <Combobox value={selected} onChange={(opt) => onChange(opt?.callingCode || '')}>
             <div className="relative">
                 <ComboboxInput
-                    className={
-                        'block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ' +
-                        className
-                    }
+                    className={formComboboxInputClass + ' ' + className}
                     displayValue={(opt) => opt?.callingCode || value || ''}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={placeholder}
                 />
-                <ComboboxOptions className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg focus:outline-none">
+                <ComboboxOptions
+                    className={`absolute z-30 mt-1 max-h-56 w-full overflow-auto ${dropdownMenuPanelRingClass}`}
+                >
                     {filtered.slice(0, 200).map((opt) => (
                         <ComboboxOption
                             key={`${opt.iso2}-${opt.callingCode}`}
                             value={opt}
-                            className="cursor-pointer px-3 py-2 text-sm ui-active:bg-indigo-50 ui-active:text-indigo-700"
+                            className={dropdownMenuItemClass}
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <div className="truncate">
                                     {opt.name}{' '}
                                     <span className="text-xs text-gray-500">({opt.iso2})</span>
                                 </div>
-                                <div className="shrink-0 font-medium">{opt.callingCode}</div>
+                                <div className="shrink-0 font-medium tabular-nums text-gray-500">
+                                    {opt.callingCode}
+                                </div>
                             </div>
                         </ComboboxOption>
                     ))}
 
                     {filtered.length === 0 && (
-                        <div className="px-3 py-2 text-sm text-gray-500">No matches.</div>
+                        <div className="px-4 py-2 text-sm text-gray-500">No matches.</div>
                     )}
                 </ComboboxOptions>
             </div>

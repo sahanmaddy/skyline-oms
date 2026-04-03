@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -26,19 +27,32 @@ export default function Index({ permissions, filters, moduleOptions, canCreate }
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600">Module</label>
-                                <select
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    value={filters?.module || ''}
-                                    onChange={(e) => router.get(route('settings.permissions.index'), { ...filters, module: e.target.value }, { preserveState: true, replace: true })}
+                                <label
+                                    htmlFor="permissions-module-filter"
+                                    className="text-xs font-medium text-gray-600"
                                 >
-                                    <option value="">All</option>
-                                    {(moduleOptions || []).map((m) => (
-                                        <option key={m} value={m}>
-                                            {m}
-                                        </option>
-                                    ))}
-                                </select>
+                                    Module
+                                </label>
+                                <FormSelect
+                                    id="permissions-module-filter"
+                                    className="mt-1"
+                                    value={filters?.module || ''}
+                                    onChange={(module) =>
+                                        router.get(
+                                            route('settings.permissions.index'),
+                                            { ...filters, module },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                    options={[
+                                        { value: '', label: 'All' },
+                                        ...(moduleOptions || []).map((m) => ({
+                                            value: m,
+                                            label: m,
+                                        })),
+                                    ]}
+                                    placeholder="All"
+                                />
                             </div>
                         </>
                     }

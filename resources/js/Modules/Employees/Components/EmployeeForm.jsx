@@ -1,13 +1,29 @@
+import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import CountryCallingCodeCombobox from '@/Components/CountryCallingCodeCombobox';
+import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
 import CountryCombobox from '@/Components/CountryCombobox';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
+import { formTextareaClass } from '@/lib/dropdownMenuStyles';
+import { resolveCountryCallingOption } from '@/lib/phoneCountryDisplay';
 import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
 import { useEffect, useMemo, useState } from 'react';
+
+/** Same branch rules as usersAvailableForEmployeeForm: home branch_id or assigned_branches. */
+function userAssignableToEmployeeBranch(u, employeeBranchId) {
+    if (employeeBranchId === '' || employeeBranchId === null || employeeBranchId === undefined) {
+        return true;
+    }
+    const bid = Number(employeeBranchId);
+    if (Number(u.branch_id) === bid) {
+        return true;
+    }
+    const assigned = u.assigned_branches ?? [];
+    return assigned.some((b) => b.is_active !== false && Number(b.id) === bid);
+}
 
 function formatMoneyWithCommas(value) {
     const trimmed = (value ?? '').toString().trim();
@@ -24,6 +40,12 @@ function formatMoneyWithCommas(value) {
         maximumFractionDigits: 2,
     }).format(num);
 }
+
+const phoneTypeSelectOptions = [
+    { value: 'Mobile', label: 'Mobile' },
+    { value: 'Land Phone', label: 'Land Phone' },
+    { value: 'WhatsApp', label: 'WhatsApp' },
+];
 
 function normalizeMoneyInput(value) {
     const raw = (value ?? '').toString();
@@ -58,6 +80,7 @@ export default function EmployeeForm({
     const [photoPreviewSrc, setPhotoPreviewSrc] = useState(profilePhotoUrl || null);
     const [emergencyPhoneTouched, setEmergencyPhoneTouched] = useState(false);
     const [emergencyPhoneCountryCode, setEmergencyPhoneCountryCode] = useState('+94');
+    const [emergencyPhoneCountryIso2, setEmergencyPhoneCountryIso2] = useState('LK');
     const [emergencyPhoneNumber, setEmergencyPhoneNumber] = useState('');
 
     useEffect(() => {
@@ -85,15 +108,17 @@ export default function EmployeeForm({
         if (!data.branch_id) {
             return users;
         }
-        return users.filter((u) => u.branch_id === data.branch_id);
+        return users.filter((u) => userAssignableToEmployeeBranch(u, data.branch_id));
     }, [users, data.branch_id]);
 
     useEffect(() => {
-        if (!data.branch_id || !data.user_id) {
+        if (!data.branch_id || !data.user_id || !users?.length) {
             return;
         }
-        const ok = users?.some(
-            (u) => u.id === data.user_id && u.branch_id === data.branch_id,
+        const ok = users.some(
+            (u) =>
+                u.id === data.user_id &&
+                userAssignableToEmployeeBranch(u, data.branch_id),
         );
         if (!ok) {
             setData('user_id', '');
@@ -121,6 +146,7 @@ export default function EmployeeForm({
         const raw = (data.emergency_contact_phone || '').trim();
         if (!raw) {
             setEmergencyPhoneCountryCode('+94');
+            setEmergencyPhoneCountryIso2('LK');
             setEmergencyPhoneNumber('');
             return;
         }
@@ -132,6 +158,7 @@ export default function EmployeeForm({
         const match = sortedCodes.find((c) => raw.startsWith(c.callingCode));
         if (!match) {
             setEmergencyPhoneCountryCode('+94');
+            setEmergencyPhoneCountryIso2('LK');
             setEmergencyPhoneNumber(
                 raw.replace(/[^\d]/g, '').replace(/^0+/, ''),
             );
@@ -143,7 +170,13 @@ export default function EmployeeForm({
             .trim()
             .replace(/^[-\s]+/, '');
 
-        setEmergencyPhoneCountryCode(match.callingCode);
+        const resolved = resolveCountryCallingOption(
+            countryCallingCodes,
+            match.callingCode,
+            null,
+        );
+        setEmergencyPhoneCountryCode(resolved.callingCode);
+        setEmergencyPhoneCountryIso2(resolved.iso2);
         setEmergencyPhoneNumber(
             numberPart.replace(/[^\d]/g, '').replace(/^0+/, ''),
         );
@@ -195,6 +228,7 @@ export default function EmployeeForm({
             {
                 phone_type: 'Mobile',
                 country_code: '+94',
+                country_iso2: 'LK',
                 phone_number: '',
                 is_primary: phoneRows.length === 0,
             },
@@ -225,24 +259,20 @@ export default function EmployeeForm({
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                         <InputLabel htmlFor="branch_id" value="Branch" />
-                        <select
+                        <FormSelect
                             id="branch_id"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-fg"
+                            className="mt-1"
                             value={data.branch_id ?? ''}
-                            onChange={(e) =>
-                                setData(
-                                    'branch_id',
-                                    e.target.value === '' ? '' : Number(e.target.value),
-                                )
-                            }
-                        >
-                            <option value="">Select branch…</option>
-                            {activeBranches?.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.code} — {b.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
+                            options={[
+                                { value: '', label: 'Select branch…' },
+                                ...(activeBranches?.map((b) => ({
+                                    value: b.id,
+                                    label: `${b.code} — ${b.name}`,
+                                })) ?? []),
+                            ]}
+                            placeholder="Select branch…"
+                        />
                         <InputError className="mt-2" message={errors.branch_id} />
                     </div>
 
@@ -261,18 +291,18 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="status" value="Status" />
-                        <select
+                        <FormSelect
                             id="status"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1"
                             value={data.status || statusOptions?.[0] || 'active'}
-                            onChange={(e) => setData('status', e.target.value)}
-                        >
-                            {statusOptions?.map((s) => (
-                                <option key={s} value={s}>
-                                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(v) => setData('status', v)}
+                            options={
+                                statusOptions?.map((s) => ({
+                                    value: s,
+                                    label: s.charAt(0).toUpperCase() + s.slice(1),
+                                })) ?? []
+                            }
+                        />
                         <InputError className="mt-2" message={errors.status} />
                     </div>
 
@@ -378,18 +408,20 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="gender" value="Gender" />
-                        <select
+                        <FormSelect
                             id="gender"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1"
                             value={data.gender || ''}
-                            onChange={(e) => setData('gender', e.target.value)}
-                        >
-                            <option value="">—</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                            <option value="Prefer not to say">Prefer not to say</option>
-                        </select>
+                            onChange={(v) => setData('gender', v)}
+                            options={[
+                                { value: '', label: '—' },
+                                { value: 'Male', label: 'Male' },
+                                { value: 'Female', label: 'Female' },
+                                { value: 'Other', label: 'Other' },
+                                { value: 'Prefer not to say', label: 'Prefer not to say' },
+                            ]}
+                            placeholder="—"
+                        />
                         <InputError className="mt-2" message={errors.gender} />
                     </div>
 
@@ -398,20 +430,20 @@ export default function EmployeeForm({
                             htmlFor="marital_status"
                             value="Marital Status"
                         />
-                        <select
+                        <FormSelect
                             id="marital_status"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1"
                             value={data.marital_status || ''}
-                            onChange={(e) =>
-                                setData('marital_status', e.target.value)
-                            }
-                        >
-                            <option value="">—</option>
-                            <option value="Single">Single</option>
-                            <option value="Married">Married</option>
-                            <option value="Divorced">Divorced</option>
-                            <option value="Widowed">Widowed</option>
-                        </select>
+                            onChange={(v) => setData('marital_status', v)}
+                            options={[
+                                { value: '', label: '—' },
+                                { value: 'Single', label: 'Single' },
+                                { value: 'Married', label: 'Married' },
+                                { value: 'Divorced', label: 'Divorced' },
+                                { value: 'Widowed', label: 'Widowed' },
+                            ]}
+                            placeholder="—"
+                        />
                         <InputError
                             className="mt-2"
                             message={errors.marital_status}
@@ -432,21 +464,20 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="user_id" value="Linked User (optional)" />
-                        <select
+                        <FormSelect
                             id="user_id"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            value={data.user_id || ''}
-                            onChange={(e) =>
-                                setData('user_id', e.target.value ? Number(e.target.value) : '')
-                            }
-                        >
-                            <option value="">—</option>
-                            {usersInBranch.map((u) => (
-                                <option key={u.id} value={u.id}>
-                                    {u.name} ({u.email})
-                                </option>
-                            ))}
-                        </select>
+                            className="mt-1"
+                            value={data.user_id === '' || data.user_id == null ? '' : data.user_id}
+                            onChange={(v) => setData('user_id', v === '' ? '' : Number(v))}
+                            options={[
+                                { value: '', label: '—' },
+                                ...usersInBranch.map((u) => ({
+                                    value: u.id,
+                                    label: `${u.name} (${u.email})`,
+                                })),
+                            ]}
+                            placeholder="—"
+                        />
                         <InputError className="mt-2" message={errors.user_id} />
                     </div>
 
@@ -470,38 +501,36 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="department" value="Department" />
-                        <select
+                        <FormSelect
                             id="department"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1"
                             value={data.department || ''}
-                            onChange={(e) => setData('department', e.target.value)}
-                        >
-                            <option value="">—</option>
-                            {departments.map((department) => (
-                                <option key={department} value={department}>
-                                    {department}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(v) => setData('department', v)}
+                            options={[
+                                { value: '', label: '—' },
+                                ...departments.map((d) => ({ value: d, label: d })),
+                            ]}
+                            placeholder="—"
+                        />
                         <InputError className="mt-2" message={errors.department} />
                     </div>
 
                     <div>
                         <InputLabel htmlFor="employment_type" value="Employment Type" />
-                        <select
+                        <FormSelect
                             id="employment_type"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1"
                             value={data.employment_type || ''}
-                            onChange={(e) =>
-                                setData('employment_type', e.target.value)
-                            }
-                        >
-                            <option value="">—</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Intern">Intern</option>
-                        </select>
+                            onChange={(v) => setData('employment_type', v)}
+                            options={[
+                                { value: '', label: '—' },
+                                { value: 'Full-time', label: 'Full-time' },
+                                { value: 'Part-time', label: 'Part-time' },
+                                { value: 'Contract', label: 'Contract' },
+                                { value: 'Intern', label: 'Intern' },
+                            ]}
+                            placeholder="—"
+                        />
                         <InputError
                             className="mt-2"
                             message={errors.employment_type}
@@ -679,46 +708,42 @@ export default function EmployeeForm({
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div className="md:col-span-3">
                                         <InputLabel value="Type" />
-                                        <select
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        <FormSelect
+                                            className="mt-1"
                                             value={row.phone_type || 'Mobile'}
-                                            onChange={(e) =>
-                                                updatePhone(idx, { phone_type: e.target.value })
-                                            }
-                                        >
-                                            <option value="Mobile">Mobile</option>
-                                            <option value="Land Phone">Land Phone</option>
-                                            <option value="WhatsApp">WhatsApp</option>
-                                        </select>
-                                    </div>
-                                    <div className="md:col-span-3">
-                                        <InputLabel value="Country code" />
-                                        <div className="mt-1">
-                                            <CountryCallingCodeCombobox
-                                                value={row.country_code || '+94'}
-                                                onChange={(cc) => updatePhone(idx, { country_code: cc })}
-                                                options={countryCallingCodes}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="md:col-span-4">
-                                        <InputLabel value="Phone number" />
-                                        <TextInput
-                                            className="mt-1 block w-full"
-                                            value={row.phone_number || ''}
-                                            onChange={(e) =>
-                                                updatePhone(idx, { phone_number: e.target.value })
-                                            }
+                                            onChange={(v) => updatePhone(idx, { phone_type: v })}
+                                            options={phoneTypeSelectOptions}
                                         />
                                     </div>
-                                    <div className="md:col-span-2 flex items-end justify-end gap-2">
-                                        <button
-                                            type="button"
-                                            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                                            onClick={() => removePhone(idx)}
-                                        >
-                                            Remove
-                                        </button>
+                                    <div className="md:col-span-9">
+                                        <InputLabel value="Phone" />
+                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                            <div className="min-w-0 flex-1">
+                                                <PhoneNumberWithCountryField
+                                                    countryCode={row.country_code || '+94'}
+                                                    countryIso2={row.country_iso2}
+                                                    phoneNumber={row.phone_number || ''}
+                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                        updatePhone(idx, {
+                                                            country_code: countryCode,
+                                                            country_iso2: iso2 || null,
+                                                        })
+                                                    }
+                                                    onPhoneNumberChange={(num) =>
+                                                        updatePhone(idx, { phone_number: num })
+                                                    }
+                                                    options={countryCallingCodes}
+                                                    phoneInputId={`employee_phone_numbers_${idx}_number`}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="shrink-0 self-end text-sm font-medium text-gray-700 hover:text-gray-900 sm:self-auto"
+                                                onClick={() => removePhone(idx)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -760,34 +785,24 @@ export default function EmployeeForm({
                     </div>
 
                     <div className="sm:col-span-2">
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
-                            <div className="md:col-span-4">
-                                <InputLabel value="Country code" />
-                                <div className="mt-1">
-                                    <CountryCallingCodeCombobox
-                                        value={emergencyPhoneCountryCode || '+94'}
-                                        onChange={(cc) => {
-                                            setEmergencyPhoneTouched(true);
-                                            setEmergencyPhoneCountryCode(
-                                                cc || '+94',
-                                            );
-                                        }}
-                                        options={countryCallingCodes}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="md:col-span-8">
-                                <InputLabel value="Phone number" />
-                                <TextInput
-                                    className="mt-1 block w-full"
-                                    value={emergencyPhoneNumber || ''}
-                                    onChange={(e) => {
-                                        setEmergencyPhoneTouched(true);
-                                        setEmergencyPhoneNumber(e.target.value);
-                                    }}
-                                />
-                            </div>
+                        <InputLabel value="Phone number" />
+                        <div className="mt-1">
+                            <PhoneNumberWithCountryField
+                                countryCode={emergencyPhoneCountryCode || '+94'}
+                                countryIso2={emergencyPhoneCountryIso2}
+                                phoneNumber={emergencyPhoneNumber || ''}
+                                onPhoneCountryChange={({ countryCode, iso2 }) => {
+                                    setEmergencyPhoneTouched(true);
+                                    setEmergencyPhoneCountryCode(countryCode || '+94');
+                                    setEmergencyPhoneCountryIso2(iso2 || null);
+                                }}
+                                onPhoneNumberChange={(num) => {
+                                    setEmergencyPhoneTouched(true);
+                                    setEmergencyPhoneNumber(num);
+                                }}
+                                options={countryCallingCodes}
+                                phoneInputId="emergency_contact_phone_input"
+                            />
                         </div>
 
                         <InputError
@@ -839,7 +854,7 @@ export default function EmployeeForm({
                                 value={data.country || ''}
                                 onChange={(name) => setData('country', name)}
                                 options={countries}
-                                placeholder="Search country..."
+                                placeholder="Search countries..."
                             />
                         </div>
                         <InputError className="mt-2" message={errors.country} />
@@ -913,7 +928,7 @@ export default function EmployeeForm({
                 <div className="mt-4">
                     <textarea
                         id="notes"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className={`mt-1 ${formTextareaClass}`}
                         rows={4}
                         value={data.notes || ''}
                         onChange={(e) => setData('notes', e.target.value)}

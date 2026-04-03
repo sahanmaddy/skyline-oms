@@ -6,6 +6,12 @@ import UserForm from '@/Modules/Users/Components/UserForm';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ user, roles, statusOptions, employeesForLink, activeBranches }) {
+    const assignedIds =
+        user.assigned_branches?.length > 0
+            ? user.assigned_branches.map((b) => b.id)
+            : user.branch_id
+              ? [user.branch_id]
+              : [];
     const { data, setData, put, processing, errors } = useForm({
         name: user.name || '',
         email: user.email || '',
@@ -13,6 +19,7 @@ export default function Edit({ user, roles, statusOptions, employeesForLink, act
         password_confirmation: '',
         roles: user.roles?.map((r) => r.name) || (roles?.length ? [roles[0]] : []),
         status: user.status || statusOptions?.[0] || 'active',
+        branch_ids: assignedIds,
         branch_id: user.branch_id ?? user.branch?.id ?? '',
         employee_id: user.employee?.id ?? '',
     });

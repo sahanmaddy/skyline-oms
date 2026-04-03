@@ -25,7 +25,10 @@ class BranchController extends Controller
     public function index(Request $request): Response
     {
         $query = Branch::query()
-            ->withCount(['users', 'employees']);
+            ->withCount([
+                'employees',
+                'usersWithAccess as users_count',
+            ]);
 
         if ($search = trim((string) $request->string('q'))) {
             $query->where(function ($q) use ($search) {
@@ -91,10 +94,16 @@ class BranchController extends Controller
 
     public function show(Branch $branch): Response
     {
-        $branch->loadCount(['users', 'employees']);
+        $branch->loadCount([
+            'employees',
+            'usersWithAccess as users_count',
+        ]);
 
         $users = User::query()
-            ->where('branch_id', $branch->id)
+            ->where(function ($q) use ($branch) {
+                $q->where('branch_id', $branch->id)
+                    ->orWhereHas('assignedBranches', fn ($b) => $b->where('branches.id', $branch->id));
+            })
             ->orderBy('name')
             ->limit(20)
             ->get(['id', 'name', 'email', 'status']);

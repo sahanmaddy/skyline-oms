@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -27,6 +28,11 @@ export default function DocumentDropzone({
         if (!file) return 'No file selected';
         return `${file.name} (${Math.round(file.size / 1024)} KB)`;
     }, [file]);
+
+    const documentTypeOptionsList = useMemo(
+        () => documentTypeOptions?.map((t) => ({ value: t, label: t })) ?? [],
+        [documentTypeOptions],
+    );
 
     const chooseFile = () => {
         // Clearing ensures re-selecting the same file triggers `onChange`.
@@ -79,23 +85,17 @@ export default function DocumentDropzone({
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <InputLabel value="Document type" />
-                    <select
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    <FormSelect
+                        className="mt-1"
                         value={documentType}
-                        onChange={(e) => {
-                            const nextType = e.target.value;
+                        onChange={(nextType) => {
                             setDocumentType(nextType);
                             if (!isTitleCustom && file) {
                                 setTitle(`${employeeCode ?? ''} - ${nextType}`.trim());
                             }
                         }}
-                    >
-                        {documentTypeOptions?.map((t) => (
-                            <option key={t} value={t}>
-                                {t}
-                            </option>
-                        ))}
-                    </select>
+                        options={documentTypeOptionsList}
+                    />
                     <InputError className="mt-2" message={errors?.document_type} />
                 </div>
 

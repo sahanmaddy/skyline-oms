@@ -2,6 +2,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 
 export default function BranchForm({
     data,
@@ -128,7 +129,7 @@ export default function BranchForm({
                     <textarea
                         id="notes"
                         rows={3}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-fg"
+                        className={`mt-1 ${formTextareaClass}`}
                         value={data.notes || ''}
                         onChange={(e) => setData('notes', e.target.value)}
                     />

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Users\SyncUserBranchAssignmentsAction;
 use App\Actions\Users\SyncUserEmployeeLinkAction;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
@@ -79,16 +80,21 @@ class UserController extends Controller
             'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->branchScope->employeesAvailableForUserForm($request, null),
-            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, null),
-            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor),
+            'activeBranches' => $this->branchScope->branchesForUserAssignmentForms($actor, null),
+            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor, true),
         ]);
     }
 
-    public function store(UserStoreRequest $request, SyncUserEmployeeLinkAction $linkEmployee): RedirectResponse
-    {
+    public function store(
+        UserStoreRequest $request,
+        SyncUserEmployeeLinkAction $linkEmployee,
+        SyncUserBranchAssignmentsAction $syncBranches,
+    ): RedirectResponse {
         $data = $request->validated();
         $rawEmployeeId = $data['employee_id'] ?? null;
         unset($data['employee_id']);
+        $branchIds = array_values(array_unique(array_map('intval', $data['branch_ids'] ?? [])));
+        unset($data['branch_ids']);
         $employeeId = $rawEmployeeId !== null ? (int) $rawEmployeeId : null;
 
         $user = User::create([
@@ -99,13 +105,27 @@ class UserController extends Controller
             'branch_id' => $data['branch_id'],
         ]);
 
+        $syncBranches->execute($user, $branchIds);
+
         $user->syncRoles($data['roles'] ?? []);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $linkEmployee->execute($user, $employeeId);
 
-        return redirect()->route('settings.users.show', $user)->with('success', 'User created.');
+        $user->refresh();
+
+        if ($this->branchScope->userRecordVisibleInBranchContext(
+            $user,
+            $this->branchScope->effectiveBranchId($request, $request->user()),
+        )) {
+            return redirect()->route('settings.users.show', $user)->with('success', 'User created.');
+        }
+
+        return redirect()->route('settings.users.index')->with(
+            'success',
+            'User created. They belong to another branch, so you were returned to the user list.',
+        );
     }
 
     public function show(User $user): Response
@@ -113,6 +133,7 @@ class UserController extends Controller
         $user->load([
             'roles',
             'branch:id,code,name',
+            'assignedBranches:id,code,name,is_active',
             'employee:id,employee_code,display_name,user_id',
         ]);
 
@@ -131,6 +152,7 @@ class UserController extends Controller
         $user->load([
             'roles',
             'branch:id,code,name',
+            'assignedBranches:id,code,name,is_active',
             'employee:id,employee_code,display_name,user_id',
         ]);
 
@@ -139,18 +161,21 @@ class UserController extends Controller
             'roles' => $this->assignableRoleNames(),
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->branchScope->employeesAvailableForUserForm($request, $user),
-            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, (int) $user->branch_id),
+            'activeBranches' => $this->branchScope->branchesForUserAssignmentForms($actor, (int) $user->branch_id),
         ]);
     }
 
     public function update(
         UserUpdateRequest $request,
         User $user,
-        SyncUserEmployeeLinkAction $linkEmployee
+        SyncUserEmployeeLinkAction $linkEmployee,
+        SyncUserBranchAssignmentsAction $syncBranches,
     ): RedirectResponse {
         $data = $request->validated();
         $rawEmployeeId = $data['employee_id'] ?? null;
         unset($data['employee_id']);
+        $branchIds = array_values(array_unique(array_map('intval', $data['branch_ids'] ?? [])));
+        unset($data['branch_ids']);
         $employeeId = $rawEmployeeId !== null ? (int) $rawEmployeeId : null;
 
         $user->update([
@@ -164,13 +189,27 @@ class UserController extends Controller
             $user->update(['password' => Hash::make($data['password'])]);
         }
 
+        $syncBranches->execute($user, $branchIds);
+
         $user->syncRoles($data['roles'] ?? []);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $linkEmployee->execute($user, $employeeId);
 
-        return redirect()->route('settings.users.show', $user)->with('success', 'User updated.');
+        $user->refresh();
+
+        if ($this->branchScope->userRecordVisibleInBranchContext(
+            $user,
+            $this->branchScope->effectiveBranchId($request, $request->user()),
+        )) {
+            return redirect()->route('settings.users.show', $user)->with('success', 'User updated.');
+        }
+
+        return redirect()->route('settings.users.index')->with(
+            'success',
+            'User updated. They are assigned to another branch, so you were returned to the user list.',
+        );
     }
 
     public function destroy(User $user): RedirectResponse

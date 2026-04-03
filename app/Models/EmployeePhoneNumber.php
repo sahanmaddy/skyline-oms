@@ -11,6 +11,7 @@ class EmployeePhoneNumber extends Model
         'employee_id',
         'phone_type',
         'country_code',
+        'country_iso2',
         'phone_number',
         'is_primary',
     ];

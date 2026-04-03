@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -21,6 +22,14 @@ class User extends Authenticatable
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Branches this user may access (navbar context). Default/home branch is {@see $branch_id}.
+     */
+    public function assignedBranches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class)->withTimestamps();
     }
 
     /**

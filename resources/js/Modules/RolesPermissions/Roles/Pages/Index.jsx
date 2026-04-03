@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -26,15 +27,32 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600">Status</label>
-                                <select
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    value={filters?.status || ''}
-                                    onChange={(e) => router.get(route('settings.roles.index'), { ...filters, status: e.target.value }, { preserveState: true, replace: true })}
+                                <label
+                                    htmlFor="roles-status-filter"
+                                    className="text-xs font-medium text-gray-600"
                                 >
-                                    <option value="">All</option>
-                                    {statusOptions.map((s) => <option key={s} value={s}>{s === 'active' ? 'Active' : 'Inactive'}</option>)}
-                                </select>
+                                    Status
+                                </label>
+                                <FormSelect
+                                    id="roles-status-filter"
+                                    className="mt-1"
+                                    value={filters?.status || ''}
+                                    onChange={(status) =>
+                                        router.get(
+                                            route('settings.roles.index'),
+                                            { ...filters, status },
+                                            { preserveState: true, replace: true },
+                                        )
+                                    }
+                                    options={[
+                                        { value: '', label: 'All' },
+                                        ...statusOptions.map((s) => ({
+                                            value: s,
+                                            label: s === 'active' ? 'Active' : 'Inactive',
+                                        })),
+                                    ]}
+                                    placeholder="All"
+                                />
                             </div>
                         </>
                     }

@@ -16,6 +16,6 @@ class BranchCodeGeneratorService
 
         $next = ((int) $max) + 1;
 
-        return 'BR-'.str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        return 'BR-'.$next;
     }
 }

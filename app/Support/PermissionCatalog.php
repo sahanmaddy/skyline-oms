@@ -163,25 +163,25 @@ final class PermissionCatalog
             [
                 'name' => 'branches.view',
                 'display_name' => 'View branches',
-                'module' => 'Settings',
+                'module' => 'Branches',
                 'description' => 'Open the branches list and branch detail pages.',
             ],
             [
                 'name' => 'branches.create',
                 'display_name' => 'Create branches',
-                'module' => 'Settings',
+                'module' => 'Branches',
                 'description' => 'Add new company branches or locations.',
             ],
             [
                 'name' => 'branches.edit',
                 'display_name' => 'Edit branches',
-                'module' => 'Settings',
+                'module' => 'Branches',
                 'description' => 'Update branch details, contact information, and active status.',
             ],
             [
                 'name' => 'branches.delete',
                 'display_name' => 'Delete branches',
-                'module' => 'Settings',
+                'module' => 'Branches',
                 'description' => 'Remove branches that are not assigned to users or employees.',
             ],
         ];

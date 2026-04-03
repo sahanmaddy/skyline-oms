@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -45,25 +46,32 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600">Status</label>
-                                <select
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                <label
+                                    htmlFor="settings-users-status"
+                                    className="text-xs font-medium text-gray-600"
+                                >
+                                    Status
+                                </label>
+                                <FormSelect
+                                    id="settings-users-status"
+                                    className="mt-1"
                                     value={filters?.status || ''}
-                                    onChange={(e) =>
+                                    onChange={(status) =>
                                         router.get(
                                             route('settings.users.index'),
-                                            { ...filters, status: e.target.value },
+                                            { ...filters, status },
                                             { preserveState: true, replace: true },
                                         )
                                     }
-                                >
-                                    <option value="">All</option>
-                                    {statusOptions?.map((s) => (
-                                        <option key={s} value={s}>
-                                            {s === 'active' ? 'Active' : 'Inactive'}
-                                        </option>
-                                    ))}
-                                </select>
+                                    options={[
+                                        { value: '', label: 'All' },
+                                        ...(statusOptions?.map((s) => ({
+                                            value: s,
+                                            label: s === 'active' ? 'Active' : 'Inactive',
+                                        })) ?? []),
+                                    ]}
+                                    placeholder="All"
+                                />
                             </div>
                         </>
                     }

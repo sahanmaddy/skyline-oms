@@ -1,5 +1,7 @@
 import Dropdown from '@/Components/Dropdown';
+import FormSelect from '@/Components/FormSelect';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import { navFormSelectTriggerClass, navFormSelectTriggerMobileClass } from '@/lib/dropdownMenuStyles';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -104,23 +106,23 @@ export default function AuthenticatedLayout({ header, children }) {
                                     branchesForContext.length > 1 ? (
                                         <label className="hidden max-w-[min(100%,14rem)] sm:block">
                                             <span className="sr-only">Working branch</span>
-                                            <select
-                                                className="block w-full truncate rounded-md border border-gray-200 bg-white py-1.5 ps-2 pe-7 text-xs font-medium text-gray-800 shadow-sm focus:border-cursor-accent focus:outline-none focus:ring-1 focus:ring-cursor-accent dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-bright"
+                                            <FormSelect
+                                                aria-label="Working branch"
+                                                className="truncate"
+                                                triggerClassName={navFormSelectTriggerClass}
                                                 value={contextBranch.id}
-                                                onChange={(e) => {
+                                                onChange={(branchId) => {
                                                     router.patch(
                                                         route('settings.context.branch'),
-                                                        { branch_id: Number(e.target.value) },
+                                                        { branch_id: Number(branchId) },
                                                         { preserveScroll: true },
                                                     );
                                                 }}
-                                            >
-                                                {branchesForContext.map((b) => (
-                                                    <option key={b.id} value={b.id}>
-                                                        {b.code} — {b.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                options={branchesForContext.map((b) => ({
+                                                    value: b.id,
+                                                    label: `${b.code} — ${b.name}`,
+                                                }))}
+                                            />
                                         </label>
                                     ) : (
                                         <span
@@ -168,23 +170,22 @@ export default function AuthenticatedLayout({ header, children }) {
                                             <div className="mb-1 text-xs font-medium text-gray-500 dark:text-cursor-muted">
                                                 Working branch
                                             </div>
-                                            <select
-                                                className="block w-full rounded-md border border-gray-200 bg-white py-2 ps-2 pe-2 text-sm text-gray-800 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-bright"
+                                            <FormSelect
+                                                aria-label="Working branch"
+                                                triggerClassName={navFormSelectTriggerMobileClass}
                                                 value={contextBranch.id}
-                                                onChange={(e) => {
+                                                onChange={(branchId) => {
                                                     router.patch(
                                                         route('settings.context.branch'),
-                                                        { branch_id: Number(e.target.value) },
+                                                        { branch_id: Number(branchId) },
                                                         { preserveScroll: true },
                                                     );
                                                 }}
-                                            >
-                                                {branchesForContext.map((b) => (
-                                                    <option key={b.id} value={b.id}>
-                                                        {b.code} — {b.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                options={branchesForContext.map((b) => ({
+                                                    value: b.id,
+                                                    label: `${b.code} — ${b.name}`,
+                                                }))}
+                                            />
                                         </div>
                                     ) : contextBranch ? (
                                         <div className="mb-3 border-b border-gray-100 pb-3 text-xs text-gray-600 dark:border-cursor-border dark:text-cursor-muted">

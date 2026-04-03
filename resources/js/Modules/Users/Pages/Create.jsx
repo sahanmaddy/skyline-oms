@@ -10,6 +10,7 @@ export default function Create({ roles, statusOptions, employeesForLink, activeB
         suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
             ? suggestedBranchId
             : (activeBranches?.[0]?.id ?? '');
+    const initialBranchIds = defaultBranchId ? [defaultBranchId] : [];
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
@@ -17,6 +18,7 @@ export default function Create({ roles, statusOptions, employeesForLink, activeB
         password_confirmation: '',
         roles: roles?.length ? [roles[0]] : [],
         status: statusOptions?.[0] || 'active',
+        branch_ids: initialBranchIds,
         branch_id: defaultBranchId,
         employee_id: '',
     });

@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -33,8 +34,8 @@ function PaginationLinks({ links }) {
 
 export default function Index({ branches, filters, statusOptions, canCreate }) {
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Branches" />}>
-            <Head title="Branches · Settings" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Branches" section="Branches" />}>
+            <Head title="Branches" />
 
             <SettingsModuleLayout breadcrumbs={[{ label: 'Branches' }]}>
                 <ModuleListToolbar
@@ -58,26 +59,28 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600 dark:text-cursor-muted">
+                                <label
+                                    htmlFor="branches-status-filter"
+                                    className="text-xs font-medium text-gray-600 dark:text-cursor-muted"
+                                >
                                     Status
                                 </label>
-                                <select
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-fg"
+                                <FormSelect
+                                    id="branches-status-filter"
+                                    className="mt-1"
                                     value={filters?.status || ''}
-                                    onChange={(e) =>
+                                    onChange={(status) =>
                                         router.get(
                                             route('settings.branches.index'),
-                                            { ...filters, status: e.target.value },
+                                            { ...filters, status },
                                             { preserveState: true, replace: true },
                                         )
                                     }
-                                >
-                                    {(statusOptions || []).map((o) => (
-                                        <option key={o.value} value={o.value}>
-                                            {o.label}
-                                        </option>
-                                    ))}
-                                </select>
+                                    options={(statusOptions || []).map((o) => ({
+                                        value: o.value,
+                                        label: o.label,
+                                    }))}
+                                />
                             </div>
                         </>
                     }

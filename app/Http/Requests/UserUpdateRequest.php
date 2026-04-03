@@ -34,7 +34,7 @@ class UserUpdateRequest extends FormRequest
         $userModel = $this->route('user');
         $actor = $this->user();
         $allowedBranches = $actor
-            ? app(BranchScopeService::class)->assignableBranchIdsForValidation($actor, (int) $userModel->branch_id)
+            ? app(BranchScopeService::class)->assignableBranchIdsForUserFormValidation($actor, (int) $userModel->branch_id)
             : [];
 
         $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
@@ -56,6 +56,8 @@ class UserUpdateRequest extends FormRequest
                 $roleExistsRule,
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'branch_ids' => ['required', 'array', 'min:1'],
+            'branch_ids.*' => ['integer', Rule::in($allowedBranches)],
             'branch_id' => ['required', 'integer', Rule::in($allowedBranches)],
             'employee_id' => [
                 'nullable',
@@ -78,6 +80,14 @@ class UserUpdateRequest extends FormRequest
 
         $validator->after(function (Validator $validator): void {
             $branchId = (int) $this->input('branch_id');
+            $ids = array_map('intval', (array) $this->input('branch_ids', []));
+            if ($branchId && $ids !== [] && ! in_array($branchId, $ids, true)) {
+                $validator->errors()->add(
+                    'branch_id',
+                    'The default branch must be one of the selected branches.',
+                );
+            }
+
             $empId = $this->input('employee_id');
             if (! $branchId || ! $empId) {
                 return;

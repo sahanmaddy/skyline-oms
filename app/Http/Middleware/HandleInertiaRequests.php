@@ -38,7 +38,10 @@ class HandleInertiaRequests extends Middleware
         $branchesForContext = [];
 
         if ($user instanceof User) {
-            $user->loadMissing(['branch:id,code,name,is_active']);
+            $user->loadMissing([
+                'branch:id,code,name,is_active',
+                'assignedBranches:id,code,name,is_active',
+            ]);
 
             $contextBranchModel = $scope->resolveContextBranch($request, $user);
             if ($contextBranchModel) {

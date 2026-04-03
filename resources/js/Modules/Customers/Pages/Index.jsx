@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -88,25 +89,26 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                 <label htmlFor="cust-status" className="text-xs font-medium text-gray-600">
                                     Status
                                 </label>
-                                <select
+                                <FormSelect
                                     id="cust-status"
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1"
                                     value={filters?.status || ''}
-                                    onChange={(e) =>
+                                    onChange={(status) =>
                                         router.get(
                                             route('sales.customers.index'),
-                                            { ...filters, status: e.target.value },
+                                            { ...filters, status },
                                             { preserveState: true, replace: true },
                                         )
                                     }
-                                >
-                                    <option value="">All</option>
-                                    {statusOptions?.map((s) => (
-                                        <option key={s} value={s}>
-                                            {formatStatusLabel(s)}
-                                        </option>
-                                    ))}
-                                </select>
+                                    options={[
+                                        { value: '', label: 'All' },
+                                        ...(statusOptions?.map((s) => ({
+                                            value: s,
+                                            label: formatStatusLabel(s),
+                                        })) ?? []),
+                                    ]}
+                                    placeholder="All"
+                                />
                             </div>
                         </>
                     }

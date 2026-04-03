@@ -11,6 +11,7 @@ class CustomerPhoneNumber extends Model
         'customer_id',
         'phone_type',
         'country_code',
+        'country_iso2',
         'phone_number',
         'is_primary',
     ];
@@ -24,4 +25,3 @@ class CustomerPhoneNumber extends Model
         return $this->belongsTo(Customer::class);
     }
 }
-

@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -17,6 +18,14 @@ export default function UserForm({
     showPasswordFields,
     onSubmit,
 }) {
+    const branchOptions = useMemo(
+        () =>
+            (activeBranches || []).filter(
+                (b) => b.is_active === undefined || b.is_active === true,
+            ),
+        [activeBranches],
+    );
+
     const employeesInBranch = useMemo(() => {
         if (!employeesForLink?.length) {
             return [];
@@ -38,6 +47,37 @@ export default function UserForm({
             setData('employee_id', '');
         }
     }, [data.branch_id, data.employee_id, employeesForLink, setData]);
+
+    const branchIds = useMemo(() => data.branch_ids ?? [], [data.branch_ids]);
+
+    useEffect(() => {
+        if (!branchIds.length) {
+            if (data.branch_id) {
+                setData('branch_id', '');
+            }
+            return;
+        }
+        if (!branchIds.includes(data.branch_id)) {
+            setData('branch_id', branchIds[0]);
+        }
+    }, [branchIds, data.branch_id, setData]);
+
+    function toggleBranchAccess(branchId, checked) {
+        const next = new Set(branchIds);
+        if (checked) {
+            next.add(branchId);
+        } else {
+            next.delete(branchId);
+        }
+        const arr = Array.from(next).sort((a, b) => a - b);
+        setData('branch_ids', arr);
+        if (arr.length && !arr.includes(data.branch_id)) {
+            setData('branch_id', arr[0]);
+        }
+        if (!arr.length) {
+            setData('branch_id', '');
+        }
+    }
 
     return (
         <form
@@ -72,68 +112,100 @@ export default function UserForm({
                 </div>
 
                 <div className="sm:col-span-2">
-                    <InputLabel htmlFor="branch_id" value="Default branch" />
-                    <select
-                        id="branch_id"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-bg dark:text-cursor-fg"
-                        value={data.branch_id ?? ''}
-                        onChange={(e) =>
-                            setData(
-                                'branch_id',
-                                e.target.value === '' ? '' : Number(e.target.value),
-                            )
-                        }
-                    >
-                        <option value="">Select branch…</option>
-                        {activeBranches?.map((b) => (
-                            <option key={b.id} value={b.id}>
-                                {b.code} — {b.name}
-                            </option>
-                        ))}
-                    </select>
+                    <InputLabel value="Branch access" />
+                    <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2 dark:border-cursor-border">
+                        <div className="space-y-1.5">
+                            {branchOptions.map((b) => {
+                                const checked = branchIds.includes(b.id);
+                                return (
+                                    <label
+                                        key={b.id}
+                                        className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-cursor-elevated"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            checked={checked}
+                                            onChange={(e) =>
+                                                toggleBranchAccess(b.id, e.target.checked)
+                                            }
+                                        />
+                                        <span>
+                                            <span className="font-mono text-xs text-gray-600 dark:text-cursor-muted">
+                                                {b.code}
+                                            </span>
+                                            <span className="text-gray-500"> — </span>
+                                            {b.name}
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
                     <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                        The user&apos;s default branch for this application.
+                        This user can switch the app context among these branches (active branches
+                        only).
+                    </p>
+                    <InputError className="mt-2" message={errors.branch_ids} />
+                </div>
+
+                <div className="sm:col-span-2">
+                    <InputLabel htmlFor="branch_id" value="Default branch" />
+                    <FormSelect
+                        id="branch_id"
+                        className="mt-1"
+                        value={data.branch_id ?? ''}
+                        onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
+                        options={[
+                            { value: '', label: 'Select branch…' },
+                            ...branchOptions
+                                .filter((b) => branchIds.includes(b.id))
+                                .map((b) => ({
+                                    value: b.id,
+                                    label: `${b.code} — ${b.name}`,
+                                })),
+                        ]}
+                        placeholder="Select branch…"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                        Default home branch (must be one of the branches above).
                     </p>
                     <InputError className="mt-2" message={errors.branch_id} />
                 </div>
 
                 <div>
                     <InputLabel htmlFor="status" value="Status" />
-                    <select
+                    <FormSelect
                         id="status"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="mt-1"
                         value={data.status || statusOptions?.[0] || 'active'}
-                        onChange={(e) => setData('status', e.target.value)}
-                    >
-                        {statusOptions?.map((s) => (
-                            <option key={s} value={s}>
-                                {s === 'active' ? 'Active' : 'Inactive'}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={(v) => setData('status', v)}
+                        options={
+                            statusOptions?.map((s) => ({
+                                value: s,
+                                label: s === 'active' ? 'Active' : 'Inactive',
+                            })) ?? []
+                        }
+                    />
                     <InputError className="mt-2" message={errors.status} />
                 </div>
 
                 <div>
                     <InputLabel htmlFor="employee_id" value="Linked employee" />
-                    <select
+                    <FormSelect
                         id="employee_id"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={data.employee_id ?? ''}
-                        onChange={(e) =>
-                            setData(
-                                'employee_id',
-                                e.target.value === '' ? '' : Number(e.target.value),
-                            )
-                        }
-                    >
-                        <option value="">— Not linked —</option>
-                        {employeesInBranch.map((emp) => (
-                            <option key={emp.id} value={emp.id}>
-                                {emp.employee_code} - {emp.display_name}
-                            </option>
-                        ))}
-                    </select>
+                        className="mt-1"
+                        value={data.employee_id === '' || data.employee_id == null ? '' : data.employee_id}
+                        onChange={(v) => setData('employee_id', v === '' ? '' : Number(v))}
+                        options={[
+                            { value: '', label: '— Not linked —' },
+                            ...employeesInBranch.map((emp) => ({
+                                value: emp.id,
+                                label: `${emp.employee_code} - ${emp.display_name}`,
+                            })),
+                        ]}
+                        placeholder="— Not linked —"
+                    />
                     <p className="mt-1 text-xs text-gray-500">
                         Each employee can only be linked to one user.
                     </p>
@@ -211,4 +283,3 @@ export default function UserForm({
         </form>
     );
 }
-

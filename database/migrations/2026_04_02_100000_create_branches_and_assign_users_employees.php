@@ -25,7 +25,7 @@ return new class extends Migration
         });
 
         $defaultBranchId = DB::table('branches')->insertGetId([
-            'code' => 'BR-001',
+            'code' => 'BR-1',
             'name' => 'Head Office',
             'address_line_1' => null,
             'address_line_2' => null,

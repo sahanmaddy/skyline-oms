@@ -71,13 +71,19 @@ class EmployeeStoreRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('branch_id', (int) $this->input('branch_id'))
-                        ->whereDoesntHave('employee');
+                        ->whereNotExists(function ($sub) {
+                            $sub->selectRaw('1')
+                                ->from('employees')
+                                ->whereColumn('employees.user_id', 'users.id')
+                                ->whereNull('employees.deleted_at');
+                        });
                 }),
             ],
             'is_sales_commission_eligible' => ['boolean'],
             'phone_numbers' => ['array'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.phone_number'],
+            'phone_numbers.*.country_iso2' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
             'phone_numbers.*.phone_number' => ['nullable', 'string', 'max:50', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.country_code'],
             'phone_numbers.*.is_primary' => ['boolean'],
         ];

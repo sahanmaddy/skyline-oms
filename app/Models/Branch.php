@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Branch extends Model
@@ -37,6 +38,11 @@ class Branch extends Model
         return $this->hasMany(Employee::class);
     }
 
+    public function usersWithAccess(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -44,6 +50,6 @@ class Branch extends Model
 
     public function isInUse(): bool
     {
-        return $this->users()->exists() || $this->employees()->exists();
+        return $this->usersWithAccess()->exists() || $this->employees()->exists();
     }
 }

@@ -65,10 +65,21 @@ class EmployeeUpdateRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($query) use ($employee) {
-                    $query->where('branch_id', (int) $this->input('branch_id'))
+                    $branchId = (int) $this->input('branch_id');
+                    $query->where('branch_id', $branchId)
                         ->where(function ($q) use ($employee) {
-                            $q->whereDoesntHave('employee')
-                                ->orWhereHas('employee', fn ($eq) => $eq->whereKey($employee->id));
+                            $q->whereNotExists(function ($sub) {
+                                $sub->selectRaw('1')
+                                    ->from('employees')
+                                    ->whereColumn('employees.user_id', 'users.id')
+                                    ->whereNull('employees.deleted_at');
+                            })->orWhereExists(function ($sub) use ($employee) {
+                                $sub->selectRaw('1')
+                                    ->from('employees')
+                                    ->whereColumn('employees.user_id', 'users.id')
+                                    ->where('employees.id', $employee->id)
+                                    ->whereNull('employees.deleted_at');
+                            });
                         });
                 }),
                 Rule::unique('employees', 'user_id')->ignore($employee->id),
@@ -88,6 +99,7 @@ class EmployeeUpdateRequest extends FormRequest
             'phone_numbers' => ['array'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.phone_number'],
+            'phone_numbers.*.country_iso2' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
             'phone_numbers.*.phone_number' => ['nullable', 'string', 'max:50', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.country_code'],
             'phone_numbers.*.is_primary' => ['boolean'],
         ];

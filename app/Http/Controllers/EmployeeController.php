@@ -100,7 +100,14 @@ class EmployeeController extends Controller
 
         $employee = app(CreateEmployeeAction::class)->execute($validated, $phoneNumbers, $profilePhoto);
 
-        return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee created.');
+        if ($this->branchScope->recordMatchesEffectiveBranch($request, (int) $employee->branch_id, $request->user())) {
+            return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee created.');
+        }
+
+        return redirect()->route('hr.employees.index')->with(
+            'success',
+            'Employee created. They belong to another branch, so you were returned to the employee list.',
+        );
     }
 
     public function show(Employee $employee): Response
@@ -162,7 +169,16 @@ class EmployeeController extends Controller
 
         app(UpdateEmployeeAction::class)->execute($employee, $validated, $phoneNumbers, $profilePhoto);
 
-        return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee updated.');
+        $employee->refresh();
+
+        if ($this->branchScope->recordMatchesEffectiveBranch($request, (int) $employee->branch_id, $request->user())) {
+            return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee updated.');
+        }
+
+        return redirect()->route('hr.employees.index')->with(
+            'success',
+            'Employee updated. They belong to another branch now, so you were returned to the employee list.',
+        );
     }
 
     public function destroy(Employee $employee): RedirectResponse

@@ -20,8 +20,8 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
     const { confirm } = useConfirm();
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Branch" />}>
-            <Head title={`${branch.name} · Branches · Settings`} />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Branches" section="Branch" />}>
+            <Head title={`${branch.name} · Branches`} />
 
             <SettingsModuleLayout
                 breadcrumbs={[

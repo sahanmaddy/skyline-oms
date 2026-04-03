@@ -18,10 +18,11 @@ class UserPolicy
             return false;
         }
 
-        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
-            request(),
-            $model->branch_id,
-            $user,
+        $scope = app(BranchScopeService::class);
+
+        return $scope->userRecordVisibleInBranchContext(
+            $model,
+            $scope->effectiveBranchId(request(), $user),
         );
     }
 
@@ -36,10 +37,11 @@ class UserPolicy
             return false;
         }
 
-        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
-            request(),
-            $model->branch_id,
-            $user,
+        $scope = app(BranchScopeService::class);
+
+        return $scope->userRecordVisibleInBranchContext(
+            $model,
+            $scope->effectiveBranchId(request(), $user),
         );
     }
 
@@ -49,10 +51,11 @@ class UserPolicy
             return false;
         }
 
-        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
-            request(),
-            $model->branch_id,
-            $user,
+        $scope = app(BranchScopeService::class);
+
+        return $scope->userRecordVisibleInBranchContext(
+            $model,
+            $scope->effectiveBranchId(request(), $user),
         );
     }
 }

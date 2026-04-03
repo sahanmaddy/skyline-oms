@@ -19,8 +19,8 @@ export default function Create({ nextCode }) {
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="New branch" />}>
-            <Head title="New branch · Settings" />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Branches" section="New branch" />}>
+            <Head title="New branch · Branches" />
 
             <SettingsModuleLayout
                 breadcrumbs={[

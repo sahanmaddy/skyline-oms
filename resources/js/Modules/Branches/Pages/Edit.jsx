@@ -19,8 +19,8 @@ export default function Edit({ branch }) {
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Edit branch" />}>
-            <Head title={`Edit ${branch.name} · Settings`} />
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Branches" section="Edit branch" />}>
+            <Head title={`Edit ${branch.name} · Branches`} />
 
             <SettingsModuleLayout
                 breadcrumbs={[
