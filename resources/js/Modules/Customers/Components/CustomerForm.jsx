@@ -1,7 +1,8 @@
-import CountryCallingCodeCombobox from '@/Components/CountryCallingCodeCombobox';
 import CountryCombobox from '@/Components/CountryCombobox';
+import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
@@ -33,6 +34,12 @@ function formatMoneyWithCommas(value) {
         maximumFractionDigits: 2,
     }).format(num);
 }
+
+const phoneTypeSelectOptions = [
+    { value: 'Mobile', label: 'Mobile' },
+    { value: 'Land Phone', label: 'Land Phone' },
+    { value: 'WhatsApp', label: 'WhatsApp' },
+];
 
 function normalizeMoneyInput(value) {
     const raw = (value ?? '').toString();
@@ -67,6 +74,7 @@ export default function CustomerForm({
             {
                 phone_type: 'Mobile',
                 country_code: '+94',
+                country_iso2: 'LK',
                 phone_number: '',
                 is_primary: phoneRows.length === 0,
             },
@@ -115,18 +123,18 @@ export default function CustomerForm({
 
                     <div>
                         <InputLabel htmlFor="status" value="Status" />
-                        <select
+                        <FormSelect
                             id="status"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1"
                             value={data.status || statusOptions?.[0] || 'active'}
-                            onChange={(e) => setData('status', e.target.value)}
-                        >
-                            {statusOptions?.map((s) => (
-                                <option key={s} value={s}>
-                                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(v) => setData('status', v)}
+                            options={
+                                statusOptions?.map((s) => ({
+                                    value: s,
+                                    label: s.charAt(0).toUpperCase() + s.slice(1),
+                                })) ?? []
+                            }
+                        />
                         <InputError className="mt-2" message={errors.status} />
                     </div>
 
@@ -255,45 +263,43 @@ export default function CustomerForm({
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div className="md:col-span-3">
                                         <InputLabel value="Type" />
-                                        <select
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        <FormSelect
+                                            className="mt-1"
                                             value={row.phone_type || 'Mobile'}
-                                            onChange={(e) => updatePhone(idx, { phone_type: e.target.value })}
-                                        >
-                                            <option value="Mobile">Mobile</option>
-                                            <option value="Land Phone">Land Phone</option>
-                                            <option value="WhatsApp">WhatsApp</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="md:col-span-3">
-                                        <InputLabel value="Country code" />
-                                        <div className="mt-1">
-                                            <CountryCallingCodeCombobox
-                                                value={row.country_code || '+94'}
-                                                onChange={(cc) => updatePhone(idx, { country_code: cc })}
-                                                options={countryCallingCodes}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="md:col-span-4">
-                                        <InputLabel value="Phone number" />
-                                        <TextInput
-                                            className="mt-1 block w-full"
-                                            value={row.phone_number || ''}
-                                            onChange={(e) => updatePhone(idx, { phone_number: e.target.value })}
+                                            onChange={(v) => updatePhone(idx, { phone_type: v })}
+                                            options={phoneTypeSelectOptions}
                                         />
                                     </div>
 
-                                    <div className="md:col-span-2 flex items-end justify-end">
-                                        <button
-                                            type="button"
-                                            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                                            onClick={() => removePhone(idx)}
-                                        >
-                                            Remove
-                                        </button>
+                                    <div className="md:col-span-9">
+                                        <InputLabel value="Phone" />
+                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                            <div className="min-w-0 flex-1">
+                                                <PhoneNumberWithCountryField
+                                                    countryCode={row.country_code || '+94'}
+                                                    countryIso2={row.country_iso2}
+                                                    phoneNumber={row.phone_number || ''}
+                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                        updatePhone(idx, {
+                                                            country_code: countryCode,
+                                                            country_iso2: iso2 || null,
+                                                        })
+                                                    }
+                                                    onPhoneNumberChange={(num) =>
+                                                        updatePhone(idx, { phone_number: num })
+                                                    }
+                                                    options={countryCallingCodes}
+                                                    phoneInputId={`customer_phone_numbers_${idx}_number`}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="shrink-0 self-end text-sm font-medium text-gray-700 hover:text-gray-900 sm:self-auto"
+                                                onClick={() => removePhone(idx)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -349,7 +355,7 @@ export default function CustomerForm({
                                 value={data.country || ''}
                                 onChange={(name) => setData('country', name)}
                                 options={countries}
-                                placeholder="Search country..."
+                                placeholder="Search countries..."
                             />
                         </div>
                         <InputError className="mt-2" message={errors.country} />
@@ -370,10 +376,10 @@ export default function CustomerForm({
                                 : 'border-gray-200 bg-white')
                         }
                     >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-center gap-3">
                             <input
                                 type="checkbox"
-                                className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                className="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                 checked={!!data.credit_eligible}
                                 onChange={(e) => setData('credit_eligible', e.target.checked)}
                             />

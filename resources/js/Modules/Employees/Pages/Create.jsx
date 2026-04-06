@@ -5,8 +5,13 @@ import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Create({ statusOptions, users, nextEmployeeCode }) {
+export default function Create({ statusOptions, users, nextEmployeeCode, activeBranches, suggestedBranchId }) {
+    const defaultBranchId =
+        suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
+            ? suggestedBranchId
+            : (activeBranches?.[0]?.id ?? '');
     const { data, setData, post, processing, errors } = useForm({
+        branch_id: defaultBranchId,
         employee_code: nextEmployeeCode || '',
         first_name: '',
         last_name: '',
@@ -32,6 +37,7 @@ export default function Create({ statusOptions, users, nextEmployeeCode }) {
         bank_name: '',
         bank_branch: '',
         bank_account_number: '',
+        tin_number: '',
         epf_number: '',
         etf_number: '',
         emergency_contact_person: '',
@@ -66,6 +72,7 @@ export default function Create({ statusOptions, users, nextEmployeeCode }) {
                     errors={errors}
                     processing={processing}
                     statusOptions={statusOptions}
+                    activeBranches={activeBranches}
                     users={users}
                     profilePhotoUrl={null}
                     submitLabel="Create"

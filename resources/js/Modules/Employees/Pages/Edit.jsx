@@ -6,8 +6,9 @@ import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Edit({ employee, statusOptions, users }) {
+export default function Edit({ employee, statusOptions, users, activeBranches }) {
     const { data, setData, put, processing, errors } = useForm({
+        branch_id: employee.branch_id ?? employee.branch?.id ?? '',
         employee_code: employee.employee_code || '',
         first_name: employee.first_name || '',
         last_name: employee.last_name || '',
@@ -36,6 +37,7 @@ export default function Edit({ employee, statusOptions, users }) {
         bank_name: employee.bank_name || '',
         bank_branch: employee.bank_branch || '',
         bank_account_number: employee.bank_account_number || '',
+        tin_number: employee.tin_number || '',
         epf_number: employee.epf_number || '',
         etf_number: employee.etf_number || '',
         emergency_contact_person: employee.emergency_contact_person || '',
@@ -47,6 +49,7 @@ export default function Edit({ employee, statusOptions, users }) {
         phone_numbers: (employee.phone_numbers || []).map((p) => ({
             phone_type: p.phone_type,
             country_code: p.country_code,
+            country_iso2: p.country_iso2 ?? null,
             phone_number: p.phone_number,
             is_primary: !!p.is_primary,
         })),
@@ -79,6 +82,7 @@ export default function Edit({ employee, statusOptions, users }) {
                     errors={errors}
                     processing={processing}
                     statusOptions={statusOptions}
+                    activeBranches={activeBranches}
                     users={users}
                     profilePhotoUrl={
                         employee.profile_photo_path

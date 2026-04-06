@@ -6,8 +6,8 @@ use App\Models\Employee;
 use App\Services\Employees\EmployeeCodeGeneratorService;
 use App\Services\Employees\PhoneNumberNormalizer;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CreateEmployeeAction
@@ -21,8 +21,7 @@ class CreateEmployeeAction
         array $employeeData,
         array $phoneNumbers = [],
         ?UploadedFile $profilePhoto = null
-    ): Employee
-    {
+    ): Employee {
         return DB::transaction(function () use ($employeeData, $phoneNumbers, $profilePhoto) {
             $employeeData['employee_code'] = $this->codeGenerator->nextCode();
 
@@ -57,6 +56,7 @@ class CreateEmployeeAction
                 return [
                     'phone_type' => $row['phone_type'] ?? 'Mobile',
                     'country_code' => $row['country_code'] ?? '+94',
+                    'country_iso2' => $this->normalizeCountryIso2($row['country_iso2'] ?? null),
                     'phone_number' => $normalizedPhoneNumber ?? '',
                     'is_primary' => (bool) ($row['is_primary'] ?? $index === 0),
                 ];
@@ -88,5 +88,14 @@ class CreateEmployeeAction
         );
 
         return $path;
+    }
+
+    private function normalizeCountryIso2(mixed $value): ?string
+    {
+        if (! is_string($value) || strlen($value) !== 2) {
+            return null;
+        }
+
+        return ctype_alpha($value) ? strtoupper($value) : null;
     }
 }

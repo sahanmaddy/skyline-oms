@@ -10,6 +10,7 @@ import { Head, Link, router } from '@inertiajs/react';
 export default function Show({ user, canEdit, canDelete }) {
     const { confirm } = useConfirm();
     const roles = user.roles || [];
+    const assignedBranches = user.assigned_branches || [];
     const emp = user.employee;
     const linkedLine =
         emp
@@ -96,6 +97,43 @@ export default function Show({ user, canEdit, canDelete }) {
                                         : 'bg-gray-100 text-gray-700'
                                 }
                             />
+                            <div className="rounded-md border border-gray-200 bg-white p-3 sm:col-span-2">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Branch access
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {assignedBranches.length > 0 ? (
+                                        assignedBranches.map((b) => (
+                                            <span
+                                                key={b.id}
+                                                className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-800"
+                                            >
+                                                <span className="font-mono text-slate-600">{b.code}</span>
+                                                <span className="text-slate-400"> — </span>
+                                                {b.name}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-sm text-gray-400">—</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Default branch
+                                </div>
+                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                    {user.branch ? (
+                                        <>
+                                            <span className="font-mono text-xs text-gray-600">{user.branch.code}</span>
+                                            <span className="text-gray-500"> — </span>
+                                            {user.branch.name}
+                                        </>
+                                    ) : (
+                                        <span className="text-gray-400">—</span>
+                                    )}
+                                </div>
+                            </div>
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Linked employee

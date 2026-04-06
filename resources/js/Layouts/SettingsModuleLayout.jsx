@@ -10,6 +10,7 @@ const SETTINGS_TITLE = 'Settings';
 export default function SettingsModuleLayout({ children, breadcrumbs = [] }) {
     const permissions = usePage().props.auth.permissions ?? [];
     const items = settingsSectionNavItems({
+        canViewBranches: permissions.includes('branches.view'),
         canViewUsers: permissions.includes('users.view'),
         canViewRoles: permissions.includes('roles.view'),
         canViewPermissions: permissions.includes('permissions.view'),
@@ -19,7 +20,7 @@ export default function SettingsModuleLayout({ children, breadcrumbs = [] }) {
 
     return (
         <ModulePageShell>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
                 <ModuleHeader title={SETTINGS_TITLE} />
                 <ModuleSubnav items={items} ariaLabel="Settings sections" />
             </div>

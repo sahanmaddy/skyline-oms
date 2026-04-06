@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Employee;
 use App\Models\Role;
+use App\Services\Branches\BranchScopeService;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -23,6 +26,11 @@ class UserStoreRequest extends FormRequest
 
     public function rules(): array
     {
+        $actor = $this->user();
+        $allowedBranches = $actor
+            ? app(BranchScopeService::class)->assignableBranchIdsForUserFormValidation($actor, null)
+            : [];
+
         $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
             ->where(function ($query) {
                 $query->where('guard_name', 'web');
@@ -42,13 +50,44 @@ class UserStoreRequest extends FormRequest
                 $roleExistsRule,
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'branch_ids' => ['required', 'array', 'min:1'],
+            'branch_ids.*' => ['integer', Rule::in($allowedBranches)],
+            'branch_id' => ['required', 'integer', Rule::in($allowedBranches)],
             'employee_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('employees', 'id')->where(function ($query) {
-                    $query->whereNull('user_id');
+                    $query->whereNull('user_id')
+                        ->where('branch_id', (int) $this->input('branch_id'));
                 }),
             ],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $branchId = (int) $this->input('branch_id');
+            $ids = array_map('intval', (array) $this->input('branch_ids', []));
+            if ($branchId && $ids !== [] && ! in_array($branchId, $ids, true)) {
+                $validator->errors()->add(
+                    'branch_id',
+                    'The default branch must be one of the selected branches.',
+                );
+            }
+
+            $empId = $this->input('employee_id');
+            if (! $branchId || ! $empId) {
+                return;
+            }
+
+            $employee = Employee::query()->find((int) $empId);
+            if ($employee && (int) $employee->branch_id !== $branchId) {
+                $validator->errors()->add(
+                    'employee_id',
+                    'The linked employee must belong to the same branch as this user.',
+                );
+            }
+        });
     }
 }

@@ -1,3 +1,4 @@
+import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -34,15 +35,16 @@ export default function RoleForm({
                 </div>
                 <div>
                     <InputLabel htmlFor="is_active" value="Status" />
-                    <select
+                    <FormSelect
                         id="is_active"
-                        className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="mt-1"
                         value={data.is_active ? '1' : '0'}
-                        onChange={(e) => setData('is_active', e.target.value === '1')}
-                    >
-                        <option value="1">Active</option>
-                        <option value="0">Inactive</option>
-                    </select>
+                        onChange={(v) => setData('is_active', v === '1')}
+                        options={[
+                            { value: '1', label: 'Active' },
+                            { value: '0', label: 'Inactive' },
+                        ]}
+                    />
                     <InputError className="mt-2" message={errors.is_active} />
                 </div>
                 <div className="sm:col-span-2">

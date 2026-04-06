@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -18,6 +19,19 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Branches this user may access (navbar context). Default/home branch is {@see $branch_id}.
+     */
+    public function assignedBranches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class)->withTimestamps();
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -28,6 +42,8 @@ class User extends Authenticatable
         'email',
         'password',
         'status',
+        'theme_preference',
+        'branch_id',
     ];
 
     /**

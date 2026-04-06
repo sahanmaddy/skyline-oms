@@ -30,6 +30,7 @@ export default function Edit({ customer, statusOptions }) {
         phone_numbers: (customer.phone_numbers || []).map((p) => ({
             phone_type: p.phone_type,
             country_code: p.country_code,
+            country_iso2: p.country_iso2 ?? null,
             phone_number: p.phone_number,
             is_primary: !!p.is_primary,
         })),

@@ -6,6 +6,7 @@ import 'primeicons/primeicons.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import FeedbackProvider from '@/feedback/FeedbackProvider';
+import { ThemeProvider } from '@/theme/ThemeProvider';
 import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -28,12 +29,17 @@ createInertiaApp({
         const root = createRoot(el);
 
         root.render(
-            <FeedbackProvider initialFlash={props?.initialPage?.props?.flash ?? null}>
-                <App {...props} />
-            </FeedbackProvider>,
+            <ThemeProvider
+                initialMode={props?.initialPage?.props?.auth?.user?.theme_preference ?? 'system'}
+                persistToServer={Boolean(props?.initialPage?.props?.auth?.user)}
+            >
+                <FeedbackProvider initialFlash={props?.initialPage?.props?.flash ?? null}>
+                    <App {...props} />
+                </FeedbackProvider>
+            </ThemeProvider>,
         );
     },
     progress: {
-        color: '#4B5563',
+        color: '#007acc',
     },
 });

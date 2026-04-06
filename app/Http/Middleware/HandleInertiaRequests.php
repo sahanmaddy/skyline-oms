@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -30,6 +32,38 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $scope = app(BranchScopeService::class);
+
+        $contextBranch = null;
+        $branchesForContext = [];
+
+        if ($user instanceof User) {
+            $user->loadMissing([
+                'branch:id,code,name,is_active',
+                'assignedBranches:id,code,name,is_active',
+            ]);
+
+            $contextBranchModel = $scope->resolveContextBranch($request, $user);
+            if ($contextBranchModel) {
+                $request->session()->put('current_branch_id', (int) $contextBranchModel->id);
+            }
+
+            $contextBranch = $contextBranchModel ? [
+                'id' => $contextBranchModel->id,
+                'code' => $contextBranchModel->code,
+                'name' => $contextBranchModel->name,
+                'is_active' => $contextBranchModel->is_active,
+            ] : null;
+
+            $branchesForContext = $scope->branchesForNavbar($user)
+                ->map(fn ($b) => [
+                    'id' => $b->id,
+                    'code' => $b->code,
+                    'name' => $b->name,
+                ])
+                ->values()
+                ->all();
+        }
 
         return [
             ...parent::share($request),
@@ -37,6 +71,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'roles' => $user ? $user->getRoleNames()->values() : [],
                 'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values() : [],
+                'context_branch' => $contextBranch,
+                'branches_for_context' => $branchesForContext,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

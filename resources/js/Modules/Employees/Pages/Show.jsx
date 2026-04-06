@@ -182,10 +182,30 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                     </div>
                                 </div>
                             </div>
-                            <Info
-                                label="Employee Code"
-                                value={employee.employee_code || '—'}
-                            />
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Employee Code
+                                </div>
+                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                    {employee.employee_code || '—'}
+                                </div>
+                                <div className="mt-3 border-t border-gray-100 pt-2">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                        Branch
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-gray-900">
+                                        {employee.branch ? (
+                                            <>
+                                                {employee.branch.code}
+                                                <span className="text-gray-500"> — </span>
+                                                {employee.branch.name}
+                                            </>
+                                        ) : (
+                                            '—'
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                             <Info label="Gender" value={employee.gender || '—'} />
                             <Info
                                 label="Marital Status"
@@ -225,6 +245,15 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                <StatusInfo
+                                    label="Status"
+                                    isPositive={employee.status === 'active'}
+                                    value={
+                                        employee.status === 'active'
+                                            ? 'Active'
+                                            : 'Inactive'
+                                    }
+                                />
                                 <Info
                                     label="Designation"
                                     value={employee.designation || '—'}
@@ -234,19 +263,18 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                     value={employee.department || '—'}
                                 />
                                 <Info
+                                    label="Employment Type"
+                                    value={employee.employment_type || '—'}
+                                />
+                                <Info
                                     label="Joined Date"
                                     value={formatDisplayDate(
                                         employee.joined_date,
                                     )}
                                 />
-                                <StatusInfo
-                                    label="Status"
-                                    isPositive={employee.status === 'active'}
-                                    value={
-                                        employee.status === 'active'
-                                            ? 'Active'
-                                            : 'Inactive'
-                                    }
+                                <Info
+                                    label="Basic Salary"
+                                    value={formatSalary(employee.basic_salary)}
                                 />
                                 <StatusInfo
                                     label="Sales Commission Eligible"
@@ -263,14 +291,6 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                     value={
                                         employee.is_overtime_eligible ? 'Yes' : 'No'
                                     }
-                                />
-                                <Info
-                                    label="Employment Type"
-                                    value={employee.employment_type || '—'}
-                                />
-                                <Info
-                                    label="Basic Salary"
-                                    value={formatSalary(employee.basic_salary)}
                                 />
                             </div>
                         </div>
@@ -351,7 +371,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                     </section>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
-                        <h3 className="text-sm font-semibold text-gray-900">Bank Details</h3>
+                        <h3 className="text-sm font-semibold text-gray-900">Payroll & Statutory Details</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-6">
                             <Info
                                 label="Bank Name"
@@ -369,14 +389,19 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                 className="sm:col-span-2"
                             />
                             <Info
+                                label="TIN"
+                                value={employee.tin_number || '—'}
+                                className="sm:col-span-2"
+                            />
+                            <Info
                                 label="EPF Number"
                                 value={employee.epf_number || '—'}
-                                className="sm:col-span-3"
+                                className="sm:col-span-2"
                             />
                             <Info
                                 label="ETF Number"
                                 value={employee.etf_number || '—'}
-                                className="sm:col-span-3"
+                                className="sm:col-span-2"
                             />
                         </div>
                     </section>

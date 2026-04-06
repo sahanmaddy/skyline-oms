@@ -9,6 +9,7 @@ export function settingsSectionNavItems({
     canViewPermissions = false,
     canViewCompanySettings = false,
     canViewSystemSettings = false,
+    canViewBranches = false,
 } = {}) {
     const items = [
         {
@@ -18,6 +19,15 @@ export function settingsSectionNavItems({
             activePattern: 'settings.profile.*',
         },
     ];
+
+    if (canViewBranches) {
+        items.push({
+            key: 'branches',
+            label: 'Branches',
+            href: route('settings.branches.index'),
+            activePattern: 'settings.branches.*',
+        });
+    }
 
     if (canViewUsers) {
         items.push({

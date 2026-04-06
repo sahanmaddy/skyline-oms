@@ -42,6 +42,7 @@ class CreateCustomerAction
                 return [
                     'phone_type' => $row['phone_type'] ?? 'Mobile',
                     'country_code' => $row['country_code'] ?? '+94',
+                    'country_iso2' => $this->normalizeCountryIso2($row['country_iso2'] ?? null),
                     'phone_number' => $normalizedPhoneNumber ?? '',
                     'is_primary' => (bool) ($row['is_primary'] ?? $index === 0),
                 ];
@@ -62,5 +63,14 @@ class CreateCustomerAction
         $customerName = trim((string) ($customerData['customer_name'] ?? ''));
 
         return $displayName !== '' ? $displayName : $customerName;
+    }
+
+    private function normalizeCountryIso2(mixed $value): ?string
+    {
+        if (! is_string($value) || strlen($value) !== 2) {
+            return null;
+        }
+
+        return ctype_alpha($value) ? strtoupper($value) : null;
     }
 }

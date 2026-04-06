@@ -10,6 +10,7 @@ use App\Http\Requests\EmployeeStoreRequest;
 use App\Http\Requests\EmployeeUpdateRequest;
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
 use App\Services\Employees\EmployeeCodeGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,18 +20,21 @@ use Inertia\Response;
 
 class EmployeeController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly BranchScopeService $branchScope,
+    ) {
         $this->authorizeResource(Employee::class, 'employee');
     }
 
     public function index(Request $request): Response
     {
-        $query = Employee::query()->with(['user', 'phoneNumbers']);
+        $branchId = $this->branchScope->effectiveBranchId($request);
+
+        $query = Employee::query()->with(['user', 'phoneNumbers', 'branch:id,code,name']);
+
+        $this->branchScope->scopeEmployeesToEffectiveBranch($query, $branchId);
 
         if ($search = trim((string) $request->string('q'))) {
-            // Phone numbers are normalized on save (digits-only and leading zeros stripped).
-            // Normalize the search term similarly so queries like "0771234567" match stored "771234567".
             $phoneSearch = preg_replace('/\D+/', '', $search) ?? '';
             $phoneSearch = ltrim($phoneSearch, '0');
             $phoneTerm = $phoneSearch !== '' ? $phoneSearch : $search;
@@ -72,16 +76,17 @@ class EmployeeController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403);
+
         return Inertia::render('Modules/Employees/Pages/Create', [
             'statusOptions' => EmployeeStatus::values(),
             'nextEmployeeCode' => app(EmployeeCodeGeneratorService::class)->nextCode(),
-            'users' => User::query()
-                ->whereDoesntHave('employee')
-                ->select(['id', 'name', 'email'])
-                ->orderBy('name')
-                ->get(),
+            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, null),
+            'users' => $this->branchScope->usersAvailableForEmployeeForm($request, null),
+            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor),
         ]);
     }
 
@@ -95,12 +100,20 @@ class EmployeeController extends Controller
 
         $employee = app(CreateEmployeeAction::class)->execute($validated, $phoneNumbers, $profilePhoto);
 
-        return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee created.');
+        if ($this->branchScope->recordMatchesEffectiveBranch($request, (int) $employee->branch_id, $request->user())) {
+            return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee created.');
+        }
+
+        return redirect()->route('hr.employees.index')->with(
+            'success',
+            'Employee created. They belong to another branch, so you were returned to the employee list.',
+        );
     }
 
     public function show(Employee $employee): Response
     {
         $employee->load([
+            'branch:id,code,name',
             'user:id,name,email',
             'phoneNumbers',
             'documents' => fn ($q) => $q->with('uploader:id,name')->latest(),
@@ -133,25 +146,16 @@ class EmployeeController extends Controller
         );
     }
 
-    public function edit(Employee $employee): Response
+    public function edit(Request $request, Employee $employee): Response
     {
-        $availableUsers = User::query()
-            ->whereDoesntHave('employee')
-            ->select(['id', 'name', 'email'])
-            ->orderBy('name')
-            ->get();
-
-        if ($employee->user_id) {
-            $current = User::query()->select(['id', 'name', 'email'])->find($employee->user_id);
-            if ($current) {
-                $availableUsers->prepend($current);
-            }
-        }
+        $actor = $request->user();
+        abort_unless($actor instanceof User, 403);
 
         return Inertia::render('Modules/Employees/Pages/Edit', [
-            'employee' => $employee->load(['user:id,name,email', 'phoneNumbers']),
+            'employee' => $employee->load(['branch:id,code,name', 'user:id,name,email', 'phoneNumbers']),
             'statusOptions' => EmployeeStatus::values(),
-            'users' => $availableUsers->unique('id')->values(),
+            'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, (int) $employee->branch_id),
+            'users' => $this->branchScope->usersAvailableForEmployeeForm($request, $employee),
         ]);
     }
 
@@ -165,7 +169,16 @@ class EmployeeController extends Controller
 
         app(UpdateEmployeeAction::class)->execute($employee, $validated, $phoneNumbers, $profilePhoto);
 
-        return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee updated.');
+        $employee->refresh();
+
+        if ($this->branchScope->recordMatchesEffectiveBranch($request, (int) $employee->branch_id, $request->user())) {
+            return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee updated.');
+        }
+
+        return redirect()->route('hr.employees.index')->with(
+            'success',
+            'Employee updated. They belong to another branch now, so you were returned to the employee list.',
+        );
     }
 
     public function destroy(Employee $employee): RedirectResponse

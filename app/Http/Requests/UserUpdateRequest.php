@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Branches\BranchScopeService;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -29,6 +32,11 @@ class UserUpdateRequest extends FormRequest
     {
         /** @var User $userModel */
         $userModel = $this->route('user');
+        $actor = $this->user();
+        $allowedBranches = $actor
+            ? app(BranchScopeService::class)->assignableBranchIdsForUserFormValidation($actor, (int) $userModel->branch_id)
+            : [];
+
         $roleExistsRule = Rule::exists((new Role)->getTable(), 'name')
             ->where(function ($query) {
                 $query->where('guard_name', 'web');
@@ -48,16 +56,50 @@ class UserUpdateRequest extends FormRequest
                 $roleExistsRule,
             ],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'branch_ids' => ['required', 'array', 'min:1'],
+            'branch_ids.*' => ['integer', Rule::in($allowedBranches)],
+            'branch_id' => ['required', 'integer', Rule::in($allowedBranches)],
             'employee_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('employees', 'id')->where(function ($query) use ($userModel) {
-                    $query->where(function ($q) use ($userModel) {
-                        $q->whereNull('user_id')
-                            ->orWhere('user_id', $userModel->id);
-                    });
+                    $query->where('branch_id', (int) $this->input('branch_id'))
+                        ->where(function ($q) use ($userModel) {
+                            $q->whereNull('user_id')
+                                ->orWhere('user_id', $userModel->id);
+                        });
                 }),
             ],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        /** @var User $userModel */
+        $userModel = $this->route('user');
+
+        $validator->after(function (Validator $validator): void {
+            $branchId = (int) $this->input('branch_id');
+            $ids = array_map('intval', (array) $this->input('branch_ids', []));
+            if ($branchId && $ids !== [] && ! in_array($branchId, $ids, true)) {
+                $validator->errors()->add(
+                    'branch_id',
+                    'The default branch must be one of the selected branches.',
+                );
+            }
+
+            $empId = $this->input('employee_id');
+            if (! $branchId || ! $empId) {
+                return;
+            }
+
+            $employee = Employee::query()->find((int) $empId);
+            if ($employee && (int) $employee->branch_id !== $branchId) {
+                $validator->errors()->add(
+                    'employee_id',
+                    'The linked employee must belong to the same branch as this user.',
+                );
+            }
+        });
     }
 }

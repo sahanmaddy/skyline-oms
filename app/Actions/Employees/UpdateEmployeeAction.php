@@ -4,8 +4,8 @@ namespace App\Actions\Employees;
 
 use App\Models\Employee;
 use App\Services\Employees\PhoneNumberNormalizer;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -18,8 +18,7 @@ class UpdateEmployeeAction
         array $employeeData,
         array $phoneNumbers = [],
         ?UploadedFile $profilePhoto = null
-    ): Employee
-    {
+    ): Employee {
         return DB::transaction(function () use ($employee, $employeeData, $phoneNumbers, $profilePhoto) {
             unset($employeeData['employee_code']);
 
@@ -57,6 +56,7 @@ class UpdateEmployeeAction
                 return [
                     'phone_type' => $row['phone_type'] ?? 'Mobile',
                     'country_code' => $row['country_code'] ?? '+94',
+                    'country_iso2' => $this->normalizeCountryIso2($row['country_iso2'] ?? null),
                     'phone_number' => $normalizedPhoneNumber ?? '',
                     'is_primary' => (bool) ($row['is_primary'] ?? $index === 0),
                 ];
@@ -90,5 +90,14 @@ class UpdateEmployeeAction
         );
 
         return $path;
+    }
+
+    private function normalizeCountryIso2(mixed $value): ?string
+    {
+        if (! is_string($value) || strlen($value) !== 2) {
+            return null;
+        }
+
+        return ctype_alpha($value) ? strtoupper($value) : null;
     }
 }
