@@ -19,9 +19,22 @@ export const dropdownMenuLinkClass =
 export const formNativeSelectClass =
     'block min-h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
 
+/** Border / padding / shadow / focus ring without text color (for triggers that color the label per state). */
+export const formComboboxInputSurfaceClass =
+    'block min-h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
+
 /** Combobox text field — same surface as formNativeSelectClass. */
-export const formComboboxInputClass =
-    'block min-h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
+export const formComboboxInputClass = `${formComboboxInputSurfaceClass} text-gray-900 dark:text-cursor-fg`;
+
+/** List/toolbar search fields — same focus ring as `TextInput` / combobox (indigo ring-2 + offset, dark mode). */
+export const moduleListSearchInputClass = formComboboxInputClass;
+
+/**
+ * Filter field inside floating listbox panels (e.g. country search).
+ * Slightly tighter padding than `formComboboxInputClass`; same ring as form fields.
+ */
+export const listboxPanelFilterInputClass =
+    'block w-full cursor-text rounded-md border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-900 shadow-sm transition duration-150 ease-in-out placeholder:text-gray-400 selection:bg-gray-100 selection:text-gray-900 hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:selection:bg-cursor-raised dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
 
 /** Compact navbar native select (branch switcher). */
 export const navNativeSelectClass =

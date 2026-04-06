@@ -1,5 +1,5 @@
 /**
- * Convert API / serialized dates to Y-m-d for HTML <input type="date" />.
+ * Convert API / serialized dates to Y-m-d for date fields (e.g. FormDatePicker / legacy inputs).
  * Uses Asia/Colombo so calendar dates match Laravel (avoids UTC off-by-one).
  */
 export function normalizeDateInputForForm(value) {

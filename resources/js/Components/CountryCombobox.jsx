@@ -1,5 +1,10 @@
 import { countryNativeNames } from '@/data/countryNativeNames';
-import { dropdownMenuItemClass, dropdownMenuPanelRingClass, formComboboxInputClass } from '@/lib/dropdownMenuStyles';
+import {
+    dropdownMenuItemClass,
+    dropdownMenuPanelRingClass,
+    formComboboxInputClass,
+    listboxPanelFilterInputClass,
+} from '@/lib/dropdownMenuStyles';
 import { countryListLabel, flagEmojiFromIso2 } from '@/lib/phoneCountryDisplay';
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -66,7 +71,7 @@ function CountryOptionsPanel({ open, query, setQuery, filtered }) {
                         }
                         e.stopPropagation();
                     }}
-                    className="block w-full cursor-text rounded-md border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-900 shadow-sm transition duration-150 ease-in-out placeholder:text-gray-400 selection:bg-gray-100 selection:text-gray-900 hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:selection:bg-cursor-raised dark:hover:bg-cursor-raised"
+                    className={listboxPanelFilterInputClass}
                     placeholder="Search countries..."
                     aria-label="Search countries"
                     autoComplete="off"

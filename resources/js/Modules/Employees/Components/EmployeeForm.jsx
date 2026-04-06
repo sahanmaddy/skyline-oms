@@ -1,3 +1,4 @@
+import FormDatePicker from '@/Components/FormDatePicker';
 import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -10,6 +11,7 @@ import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 import { resolveCountryCallingOption } from '@/lib/phoneCountryDisplay';
 import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
+import { subYears } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 
 /** Same branch rules as usersAvailableForEmployeeForm: home branch_id or assigned_branches. */
@@ -454,13 +456,15 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="date_of_birth" value="Date of Birth" />
-                        <TextInput
-                            id="date_of_birth"
-                            type="date"
-                            className="mt-1 block w-full"
-                            value={data.date_of_birth || ''}
-                            onChange={(e) => setData('date_of_birth', e.target.value)}
-                        />
+                        <div className="mt-1">
+                            <FormDatePicker
+                                id="date_of_birth"
+                                value={data.date_of_birth || ''}
+                                onChange={(v) => setData('date_of_birth', v)}
+                                maxDate={new Date()}
+                                minDate={subYears(new Date(), 120)}
+                            />
+                        </div>
                         <InputError className="mt-2" message={errors.date_of_birth} />
                     </div>
 
@@ -541,13 +545,15 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="joined_date" value="Joined Date" />
-                        <TextInput
-                            id="joined_date"
-                            type="date"
-                            className="mt-1 block w-full"
-                            value={data.joined_date || ''}
-                            onChange={(e) => setData('joined_date', e.target.value)}
-                        />
+                        <div className="mt-1">
+                            <FormDatePicker
+                                id="joined_date"
+                                value={data.joined_date || ''}
+                                onChange={(v) => setData('joined_date', v)}
+                                maxDate={new Date()}
+                                minDate={subYears(new Date(), 80)}
+                            />
+                        </div>
                         <InputError className="mt-2" message={errors.joined_date} />
                     </div>
 
