@@ -37,6 +37,7 @@ export default function Edit({ employee, statusOptions, users, activeBranches })
         bank_name: employee.bank_name || '',
         bank_branch: employee.bank_branch || '',
         bank_account_number: employee.bank_account_number || '',
+        tin_number: employee.tin_number || '',
         epf_number: employee.epf_number || '',
         etf_number: employee.etf_number || '',
         emergency_contact_person: employee.emergency_contact_person || '',

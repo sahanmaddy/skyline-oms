@@ -36,6 +36,7 @@ class Employee extends Model
         'bank_name',
         'bank_branch',
         'bank_account_number',
+        'tin_number',
         'epf_number',
         'etf_number',
         'employment_type',

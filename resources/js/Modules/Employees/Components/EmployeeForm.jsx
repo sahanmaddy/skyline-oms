@@ -322,18 +322,20 @@ export default function EmployeeForm({
                                     </div>
                                 )}
                             </div>
-                            <div className="flex-1">
-                                <input
-                                    type="file"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
-                                    onChange={(e) =>
-                                        setData(
-                                            'profile_photo',
-                                            e.target.files?.[0] || null,
-                                        )
-                                    }
-                                />
+                            <div className="flex flex-1 flex-col justify-center sm:min-h-20">
+                                <div className="rounded-md border border-gray-200 bg-white px-3 py-2 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:hover:bg-cursor-raised dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 focus:outline-none focus:ring-0"
+                                        onChange={(e) =>
+                                            setData(
+                                                'profile_photo',
+                                                e.target.files?.[0] || null,
+                                            )
+                                        }
+                                    />
+                                </div>
                                 <div className="mt-1 text-xs text-gray-500">
                                     Upload JPG/JPEG/PNG/WEBP.
                                 </div>
@@ -586,10 +588,10 @@ export default function EmployeeForm({
                                 : 'border-gray-200 bg-white')
                         }
                     >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-center gap-3">
                             <input
                                 type="checkbox"
-                                className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                className="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                 checked={!!data.is_sales_commission_eligible}
                                 onChange={(e) =>
                                     setData('is_sales_commission_eligible', e.target.checked)
@@ -632,10 +634,10 @@ export default function EmployeeForm({
                                 : 'border-gray-200 bg-white')
                         }
                     >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-center gap-3">
                             <input
                                 type="checkbox"
-                                className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                className="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                 checked={!!data.is_overtime_eligible}
                                 onChange={(e) =>
                                     setData('is_overtime_eligible', e.target.checked)
@@ -863,7 +865,7 @@ export default function EmployeeForm({
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900">Bank Details</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Payroll & Statutory Details</h3>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="bank_name" value="Bank Name" />
@@ -885,7 +887,7 @@ export default function EmployeeForm({
                         />
                         <InputError className="mt-2" message={errors.bank_branch} />
                     </div>
-                    <div className="sm:col-span-2">
+                    <div>
                         <InputLabel
                             htmlFor="bank_account_number"
                             value="Bank Account Number"
@@ -897,6 +899,17 @@ export default function EmployeeForm({
                             onChange={(e) => setData('bank_account_number', e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.bank_account_number} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="tin_number" value="TIN" />
+                        <TextInput
+                            id="tin_number"
+                            className="mt-1 block w-full"
+                            value={data.tin_number || ''}
+                            onChange={(e) => setData('tin_number', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.tin_number} />
                     </div>
 
                     <div>

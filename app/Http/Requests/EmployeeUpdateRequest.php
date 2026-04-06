@@ -61,6 +61,7 @@ class EmployeeUpdateRequest extends FormRequest
             'bank_name' => ['nullable', 'string', 'max:150'],
             'bank_branch' => ['nullable', 'string', 'max:150'],
             'bank_account_number' => ['nullable', 'string', 'max:100'],
+            'tin_number' => ['nullable', 'string', 'max:100'],
             'user_id' => [
                 'nullable',
                 'integer',

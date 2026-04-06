@@ -376,10 +376,10 @@ export default function CustomerForm({
                                 : 'border-gray-200 bg-white')
                         }
                     >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-center gap-3">
                             <input
                                 type="checkbox"
-                                className="mt-1 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                className="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                 checked={!!data.credit_eligible}
                                 onChange={(e) => setData('credit_eligible', e.target.checked)}
                             />

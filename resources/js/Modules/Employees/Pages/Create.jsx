@@ -37,6 +37,7 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
         bank_name: '',
         bank_branch: '',
         bank_account_number: '',
+        tin_number: '',
         epf_number: '',
         etf_number: '',
         emergency_contact_person: '',

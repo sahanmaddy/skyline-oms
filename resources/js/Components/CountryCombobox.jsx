@@ -44,7 +44,7 @@ function CountryOptionsPanel({ open, query, setQuery, filtered }) {
             modal={false}
             portal
             anchor="bottom start"
-            className={`z-[100] mt-1 max-h-64 w-[min(100vw-1.5rem,22rem)] overflow-hidden [--anchor-gap:4px] ${dropdownMenuPanelRingClass}`}
+            className={`z-[100] mt-1 max-h-64 min-w-[var(--button-width)] w-[var(--button-width)] overflow-hidden [--anchor-gap:4px] ${dropdownMenuPanelRingClass}`}
         >
             <div
                 className="sticky top-0 z-10 border-b border-gray-100 bg-white px-2 pb-2 pt-1.5 dark:border-cursor-border dark:bg-cursor-surface"
@@ -126,11 +126,11 @@ export default function CountryCombobox({
     return (
         <Listbox value={selected} onChange={(opt) => onChange(opt?.name || '')} by={optionsByComparator}>
             {({ open }) => (
-                <div className={`relative ${className}`.trim()}>
+                <div className={`relative w-full min-w-0 ${className}`.trim()}>
                     <ListboxButton
                         className={
                             formComboboxInputClass +
-                            ' flex items-center justify-between gap-2 text-start ' +
+                            ' flex w-full min-w-0 items-center justify-between gap-2 text-start ' +
                             (open
                                 ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-cursor-accent-soft dark:ring-offset-cursor-bg'
                                 : '')

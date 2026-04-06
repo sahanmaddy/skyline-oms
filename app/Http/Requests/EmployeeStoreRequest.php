@@ -55,6 +55,7 @@ class EmployeeStoreRequest extends FormRequest
             'bank_name' => ['nullable', 'string', 'max:150'],
             'bank_branch' => ['nullable', 'string', 'max:150'],
             'bank_account_number' => ['nullable', 'string', 'max:100'],
+            'tin_number' => ['nullable', 'string', 'max:100'],
             'epf_number' => ['nullable', 'string', 'max:100'],
             'etf_number' => ['nullable', 'string', 'max:100'],
             'emergency_contact_person' => ['nullable', 'string', 'max:150'],
