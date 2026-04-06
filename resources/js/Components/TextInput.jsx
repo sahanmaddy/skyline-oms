@@ -1,3 +1,4 @@
+import { formComboboxInputClass } from '@/lib/dropdownMenuStyles';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 export default forwardRef(function TextInput(
@@ -20,10 +21,7 @@ export default forwardRef(function TextInput(
         <input
             {...props}
             type={type}
-            className={
-                'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ' +
-                className
-            }
+            className={`${formComboboxInputClass} ${className}`.trim()}
             ref={localRef}
         />
     );

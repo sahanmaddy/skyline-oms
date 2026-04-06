@@ -47,9 +47,8 @@ function CountryOptionsPanel({ open, query, setQuery, filtered }) {
         <ListboxOptions
             modal={false}
             portal
-            transition
             anchor="bottom start"
-            className={`z-[100] mt-1 max-h-64 w-[min(100vw-1.5rem,22rem)] overflow-hidden [--anchor-gap:4px] data-[closed]:opacity-0 data-[enter]:transition data-[enter]:duration-100 data-[enter]:ease-out data-[leave]:transition data-[leave]:duration-75 data-[leave]:ease-in ${dropdownMenuPanelRingClass}`}
+            className={`z-[100] mt-1 max-h-64 w-[min(100vw-1.5rem,22rem)] overflow-hidden [--anchor-gap:4px] ${dropdownMenuPanelRingClass}`}
         >
             <div
                 className="sticky top-0 z-10 border-b border-gray-100 bg-white px-2 pb-2 pt-1.5 dark:border-cursor-border dark:bg-cursor-surface"
@@ -148,7 +147,6 @@ export default function PhoneNumberWithCountryField({
     }, [options, query]);
 
     const handleSelect = (opt) => {
-        setQuery('');
         onPhoneCountryChange({
             countryCode: opt?.callingCode ?? '',
             iso2: opt?.iso2 ?? '',

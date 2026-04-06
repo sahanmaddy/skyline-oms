@@ -17,11 +17,11 @@ export const dropdownMenuLinkClass =
 
 /** Native select in forms — closed control matches menu trigger (border-gray-200, hover gray-50). */
 export const formNativeSelectClass =
-    'block w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
+    'block min-h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
 
 /** Combobox text field — same surface as formNativeSelectClass. */
 export const formComboboxInputClass =
-    'block w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
+    'block min-h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg';
 
 /** Compact navbar native select (branch switcher). */
 export const navNativeSelectClass =

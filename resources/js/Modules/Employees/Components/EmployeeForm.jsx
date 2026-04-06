@@ -551,7 +551,7 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="basic_salary" value="Basic Salary" />
-                        <div className="mt-1 flex items-stretch">
+                        <div className="mt-1 flex items-stretch rounded-md transition duration-150 ease-in-out focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
                             <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
                                 Rs.
                             </div>
@@ -559,7 +559,7 @@ export default function EmployeeForm({
                                 id="basic_salary"
                                 type="text"
                                 inputMode="decimal"
-                                className="block w-full rounded-none rounded-r-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="block w-full rounded-none rounded-r-md border border-gray-300 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-0"
                                 value={formatMoneyWithCommas(data.basic_salary || '')}
                                 placeholder="0.00"
                                 onChange={(e) =>

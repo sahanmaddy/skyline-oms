@@ -108,7 +108,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     <span className="inline-flex rounded-md">
                                                         <button
                                                             type="button"
-                                                            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
+                                                            className="inline-flex min-h-10 items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-5 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                                             title={`${contextBranch.code} — ${contextBranch.name}`}
                                                         >
                                                             <span className="truncate text-left">{`${contextBranch.code} — ${contextBranch.name}`}</span>
@@ -152,7 +152,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <span className="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
+                                                className="inline-flex min-h-10 items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-5 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                             >
                                                 <span className="truncate text-left">{user.name}</span>
                                                 <svg className="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -188,7 +188,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     <span className="inline-flex rounded-md">
                                                         <button
                                                             type="button"
-                                                            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
+                                                            className="inline-flex min-h-10 items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-5 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                                         >
                                                             {`${contextBranch.code} — ${contextBranch.name}`}
                                                             <svg className="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
