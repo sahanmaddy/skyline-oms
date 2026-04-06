@@ -154,10 +154,16 @@ const Content = ({
     );
 };
 
-const DropdownLink = ({ className = '', children, ...props }) => {
+const DropdownLink = ({ className = '', children, onClick, ...props }) => {
+    const { setOpen } = useContext(DropDownContext);
+
     return (
         <Link
             {...props}
+            onClick={(event) => {
+                onClick?.(event);
+                setOpen(false);
+            }}
             className={dropdownMenuLinkClass + ' ' + className}
         >
             {children}

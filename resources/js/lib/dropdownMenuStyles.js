@@ -5,7 +5,7 @@
 
 /** Floating menu panel: ring + shadow like Dropdown.Content inner wrapper. */
 export const dropdownMenuPanelRingClass =
-    'rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-cursor-surface dark:ring-white/10';
+    'rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-cursor-surface';
 
 /** Option row (Headless UI ListboxOption / ComboboxOption). */
 export const dropdownMenuItemClass =

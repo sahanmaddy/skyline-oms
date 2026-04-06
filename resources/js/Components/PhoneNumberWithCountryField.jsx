@@ -156,14 +156,8 @@ export default function PhoneNumberWithCountryField({
     };
 
     return (
-        <div
-            className={
-                'flex min-h-10 items-stretch overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm ' +
-                (disabled ? 'opacity-60 ' : '') +
-                className
-            }
-        >
-            <div className="flex shrink-0 border-r border-gray-300 bg-white">
+        <div className={'flex items-start gap-2 ' + (disabled ? 'opacity-60 ' : '') + className}>
+            <div className="w-36 shrink-0">
                 <Listbox
                     value={selected}
                     onChange={handleSelect}
@@ -171,13 +165,13 @@ export default function PhoneNumberWithCountryField({
                     disabled={disabled}
                 >
                     {({ open }) => (
-                        <div className="relative flex h-full min-h-10">
+                        <div className="relative min-h-10">
                             <ListboxButton
                                 className={
-                                    'flex h-full min-h-10 min-w-[7.25rem] items-center gap-2 px-3 text-left text-sm text-gray-900 outline-none ' +
+                                    'flex min-h-10 w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised ' +
                                     (open
-                                        ? 'ring-2 ring-inset ring-indigo-500'
-                                        : 'data-[focus]:ring-2 data-[focus]:ring-inset data-[focus]:ring-indigo-500 ') +
+                                        ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-cursor-accent-soft dark:ring-offset-cursor-bg'
+                                        : 'data-[focus]:border-indigo-500 data-[focus]:ring-2 data-[focus]:ring-indigo-500 data-[focus]:ring-offset-2 data-[focus]:ring-offset-white dark:data-[focus]:ring-cursor-accent-soft dark:data-[focus]:ring-offset-cursor-bg ') +
                                     'disabled:cursor-not-allowed'
                                 }
                             >
@@ -201,7 +195,7 @@ export default function PhoneNumberWithCountryField({
                 </Listbox>
             </div>
 
-            <div className="relative flex min-h-10 min-w-0 flex-1 items-center focus-within:z-[2] focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500">
+            <div className="min-w-0 flex-1">
                 <input
                     id={phoneInputId}
                     name={phoneInputName}
@@ -212,7 +206,7 @@ export default function PhoneNumberWithCountryField({
                     placeholder={phonePlaceholder}
                     value={phoneNumber ?? ''}
                     onChange={(e) => onPhoneNumberChange(e.target.value)}
-                    className="block min-h-10 w-full min-w-0 border-0 bg-transparent px-3 py-2 text-sm leading-5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed"
+                    className="block min-h-10 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out placeholder:text-gray-400 hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg"
                 />
             </div>
         </div>

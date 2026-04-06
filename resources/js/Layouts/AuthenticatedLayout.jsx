@@ -1,7 +1,5 @@
 import Dropdown from '@/Components/Dropdown';
-import FormSelect from '@/Components/FormSelect';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { navFormSelectTriggerClass, navFormSelectTriggerMobileClass } from '@/lib/dropdownMenuStyles';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -104,26 +102,42 @@ export default function AuthenticatedLayout({ header, children }) {
                             <div className="flex items-center gap-2 sm:gap-3">
                                 {contextBranch ? (
                                     branchesForContext.length > 1 ? (
-                                        <label className="hidden max-w-[min(100%,14rem)] sm:block">
-                                            <span className="sr-only">Working branch</span>
-                                            <FormSelect
-                                                aria-label="Working branch"
-                                                className="truncate"
-                                                triggerClassName={navFormSelectTriggerClass}
-                                                value={contextBranch.id}
-                                                onChange={(branchId) => {
-                                                    router.patch(
-                                                        route('settings.context.branch'),
-                                                        { branch_id: Number(branchId) },
-                                                        { preserveScroll: true },
-                                                    );
-                                                }}
-                                                options={branchesForContext.map((b) => ({
-                                                    value: b.id,
-                                                    label: `${b.code} — ${b.name}`,
-                                                }))}
-                                            />
-                                        </label>
+                                        <div className="hidden sm:block">
+                                            <Dropdown>
+                                                <Dropdown.Trigger>
+                                                    <span className="inline-flex rounded-md">
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
+                                                            title={`${contextBranch.code} — ${contextBranch.name}`}
+                                                        >
+                                                            <span className="truncate text-left">{`${contextBranch.code} — ${contextBranch.name}`}</span>
+                                                            <svg className="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path
+                                                                    fillRule="evenodd"
+                                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                                    clipRule="evenodd"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </span>
+                                                </Dropdown.Trigger>
+                                                <Dropdown.Content align="right">
+                                                    {branchesForContext.map((b) => (
+                                                        <Dropdown.Link
+                                                            key={b.id}
+                                                            href={route('settings.context.branch')}
+                                                            method="patch"
+                                                            as="button"
+                                                            data={{ branch_id: Number(b.id) }}
+                                                            preserveScroll
+                                                        >
+                                                            {b.code} — {b.name}
+                                                        </Dropdown.Link>
+                                                    ))}
+                                                </Dropdown.Content>
+                                            </Dropdown>
+                                        </div>
                                     ) : (
                                         <span
                                             className="hidden max-w-[12rem] truncate text-xs text-gray-600 dark:text-cursor-muted sm:inline"
@@ -133,7 +147,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                         </span>
                                     )
                                 ) : null}
-                                <div className="hidden text-sm text-gray-600 dark:text-cursor-muted md:block">{user.email}</div>
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <span className="inline-flex rounded-md">
@@ -141,7 +154,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 type="button"
                                                 className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                             >
-                                                {user.name}
+                                                <span className="truncate text-left">{user.name}</span>
                                                 <svg className="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                     <path
                                                         fillRule="evenodd"
@@ -170,22 +183,39 @@ export default function AuthenticatedLayout({ header, children }) {
                                             <div className="mb-1 text-xs font-medium text-gray-500 dark:text-cursor-muted">
                                                 Working branch
                                             </div>
-                                            <FormSelect
-                                                aria-label="Working branch"
-                                                triggerClassName={navFormSelectTriggerMobileClass}
-                                                value={contextBranch.id}
-                                                onChange={(branchId) => {
-                                                    router.patch(
-                                                        route('settings.context.branch'),
-                                                        { branch_id: Number(branchId) },
-                                                        { preserveScroll: true },
-                                                    );
-                                                }}
-                                                options={branchesForContext.map((b) => ({
-                                                    value: b.id,
-                                                    label: `${b.code} — ${b.name}`,
-                                                }))}
-                                            />
+                                            <Dropdown>
+                                                <Dropdown.Trigger>
+                                                    <span className="inline-flex rounded-md">
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
+                                                        >
+                                                            {`${contextBranch.code} — ${contextBranch.name}`}
+                                                            <svg className="-me-0.5 ms-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path
+                                                                    fillRule="evenodd"
+                                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                                    clipRule="evenodd"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </span>
+                                                </Dropdown.Trigger>
+                                                <Dropdown.Content align="left">
+                                                    {branchesForContext.map((b) => (
+                                                        <Dropdown.Link
+                                                            key={b.id}
+                                                            href={route('settings.context.branch')}
+                                                            method="patch"
+                                                            as="button"
+                                                            data={{ branch_id: Number(b.id) }}
+                                                            preserveScroll
+                                                        >
+                                                            {b.code} — {b.name}
+                                                        </Dropdown.Link>
+                                                    ))}
+                                                </Dropdown.Content>
+                                            </Dropdown>
                                         </div>
                                     ) : contextBranch ? (
                                         <div className="mb-3 border-b border-gray-100 pb-3 text-xs text-gray-600 dark:border-cursor-border dark:text-cursor-muted">
