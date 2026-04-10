@@ -54,6 +54,8 @@ class Branch extends Model
 
     public function isInUse(): bool
     {
-        return $this->usersWithAccess()->exists() || $this->employees()->exists();
+        return $this->users()->exists()
+            || $this->usersWithAccess()->exists()
+            || $this->employees()->exists();
     }
 }

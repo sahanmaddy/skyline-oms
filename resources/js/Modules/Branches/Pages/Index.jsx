@@ -98,25 +98,25 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                 />
 
                 <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="min-w-full table-auto divide-y divide-gray-200">
+                    <table className="w-full min-w-full table-fixed divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Branch
                                 </th>
                                 <th className="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Location
                                 </th>
-                                <th className="w-[22%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[24%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Contact
                                 </th>
-                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Team
                                 </th>
-                                <th className="w-[26%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Status
                                 </th>
-                                <th className="w-[8%] whitespace-nowrap px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-16 whitespace-nowrap px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Actions
                                 </th>
                             </tr>
@@ -124,13 +124,13 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                         <tbody className="divide-y divide-gray-200">
                             {branches.data.map((b) => (
                                 <tr key={b.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3">
+                                    <td className="min-w-0 px-4 py-3">
                                         <div className="text-sm font-semibold text-gray-900">{b.name}</div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             <span className="font-mono font-medium text-gray-700">{b.code}</span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
                                         {b.city || b.country ? (
                                             <>
                                                 <div className="font-medium text-gray-900">
@@ -144,15 +144,15 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                             <span className="text-gray-400">—</span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
-                                        <div className="text-xs text-gray-500">
+                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
+                                        <div className="break-words text-xs text-gray-500">
                                             {b.email ? `E-mail: ${b.email}` : 'E-mail: —'}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             {renderPhoneList(b.phone_numbers, 10)}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="min-w-0 px-4 py-3">
                                         <div className="text-sm text-gray-900">
                                             Users: {b.users_count ?? 0}
                                         </div>
@@ -160,7 +160,7 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                             Employees: {b.employees_count ?? 0}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="whitespace-nowrap px-4 py-3">
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span
                                                 className={

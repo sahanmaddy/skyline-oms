@@ -39,6 +39,37 @@ class BranchScopeService
         return $fallback ? [$fallback] : [];
     }
 
+    /**
+     * After a branch row is removed, ensure session working context is not a stale ID.
+     *
+     * Call after the delete transaction commits; refresh the user so pivot cascades are visible.
+     */
+    public function clearSessionIfPointingAtRemovedBranch(Request $request, User $user, int $removedBranchId): void
+    {
+        $sessionId = (int) $request->session()->get('current_branch_id', 0);
+        if ($sessionId !== $removedBranchId) {
+            return;
+        }
+
+        $allowed = $this->allowedSwitcherBranchIds($user);
+        $allowed = array_values(array_filter($allowed, fn (int $id) => $id !== $removedBranchId));
+
+        $fallback = (int) $user->branch_id;
+        if ($fallback > 0 && $fallback !== $removedBranchId && in_array($fallback, $allowed, true)) {
+            $request->session()->put('current_branch_id', $fallback);
+
+            return;
+        }
+
+        if ($allowed !== []) {
+            $request->session()->put('current_branch_id', (int) $allowed[0]);
+
+            return;
+        }
+
+        $request->session()->forget('current_branch_id');
+    }
+
     public function effectiveBranchId(Request $request, ?User $user = null): int
     {
         $user ??= $request->user();

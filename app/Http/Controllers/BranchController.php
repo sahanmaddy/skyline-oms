@@ -9,6 +9,7 @@ use App\Http\Requests\BranchUpdateRequest;
 use App\Models\Branch;
 use App\Models\User;
 use App\Services\Branches\BranchCodeGeneratorService;
+use App\Services\Branches\BranchScopeService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class BranchController extends Controller
             ->withCount([
                 'employees',
                 'usersWithAccess as users_count',
+                'users as default_branch_users_count',
             ]);
 
         if ($search = trim((string) $request->string('q'))) {
@@ -55,10 +57,14 @@ class BranchController extends Controller
 
         $branches = $query->orderBy('code')->paginate(15)->withQueryString()->through(
             function (Branch $branch) use ($request) {
+                $inUse = ($branch->users_count > 0)
+                    || ($branch->default_branch_users_count > 0)
+                    || ($branch->employees_count > 0);
+
                 return array_merge($branch->toArray(), [
                     'can_view' => $request->user()?->can('view', $branch) ?? false,
                     'can_edit' => $request->user()?->can('update', $branch) ?? false,
-                    'can_delete' => $request->user()?->can('delete', $branch) ?? false,
+                    'can_delete' => ($request->user()?->can('delete', $branch) ?? false) && ! $inUse,
                 ]);
             }
         );
@@ -108,6 +114,7 @@ class BranchController extends Controller
         $branch->loadCount([
             'employees',
             'usersWithAccess as users_count',
+            'users as default_branch_users_count',
         ]);
 
         $users = User::query()
@@ -124,7 +131,9 @@ class BranchController extends Controller
             ->limit(20)
             ->get(['id', 'employee_code', 'display_name', 'status']);
 
-        $inUse = $branch->users_count > 0 || $branch->employees_count > 0;
+        $inUse = $branch->users_count > 0
+            || $branch->default_branch_users_count > 0
+            || $branch->employees_count > 0;
 
         return Inertia::render('Modules/Branches/Pages/Show', [
             'branch' => $branch,
@@ -156,14 +165,22 @@ class BranchController extends Controller
         return redirect()->route('settings.branches.show', $branch)->with('success', 'Branch updated.');
     }
 
-    public function destroy(Branch $branch, DeleteBranchAction $deleteBranch): RedirectResponse
+    public function destroy(Request $request, Branch $branch, DeleteBranchAction $deleteBranch): RedirectResponse
     {
         $this->authorize('delete', $branch);
+
+        $deletedId = (int) $branch->id;
 
         try {
             $deleteBranch->execute($branch);
         } catch (DomainException $e) {
             return redirect()->route('settings.branches.show', $branch)->with('error', $e->getMessage());
+        }
+
+        $user = $request->user();
+        if ($user instanceof User) {
+            $user->refresh();
+            app(BranchScopeService::class)->clearSessionIfPointingAtRemovedBranch($request, $user, $deletedId);
         }
 
         return redirect()->route('settings.branches.index')->with('success', 'Branch deleted.');

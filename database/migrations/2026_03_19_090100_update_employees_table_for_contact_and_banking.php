@@ -29,6 +29,9 @@ return new class extends Migration
         ]);
 
         Schema::table('employees', function (Blueprint $table) {
+            // SQLite (and consistent ordering elsewhere): drop the index before dropping the column,
+            // or ALTER TABLE DROP COLUMN leaves a broken index and fails.
+            $table->dropIndex(['is_salesperson']);
             $table->dropColumn('is_salesperson');
         });
     }
