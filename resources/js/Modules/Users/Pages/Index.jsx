@@ -125,9 +125,12 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                         <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
                                             {u.branch ? (
-                                                <span title={u.branch.name}>
-                                                    <span className="font-mono text-xs">{u.branch.code}</span>
-                                                </span>
+                                                <>
+                                                    <div className="font-medium text-gray-900">{u.branch.name}</div>
+                                                    <div className="mt-0.5 font-mono text-xs text-gray-500">
+                                                        {u.branch.code}
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <span className="text-gray-400">—</span>
                                             )}

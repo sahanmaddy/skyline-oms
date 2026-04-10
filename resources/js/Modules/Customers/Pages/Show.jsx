@@ -76,6 +76,15 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
     };
 
     const primaryDisplayName = customer.display_name || customer.customer_name || '—';
+    const customerCodePart = customer.customer_code?.trim() || null;
+    const customerDetailPart =
+        customer.company_name?.trim() ||
+        customer.customer_name?.trim() ||
+        null;
+    const headerSubtitle =
+        customerCodePart && customerDetailPart
+            ? `${customerCodePart} · ${customerDetailPart}`
+            : customerCodePart || customerDetailPart || '—';
 
     return (
         <AuthenticatedLayout
@@ -126,7 +135,22 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-8">
-                        <h3 className="text-sm font-semibold text-gray-900">Customer Information</h3>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">{primaryDisplayName}</div>
+                                <div className="text-sm text-gray-600">{headerSubtitle}</div>
+                            </div>
+                            <span
+                                className={
+                                    'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
+                                    (customer.status === 'active'
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
+                                        : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
+                                }
+                            >
+                                {customer.status === 'active' ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                             <Info label="Customer Code" value={customer.customer_code || '—'} />
                             <Info label="Display Name" value={primaryDisplayName} />
@@ -135,11 +159,6 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                             <Info label="NIC" value={customer.nic || '—'} />
                             <Info label="TIN" value={customer.tin_number || '—'} />
                             <Info label="VAT" value={customer.vat_number || '—'} />
-                            <StatusInfo
-                                label="Status"
-                                isPositive={customer.status === 'active'}
-                                value={customer.status === 'active' ? 'Active' : 'Inactive'}
-                            />
                         </div>
                     </section>
 

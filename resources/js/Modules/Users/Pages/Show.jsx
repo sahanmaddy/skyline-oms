@@ -63,61 +63,26 @@ export default function Show({ user, canEdit, canDelete }) {
                     />
 
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-lg font-semibold text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-600">{user.email}</div>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">{user.name}</div>
+                                <div className="text-sm text-gray-600">{user.email || '—'}</div>
+                            </div>
+                            <span
+                                className={
+                                    'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
+                                    (user.status === 'active'
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
+                                        : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
+                                }
+                            >
+                                {user.status === 'active' ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
 
                         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <div className="rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Roles
-                                </div>
-                                <div className="mt-2 flex min-h-6 items-center">
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {roles.length > 0 ? (
-                                            roles.map((role) => (
-                                                <span
-                                                    key={role.id ?? role.name}
-                                                    className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700"
-                                                >
-                                                    {role.name}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <span className="text-sm text-gray-400">—</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                            <Info
-                                label="Status"
-                                value={user.status === 'active' ? 'Active' : 'Inactive'}
-                                badge={
-                                    user.status === 'active'
-                                        ? 'bg-green-50 text-green-700'
-                                        : 'bg-gray-100 text-gray-700'
-                                }
-                            />
-                            <div className="rounded-md border border-gray-200 bg-white p-3 sm:col-span-2">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Branch access
-                                </div>
-                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                    {assignedBranches.length > 0 ? (
-                                        assignedBranches.map((b) => (
-                                            <span
-                                                key={b.id}
-                                                className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-800"
-                                            >
-                                                <span className="font-mono text-slate-600">{b.code}</span>
-                                                <span className="text-slate-400"> — </span>
-                                                {b.name}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="text-sm text-gray-400">—</span>
-                                    )}
-                                </div>
-                            </div>
+                            <Info label="Name" value={user.name} />
+                            <Info label="Email" value={user.email || '—'} />
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Default branch
@@ -148,6 +113,48 @@ export default function Show({ user, canEdit, canDelete }) {
                                         </Link>
                                     ) : (
                                         <span className="text-gray-400">Not linked</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Roles
+                                </div>
+                                <div className="mt-2 flex min-h-6 items-center">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {roles.length > 0 ? (
+                                            roles.map((role) => (
+                                                <span
+                                                    key={role.id ?? role.name}
+                                                    className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700"
+                                                >
+                                                    {role.name}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-400">—</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Branch access
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {assignedBranches.length > 0 ? (
+                                        assignedBranches.map((b) => (
+                                            <span
+                                                key={b.id}
+                                                className="inline-flex items-center rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-800"
+                                            >
+                                                <span className="font-mono text-slate-600">{b.code}</span>
+                                                <span className="text-slate-400"> — </span>
+                                                {b.name}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-sm text-gray-400">—</span>
                                     )}
                                 </div>
                             </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Branches\DeleteBranchAction;
+use App\Actions\Branches\SyncBranchPhoneNumbersAction;
 use App\Http\Requests\BranchStoreRequest;
 use App\Http\Requests\BranchUpdateRequest;
 use App\Models\Branch;
@@ -25,6 +26,7 @@ class BranchController extends Controller
     public function index(Request $request): Response
     {
         $query = Branch::query()
+            ->with(['phoneNumbers'])
             ->withCount([
                 'employees',
                 'usersWithAccess as users_count',
@@ -34,7 +36,11 @@ class BranchController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('city', 'like', "%{$search}%");
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhereHas(
+                        'phoneNumbers',
+                        fn ($p) => $p->where('phone_number', 'like', "%{$search}%"),
+                    );
             });
         }
 
@@ -82,11 +88,15 @@ class BranchController extends Controller
     public function store(BranchStoreRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $phoneNumbers = $data['phone_numbers'] ?? [];
+        unset($data['phone_numbers']);
 
-        $branch = DB::transaction(function () use ($data) {
+        $branch = DB::transaction(function () use ($data, $phoneNumbers) {
             $data['code'] = app(BranchCodeGeneratorService::class)->nextCode();
+            $branch = Branch::create($data);
+            app(SyncBranchPhoneNumbersAction::class)->execute($branch, $phoneNumbers);
 
-            return Branch::create($data);
+            return $branch;
         });
 
         return redirect()->route('settings.branches.show', $branch)->with('success', 'Branch created.');
@@ -94,6 +104,7 @@ class BranchController extends Controller
 
     public function show(Branch $branch): Response
     {
+        $branch->load(['phoneNumbers']);
         $branch->loadCount([
             'employees',
             'usersWithAccess as users_count',
@@ -127,13 +138,20 @@ class BranchController extends Controller
     public function edit(Branch $branch): Response
     {
         return Inertia::render('Modules/Branches/Pages/Edit', [
-            'branch' => $branch,
+            'branch' => $branch->load('phoneNumbers'),
         ]);
     }
 
     public function update(BranchUpdateRequest $request, Branch $branch): RedirectResponse
     {
-        $branch->update($request->validated());
+        $data = $request->validated();
+        $phoneNumbers = $data['phone_numbers'] ?? [];
+        unset($data['phone_numbers']);
+
+        DB::transaction(function () use ($branch, $data, $phoneNumbers) {
+            $branch->update($data);
+            app(SyncBranchPhoneNumbersAction::class)->execute($branch, $phoneNumbers);
+        });
 
         return redirect()->route('settings.branches.show', $branch)->with('success', 'Branch updated.');
     }

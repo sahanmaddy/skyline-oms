@@ -48,12 +48,27 @@ export default function Show({ permission, canEdit, canDelete }) {
                         }
                     />
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-lg font-semibold text-gray-900">{permission.display_name || permission.name}</div>
-                        <div className="mt-1 text-sm text-gray-500">{permission.name}</div>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">
+                                    {permission.display_name || permission.name}
+                                </div>
+                                <div className="mt-1 text-sm text-gray-500">{permission.name}</div>
+                            </div>
+                            <span
+                                className={
+                                    'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
+                                    (permission.is_system
+                                        ? 'bg-gray-100 text-gray-700 ring-1 ring-gray-200'
+                                        : 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200')
+                                }
+                            >
+                                {permission.is_system ? 'System' : 'Custom'}
+                            </span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Info label="Module" value={permission.module || 'General'} />
                             <Info label="Used by roles" value={String(permission.roles?.length || 0)} />
-                            <Info label="System" value={permission.is_system ? 'Yes' : 'No'} />
                         </div>
                         <div className="mt-4 rounded-md border border-gray-200 p-3">
                             <div className="text-xs uppercase tracking-wide text-gray-500">Description</div>

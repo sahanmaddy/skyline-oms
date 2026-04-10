@@ -15,7 +15,6 @@ class Branch extends Model
         'address_line_2',
         'city',
         'country',
-        'phone',
         'email',
         'is_active',
         'notes',
@@ -36,6 +35,11 @@ class Branch extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
+    }
+
+    public function phoneNumbers(): HasMany
+    {
+        return $this->hasMany(BranchPhoneNumber::class);
     }
 
     public function usersWithAccess(): BelongsToMany

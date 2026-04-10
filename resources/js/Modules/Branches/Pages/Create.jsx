@@ -12,8 +12,8 @@ export default function Create({ nextCode }) {
         address_line_2: '',
         city: '',
         country: 'Sri Lanka',
-        phone: '',
         email: '',
+        phone_numbers: [],
         is_active: true,
         notes: '',
     });

@@ -176,9 +176,12 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
                                         {e.branch ? (
-                                            <span className="font-mono text-xs" title={e.branch.name}>
-                                                {e.branch.code}
-                                            </span>
+                                            <>
+                                                <div className="font-medium text-gray-900">{e.branch.name}</div>
+                                                <div className="mt-0.5 font-mono text-xs text-gray-500">
+                                                    {e.branch.code}
+                                                </div>
+                                            </>
                                         ) : (
                                             <span className="text-gray-400">—</span>
                                         )}

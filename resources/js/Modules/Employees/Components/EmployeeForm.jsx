@@ -872,6 +872,9 @@ export default function EmployeeForm({
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Payroll & Statutory Details</h3>
+                <p className="mt-1 text-xs text-gray-500">
+                    Banking and statutory numbers used for salary and compliance processing.
+                </p>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="bank_name" value="Bank Name" />

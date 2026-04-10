@@ -9,7 +9,7 @@ export const dropdownMenuPanelRingClass =
 
 /** Option row (Headless UI ListboxOption / ComboboxOption). */
 export const dropdownMenuItemClass =
-    'cursor-pointer px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 data-[focus]:bg-gray-100 focus:outline-none dark:text-cursor-fg dark:data-[focus]:bg-[#3c3c3c]';
+    'cursor-pointer px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 data-[focus]:bg-gray-100 data-[selected]:bg-gray-100 focus:outline-none dark:text-cursor-fg dark:data-[focus]:bg-[#3c3c3c] dark:data-[selected]:bg-[#3c3c3c]';
 
 /** Inertia Link row inside Dropdown (keyboard focus uses :focus, not data-focus). */
 export const dropdownMenuLinkClass =
