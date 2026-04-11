@@ -5,6 +5,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { useEffect, useMemo } from 'react';
 
+function normId(v) {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 export default function UserForm({
     data,
     setData,
@@ -26,52 +31,91 @@ export default function UserForm({
         [activeBranches],
     );
 
-    const employeesInBranch = useMemo(() => {
-        if (!employeesForLink?.length) {
+    const employeesList = useMemo(() => {
+        const raw = employeesForLink;
+        if (!raw) {
             return [];
         }
-        if (!data.branch_id) {
-            return employeesForLink;
+        return Array.isArray(raw) ? raw : Object.values(raw);
+    }, [employeesForLink]);
+
+    const branchIdsNorm = useMemo(
+        () =>
+            [...new Set((data.branch_ids ?? []).map((id) => normId(id)).filter(Boolean))].sort(
+                (a, b) => a - b,
+            ),
+        [data.branch_ids],
+    );
+
+    const homeBranchId = normId(data.branch_id);
+
+    const employeesInBranch = useMemo(() => {
+        if (!employeesList.length) {
+            return [];
         }
-        return employeesForLink.filter((e) => e.branch_id === data.branch_id);
-    }, [employeesForLink, data.branch_id]);
+        // Offer linkable employees in any branch the user has access to (not only the current
+        // default). Server still requires employee.branch_id === default branch_id on save.
+        if (branchIdsNorm.length === 0) {
+            return employeesList;
+        }
+        return employeesList.filter((e) => branchIdsNorm.includes(Number(e.branch_id)));
+    }, [employeesList, branchIdsNorm]);
 
     useEffect(() => {
-        if (!data.branch_id || !data.employee_id) {
+        if (!homeBranchId || !data.employee_id) {
             return;
         }
-        const ok = employeesForLink?.some(
-            (e) => e.id === data.employee_id && e.branch_id === data.branch_id,
+        const empId = normId(data.employee_id);
+        const ok = employeesList.some(
+            (e) => Number(e.id) === empId && Number(e.branch_id) === homeBranchId,
         );
         if (!ok) {
             setData('employee_id', '');
         }
-    }, [data.branch_id, data.employee_id, employeesForLink, setData]);
-
-    const branchIds = useMemo(() => data.branch_ids ?? [], [data.branch_ids]);
+    }, [homeBranchId, data.employee_id, employeesList, setData]);
 
     useEffect(() => {
-        if (!branchIds.length) {
+        if (!data.employee_id) {
+            return;
+        }
+        const emp = employeesList.find((e) => Number(e.id) === Number(data.employee_id));
+        if (!emp) {
+            setData('employee_id', '');
+            return;
+        }
+        const eb = normId(emp.branch_id);
+        if (branchIdsNorm.length > 0 && eb !== null && !branchIdsNorm.includes(eb)) {
+            setData('employee_id', '');
+        }
+    }, [branchIdsNorm, data.employee_id, employeesList, setData]);
+
+    useEffect(() => {
+        if (!branchIdsNorm.length) {
             if (data.branch_id) {
                 setData('branch_id', '');
             }
             return;
         }
-        if (!branchIds.includes(data.branch_id)) {
-            setData('branch_id', branchIds[0]);
+        if (!branchIdsNorm.includes(homeBranchId)) {
+            setData('branch_id', branchIdsNorm[0]);
         }
-    }, [branchIds, data.branch_id, setData]);
+    }, [branchIdsNorm, homeBranchId, data.branch_id, setData]);
 
     function toggleBranchAccess(branchId, checked) {
-        const next = new Set(branchIds);
+        const id = normId(branchId);
+        if (!id) {
+            return;
+        }
+        const next = new Set(branchIdsNorm);
         if (checked) {
-            next.add(branchId);
+            next.add(id);
         } else {
-            next.delete(branchId);
+            next.delete(id);
         }
         const arr = Array.from(next).sort((a, b) => a - b);
         setData('branch_ids', arr);
-        if (arr.length && !arr.includes(data.branch_id)) {
+        const nextHome = normId(data.branch_id);
+        if (arr.length && !arr.includes(nextHome)) {
             setData('branch_id', arr[0]);
         }
         if (!arr.length) {
@@ -116,7 +160,8 @@ export default function UserForm({
                     <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2 dark:border-cursor-border">
                         <div className="space-y-1.5">
                             {branchOptions.map((b) => {
-                                const checked = branchIds.includes(b.id);
+                                const bid = normId(b.id);
+                                const checked = bid !== null && branchIdsNorm.includes(bid);
                                 return (
                                     <label
                                         key={b.id}
@@ -127,7 +172,7 @@ export default function UserForm({
                                             className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                             checked={checked}
                                             onChange={(e) =>
-                                                toggleBranchAccess(b.id, e.target.checked)
+                                                toggleBranchAccess(bid, e.target.checked)
                                             }
                                         />
                                         <span>
@@ -159,7 +204,10 @@ export default function UserForm({
                         options={[
                             { value: '', label: 'Select branch…' },
                             ...branchOptions
-                                .filter((b) => branchIds.includes(b.id))
+                                .filter((b) => {
+                                    const bid = normId(b.id);
+                                    return bid !== null && branchIdsNorm.includes(bid);
+                                })
                                 .map((b) => ({
                                     value: b.id,
                                     label: `${b.code} — ${b.name}`,
@@ -196,7 +244,20 @@ export default function UserForm({
                         id="employee_id"
                         className="mt-1"
                         value={data.employee_id === '' || data.employee_id == null ? '' : data.employee_id}
-                        onChange={(v) => setData('employee_id', v === '' ? '' : Number(v))}
+                        onChange={(v) => {
+                            if (v === '' || v == null) {
+                                setData('employee_id', '');
+                                return;
+                            }
+                            const id = Number(v);
+                            const emp = employeesList.find((e) => Number(e.id) === id);
+                            const eb = emp ? normId(emp.branch_id) : null;
+                            setData((prev) => ({
+                                ...prev,
+                                employee_id: id,
+                                ...(eb !== null && branchIdsNorm.includes(eb) ? { branch_id: eb } : {}),
+                            }));
+                        }}
                         options={[
                             { value: '', label: '— Not linked —' },
                             ...employeesInBranch.map((emp) => ({

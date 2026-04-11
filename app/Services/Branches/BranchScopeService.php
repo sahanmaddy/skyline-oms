@@ -283,7 +283,13 @@ class BranchScopeService
         $actor = $request->user();
         abort_unless($actor instanceof User, 403);
 
-        $assignable = $this->assignableBranchIdsForValidation($actor, $editingUser?->branch_id);
+        // Match UserStoreRequest / UserUpdateRequest and branchesForUserAssignmentForms so editors
+        // who may assign org-wide branches still see linkable employees in those branches.
+        $assignable = $this->assignableBranchIdsForUserFormValidation($actor, $editingUser?->branch_id);
+
+        if ($assignable === []) {
+            return collect();
+        }
 
         return Employee::query()
             ->select(['id', 'employee_code', 'display_name', 'branch_id'])
@@ -295,7 +301,8 @@ class BranchScopeService
             })
             ->whereIn('branch_id', $assignable)
             ->orderBy('display_name')
-            ->get();
+            ->get()
+            ->values();
     }
 
     /**

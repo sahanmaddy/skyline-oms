@@ -469,20 +469,20 @@ export default function EmployeeForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="user_id" value="Linked User (optional)" />
+                        <InputLabel htmlFor="user_id" value="Linked User (Optional)" />
                         <FormSelect
                             id="user_id"
                             className="mt-1"
                             value={data.user_id === '' || data.user_id == null ? '' : data.user_id}
                             onChange={(v) => setData('user_id', v === '' ? '' : Number(v))}
                             options={[
-                                { value: '', label: '—' },
+                                { value: '', label: '— Not linked —' },
                                 ...usersInBranch.map((u) => ({
                                     value: u.id,
                                     label: `${u.name} (${u.email})`,
                                 })),
                             ]}
-                            placeholder="—"
+                            placeholder="— Not linked —"
                         />
                         <InputError className="mt-2" message={errors.user_id} />
                     </div>
