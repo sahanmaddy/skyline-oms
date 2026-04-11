@@ -85,7 +85,7 @@ export default function Show({ user, canEdit, canDelete }) {
                             <Info label="Email" value={user.email || '—'} />
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Default branch
+                                    Default Branch
                                 </div>
                                 <div className="mt-2 text-sm font-medium text-gray-900">
                                     {user.branch ? (
@@ -101,7 +101,7 @@ export default function Show({ user, canEdit, canDelete }) {
                             </div>
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Linked employee
+                                    Linked Employee
                                 </div>
                                 <div className="mt-2 flex min-h-6 items-center text-sm font-medium text-gray-900">
                                     {linkedLine ? (
@@ -139,7 +139,7 @@ export default function Show({ user, canEdit, canDelete }) {
                             </div>
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Branch access
+                                    Branch Access
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-1.5">
                                     {assignedBranches.length > 0 ? (

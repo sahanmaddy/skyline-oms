@@ -68,7 +68,7 @@ export default function Show({ permission, canEdit, canDelete }) {
                         </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Info label="Module" value={permission.module || 'General'} />
-                            <Info label="Used by roles" value={String(permission.roles?.length || 0)} />
+                            <Info label="Used By Roles" value={String(permission.roles?.length || 0)} />
                         </div>
                         <div className="mt-4 rounded-md border border-gray-200 p-3">
                             <div className="text-xs uppercase tracking-wide text-gray-500">Description</div>
@@ -76,7 +76,7 @@ export default function Show({ permission, canEdit, canDelete }) {
                         </div>
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">Roles using this permission</div>
+                        <div className="text-sm font-semibold text-gray-900">Roles Using This Permission</div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                             {(permission.roles || []).length ? (
                                 permission.roles.map((role) => (

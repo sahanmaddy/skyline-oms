@@ -24,7 +24,7 @@ export default function RoleForm({
         >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <InputLabel htmlFor="name" value="Role name" />
+                    <InputLabel htmlFor="name" value="Role Name" />
                     <TextInput
                         id="name"
                         className="mt-1 block w-full"

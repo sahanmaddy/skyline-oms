@@ -1,4 +1,5 @@
 import FormSelect from '@/Components/FormSelect';
+import LinkedEmployeeCombobox from '@/Components/LinkedEmployeeCombobox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -156,7 +157,7 @@ export default function UserForm({
                 </div>
 
                 <div className="sm:col-span-2">
-                    <InputLabel value="Branch access" />
+                    <InputLabel value="Branch Access" />
                     <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2 dark:border-cursor-border">
                         <div className="space-y-1.5">
                             {branchOptions.map((b) => {
@@ -195,14 +196,14 @@ export default function UserForm({
                 </div>
 
                 <div className="sm:col-span-2">
-                    <InputLabel htmlFor="branch_id" value="Default branch" />
+                    <InputLabel htmlFor="branch_id" value="Default Branch" />
                     <FormSelect
                         id="branch_id"
                         className="mt-1"
                         value={data.branch_id ?? ''}
                         onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
                         options={[
-                            { value: '', label: 'Select branch…' },
+                            { value: '', label: 'Select Branch…' },
                             ...branchOptions
                                 .filter((b) => {
                                     const bid = normId(b.id);
@@ -213,7 +214,7 @@ export default function UserForm({
                                     label: `${b.code} — ${b.name}`,
                                 })),
                         ]}
-                        placeholder="Select branch…"
+                        placeholder="Select Branch…"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                         Default home branch (must be one of the branches above).
@@ -239,33 +240,24 @@ export default function UserForm({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="employee_id" value="Linked employee" />
-                    <FormSelect
+                    <InputLabel htmlFor="employee_id" value="Linked Employee" />
+                    <LinkedEmployeeCombobox
                         id="employee_id"
                         className="mt-1"
-                        value={data.employee_id === '' || data.employee_id == null ? '' : data.employee_id}
-                        onChange={(v) => {
-                            if (v === '' || v == null) {
+                        value={data.employee_id}
+                        employees={employeesInBranch}
+                        onChange={(emp) => {
+                            if (!emp) {
                                 setData('employee_id', '');
                                 return;
                             }
-                            const id = Number(v);
-                            const emp = employeesList.find((e) => Number(e.id) === id);
-                            const eb = emp ? normId(emp.branch_id) : null;
+                            const eb = normId(emp.branch_id);
                             setData((prev) => ({
                                 ...prev,
-                                employee_id: id,
+                                employee_id: Number(emp.id),
                                 ...(eb !== null && branchIdsNorm.includes(eb) ? { branch_id: eb } : {}),
                             }));
                         }}
-                        options={[
-                            { value: '', label: '— Not linked —' },
-                            ...employeesInBranch.map((emp) => ({
-                                value: emp.id,
-                                label: `${emp.employee_code} - ${emp.display_name}`,
-                            })),
-                        ]}
-                        placeholder="— Not linked —"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                         Each employee can only be linked to one user.
@@ -321,7 +313,7 @@ export default function UserForm({
                         <div className="sm:col-span-2">
                             <InputLabel
                                 htmlFor="password_confirmation"
-                                value="Confirm password"
+                                value="Confirm Password"
                             />
                             <TextInput
                                 id="password_confirmation"

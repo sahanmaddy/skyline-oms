@@ -245,7 +245,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                 )}
                             />
                             <Info
-                                label="Linked User / Access"
+                                label="Linked User"
                                 value={
                                     employee.user ? (
                                         <Link

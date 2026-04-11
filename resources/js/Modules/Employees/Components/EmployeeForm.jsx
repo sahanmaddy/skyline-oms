@@ -1,5 +1,6 @@
 import FormDatePicker from '@/Components/FormDatePicker';
 import FormSelect from '@/Components/FormSelect';
+import LinkedUserCombobox from '@/Components/LinkedUserCombobox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
@@ -103,29 +104,37 @@ export default function EmployeeForm({
 
     const phoneRows = useMemo(() => data.phone_numbers || [], [data.phone_numbers]);
 
+    const usersList = useMemo(() => {
+        const raw = users;
+        if (!raw) {
+            return [];
+        }
+        return Array.isArray(raw) ? raw : Object.values(raw);
+    }, [users]);
+
     const usersInBranch = useMemo(() => {
-        if (!users?.length) {
+        if (!usersList.length) {
             return [];
         }
         if (!data.branch_id) {
-            return users;
+            return usersList;
         }
-        return users.filter((u) => userAssignableToEmployeeBranch(u, data.branch_id));
-    }, [users, data.branch_id]);
+        return usersList.filter((u) => userAssignableToEmployeeBranch(u, data.branch_id));
+    }, [usersList, data.branch_id]);
 
     useEffect(() => {
-        if (!data.branch_id || !data.user_id || !users?.length) {
+        if (!data.branch_id || !data.user_id || !usersList.length) {
             return;
         }
-        const ok = users.some(
+        const ok = usersList.some(
             (u) =>
-                u.id === data.user_id &&
+                Number(u.id) === Number(data.user_id) &&
                 userAssignableToEmployeeBranch(u, data.branch_id),
         );
         if (!ok) {
             setData('user_id', '');
         }
-    }, [data.branch_id, data.user_id, users, setData]);
+    }, [data.branch_id, data.user_id, usersList, setData]);
 
     useEffect(() => {
         if (data.profile_photo) {
@@ -470,19 +479,12 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="user_id" value="Linked User (Optional)" />
-                        <FormSelect
+                        <LinkedUserCombobox
                             id="user_id"
                             className="mt-1"
-                            value={data.user_id === '' || data.user_id == null ? '' : data.user_id}
-                            onChange={(v) => setData('user_id', v === '' ? '' : Number(v))}
-                            options={[
-                                { value: '', label: '— Not linked —' },
-                                ...usersInBranch.map((u) => ({
-                                    value: u.id,
-                                    label: `${u.name} (${u.email})`,
-                                })),
-                            ]}
-                            placeholder="— Not linked —"
+                            value={data.user_id}
+                            users={usersInBranch}
+                            onChange={(u) => setData('user_id', u ? Number(u.id) : '')}
                         />
                         <InputError className="mt-2" message={errors.user_id} />
                     </div>

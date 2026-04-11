@@ -101,11 +101,11 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                             </div>
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <Info
-                                    label="Branch code"
+                                    label="Branch Code"
                                     value={branch.code || '—'}
                                     valueClassName="font-mono text-xs text-gray-800 dark:text-cursor-bright"
                                 />
-                                <Info label="Branch name" value={branch.name || '—'} />
+                                <Info label="Branch Name" value={branch.name || '—'} />
                             </div>
                         </section>
 

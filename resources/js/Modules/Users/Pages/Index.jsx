@@ -102,7 +102,7 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                     Roles
                                 </th>
                                 <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Linked employee
+                                    Linked Employee
                                 </th>
                                 <th className="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Status
@@ -153,12 +153,21 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                         </td>
                                         <td className="px-4 py-3 text-sm">
                                             {linkedLabel ? (
-                                                <Link
-                                                    href={route('hr.employees.show', u.employee.id)}
-                                                    className="font-medium text-indigo-600 hover:text-indigo-800"
-                                                >
-                                                    {linkedLabel}
-                                                </Link>
+                                                u.can_view_linked_employee ? (
+                                                    <Link
+                                                        href={route('hr.employees.show', u.employee.id)}
+                                                        className="font-medium text-indigo-600 hover:text-indigo-800"
+                                                    >
+                                                        {linkedLabel}
+                                                    </Link>
+                                                ) : (
+                                                    <span
+                                                        className="text-gray-700"
+                                                        title="Switch branch context or ask for access to open this employee."
+                                                    >
+                                                        {linkedLabel}
+                                                    </span>
+                                                )
                                             ) : (
                                                 <span className="text-xs text-gray-400">Not linked</span>
                                             )}

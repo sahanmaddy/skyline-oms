@@ -80,7 +80,7 @@ export default function BranchForm({
 
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="branch_code_display" value="Branch code" />
+                        <InputLabel htmlFor="branch_code_display" value="Branch Code" />
                         <TextInput
                             id="branch_code_display"
                             className="mt-1 block w-full"
@@ -144,7 +144,7 @@ export default function BranchForm({
 
                 <div className="mt-6 border-t border-gray-200 pt-4 dark:border-cursor-border">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <InputLabel value="Phone numbers" />
+                        <InputLabel value="Phone Numbers" />
                         <PrimaryButton type="button" onClick={addPhone}>
                             Add phone
                         </PrimaryButton>

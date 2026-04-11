@@ -69,7 +69,7 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                         </div>
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">Assigned permissions</div>
+                        <div className="text-sm font-semibold text-gray-900">Assigned Permissions</div>
                         <div className="mt-3 space-y-3">
                             {Object.keys(permissionsGrouped || {}).map((module) => (
                                 <div key={module}>
@@ -85,7 +85,7 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                         <div className="text-sm font-semibold text-gray-900">
-                            Assigned users ({(assignedUsers || []).length})
+                            Assigned Users ({(assignedUsers || []).length})
                         </div>
                         <div className="mt-2 space-y-2">
                             {(assignedUsers || []).length ? (

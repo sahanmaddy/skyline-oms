@@ -235,6 +235,21 @@ class BranchScopeService
     }
 
     /**
+     * Whether the actor may open HR records (e.g. employee profile) for this branch without switching
+     * the navbar. Uses the same branch IDs as the switcher (assigned branches, or home branch_id when
+     * the pivot is empty). Ignores branches.view (directory UI); that must not imply every HR profile.
+     */
+    public function actorMayAccessBranchForHrRead(User $actor, int $branchId): bool
+    {
+        $branchId = (int) $branchId;
+        if ($branchId < 1) {
+            return false;
+        }
+
+        return in_array($branchId, $this->allowedSwitcherBranchIds($actor), true);
+    }
+
+    /**
      * Unlinked users (plus current link on edit) within assignable branches; includes branch_id for UI filtering.
      *
      * @return Collection<int, User>

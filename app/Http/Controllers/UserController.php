@@ -32,7 +32,7 @@ class UserController extends Controller
         $query = User::query()->with([
             'roles',
             'branch:id,code,name',
-            'employee:id,employee_code,display_name,user_id',
+            'employee:id,employee_code,display_name,user_id,branch_id',
         ]);
 
         $this->branchScope->scopeUsersToEffectiveBranch($query, $branchId);
@@ -52,10 +52,15 @@ class UserController extends Controller
 
         $users = $query->orderBy('name')->paginate(15)->withQueryString()->through(
             function (User $user) use ($request) {
+                $actor = $request->user();
+
                 return array_merge($user->toArray(), [
-                    'can_view' => $request->user()?->can('view', $user) ?? false,
-                    'can_edit' => $request->user()?->can('update', $user) ?? false,
-                    'can_delete' => $request->user()?->can('delete', $user) ?? false,
+                    'can_view' => $actor?->can('view', $user) ?? false,
+                    'can_edit' => $actor?->can('update', $user) ?? false,
+                    'can_delete' => $actor?->can('delete', $user) ?? false,
+                    'can_view_linked_employee' => $user->employee
+                        ? ($actor?->can('view', $user->employee) ?? false)
+                        : false,
                 ]);
             }
         );
