@@ -1,8 +1,19 @@
+import CountryCombobox from '@/Components/CountryCombobox';
+import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
+import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { countries } from '@/data/countries';
+import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
+
+const phoneTypeSelectOptions = [
+    { value: 'Mobile', label: 'Mobile' },
+    { value: 'Land Phone', label: 'Land Phone' },
+    { value: 'WhatsApp', label: 'WhatsApp' },
+];
 
 export default function BranchForm({
     data,
@@ -11,9 +22,46 @@ export default function BranchForm({
     processing,
     mode = 'create',
     nextCode,
+    branchCode,
     submitLabel,
     onSubmit,
 }) {
+    const codeDisplay =
+        mode === 'create' && nextCode
+            ? nextCode
+            : mode === 'edit' && branchCode
+              ? branchCode
+              : '';
+
+    const phoneRows = data.phone_numbers || [];
+
+    const addPhone = () => {
+        setData('phone_numbers', [
+            ...phoneRows,
+            {
+                phone_type: 'Mobile',
+                country_code: '+94',
+                country_iso2: 'LK',
+                phone_number: '',
+                is_primary: phoneRows.length === 0,
+            },
+        ]);
+    };
+
+    const removePhone = (idx) => {
+        setData(
+            'phone_numbers',
+            phoneRows.filter((_, i) => i !== idx),
+        );
+    };
+
+    const updatePhone = (idx, patch) => {
+        setData(
+            'phone_numbers',
+            phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
+        );
+    };
+
     return (
         <form
             onSubmit={(e) => {
@@ -22,84 +70,67 @@ export default function BranchForm({
             }}
             className="space-y-6"
         >
-            {mode === 'create' && nextCode ? (
-                <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-cursor-border dark:bg-cursor-raised dark:text-cursor-fg">
-                    <span className="font-medium text-gray-900 dark:text-cursor-bright">Branch code:</span>{' '}
-                    <span className="font-mono">{nextCode}</span>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                        The code is generated automatically when you save.
-                    </p>
-                </div>
-            ) : null}
+            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
+                    Branch information
+                </h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                    Core identity and whether this branch is active in the system.
+                </p>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                    <InputLabel htmlFor="name" value="Name" />
-                    <TextInput
-                        id="name"
-                        className="mt-1 block w-full"
-                        value={data.name || ''}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.name} />
-                </div>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <InputLabel htmlFor="branch_code_display" value="Branch Code" />
+                        <TextInput
+                            id="branch_code_display"
+                            className="mt-1 block w-full"
+                            value={codeDisplay || '—'}
+                            disabled
+                        />
+                        <div className="mt-2 text-xs text-gray-500 dark:text-cursor-muted">
+                            {mode === 'create'
+                                ? 'The code is generated automatically when you save.'
+                                : 'Branch code cannot be changed.'}
+                        </div>
+                    </div>
 
-                <div>
-                    <InputLabel htmlFor="address_line_1" value="Address line 1" />
-                    <TextInput
-                        id="address_line_1"
-                        className="mt-1 block w-full"
-                        value={data.address_line_1 || ''}
-                        onChange={(e) => setData('address_line_1', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.address_line_1} />
-                </div>
+                    <div>
+                        <InputLabel htmlFor="is_active" value="Status" />
+                        <FormSelect
+                            id="is_active"
+                            className="mt-1"
+                            value={data.is_active ? '1' : '0'}
+                            onChange={(v) => setData('is_active', v === '1')}
+                            options={[
+                                { value: '1', label: 'Active' },
+                                { value: '0', label: 'Inactive' },
+                            ]}
+                        />
+                        <InputError className="mt-2" message={errors.is_active} />
+                    </div>
 
-                <div>
-                    <InputLabel htmlFor="address_line_2" value="Address line 2" />
-                    <TextInput
-                        id="address_line_2"
-                        className="mt-1 block w-full"
-                        value={data.address_line_2 || ''}
-                        onChange={(e) => setData('address_line_2', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.address_line_2} />
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="name" value="Name" />
+                        <TextInput
+                            id="name"
+                            className="mt-1 block w-full"
+                            value={data.name || ''}
+                            onChange={(e) => setData('name', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.name} />
+                    </div>
                 </div>
+            </section>
 
-                <div>
-                    <InputLabel htmlFor="city" value="City" />
-                    <TextInput
-                        id="city"
-                        className="mt-1 block w-full"
-                        value={data.city || ''}
-                        onChange={(e) => setData('city', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.city} />
-                </div>
+            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
+                    Contact information
+                </h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                    Branch email and phone numbers for correspondence.
+                </p>
 
-                <div>
-                    <InputLabel htmlFor="country" value="Country" />
-                    <TextInput
-                        id="country"
-                        className="mt-1 block w-full"
-                        value={data.country || 'Sri Lanka'}
-                        onChange={(e) => setData('country', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.country} />
-                </div>
-
-                <div>
-                    <InputLabel htmlFor="phone" value="Phone" />
-                    <TextInput
-                        id="phone"
-                        className="mt-1 block w-full"
-                        value={data.phone || ''}
-                        onChange={(e) => setData('phone', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.phone} />
-                </div>
-
-                <div>
+                <div className="mt-5">
                     <InputLabel htmlFor="email" value="Email" />
                     <TextInput
                         id="email"
@@ -111,33 +142,141 @@ export default function BranchForm({
                     <InputError className="mt-2" message={errors.email} />
                 </div>
 
-                <div className="sm:col-span-2">
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                            checked={Boolean(data.is_active)}
-                            onChange={(e) => setData('is_active', e.target.checked)}
-                        />
-                        <span className="text-sm text-gray-700 dark:text-cursor-fg">Active</span>
-                    </label>
-                    <InputError className="mt-2" message={errors.is_active} />
-                </div>
+                <div className="mt-6 border-t border-gray-200 pt-4 dark:border-cursor-border">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <InputLabel value="Phone Numbers" />
+                        <PrimaryButton type="button" onClick={addPhone}>
+                            Add phone
+                        </PrimaryButton>
+                    </div>
 
-                <div className="sm:col-span-2">
-                    <InputLabel htmlFor="notes" value="Notes" />
+                    <div className="mt-3 space-y-3">
+                        {phoneRows.map((row, idx) => (
+                            <div
+                                key={idx}
+                                className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
+                            >
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                    <div className="md:col-span-3">
+                                        <InputLabel value="Type" />
+                                        <FormSelect
+                                            className="mt-1"
+                                            value={row.phone_type || 'Mobile'}
+                                            onChange={(v) => updatePhone(idx, { phone_type: v })}
+                                            options={phoneTypeSelectOptions}
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-9">
+                                        <InputLabel value="Phone" />
+                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                            <div className="min-w-0 flex-1">
+                                                <PhoneNumberWithCountryField
+                                                    countryCode={row.country_code || '+94'}
+                                                    countryIso2={row.country_iso2}
+                                                    phoneNumber={row.phone_number || ''}
+                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                        updatePhone(idx, {
+                                                            country_code: countryCode,
+                                                            country_iso2: iso2 || null,
+                                                        })
+                                                    }
+                                                    onPhoneNumberChange={(num) =>
+                                                        updatePhone(idx, { phone_number: num })
+                                                    }
+                                                    options={countryCallingCodes}
+                                                    phoneInputId={`branch_phone_numbers_${idx}_number`}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="shrink-0 self-end text-sm font-medium text-gray-700 hover:text-gray-900 sm:self-auto dark:text-cursor-fg dark:hover:text-cursor-bright"
+                                                onClick={() => removePhone(idx)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <InputError className="mt-2" message={errors.phone_numbers} />
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Address</h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                    Primary location and mailing details.
+                </p>
+
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="address_line_1" value="Address Line 1" />
+                        <TextInput
+                            id="address_line_1"
+                            className="mt-1 block w-full"
+                            value={data.address_line_1 || ''}
+                            onChange={(e) => setData('address_line_1', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.address_line_1} />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="address_line_2" value="Address Line 2" />
+                        <TextInput
+                            id="address_line_2"
+                            className="mt-1 block w-full"
+                            value={data.address_line_2 || ''}
+                            onChange={(e) => setData('address_line_2', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.address_line_2} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="city" value="City/District" />
+                        <TextInput
+                            id="city"
+                            className="mt-1 block w-full"
+                            value={data.city || ''}
+                            onChange={(e) => setData('city', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.city} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="country" value="Country" />
+                        <div className="mt-1">
+                            <CountryCombobox
+                                value={data.country || ''}
+                                onChange={(name) => setData('country', name)}
+                                options={countries}
+                                placeholder="Search countries..."
+                            />
+                        </div>
+                        <InputError className="mt-2" message={errors.country} />
+                    </div>
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Notes</h3>
+                <div className="mt-4">
                     <textarea
                         id="notes"
-                        rows={3}
+                        rows={4}
                         className={`mt-1 ${formTextareaClass}`}
                         value={data.notes || ''}
                         onChange={(e) => setData('notes', e.target.value)}
+                        aria-label="Notes"
                     />
                     <InputError className="mt-2" message={errors.notes} />
                 </div>
-            </div>
+            </section>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-end gap-3">
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

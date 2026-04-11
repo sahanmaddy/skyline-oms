@@ -63,10 +63,59 @@ export default function Show({ user, canEdit, canDelete }) {
                     />
 
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-lg font-semibold text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-600">{user.email}</div>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">{user.name}</div>
+                                <div className="text-sm text-gray-600">{user.email || '—'}</div>
+                            </div>
+                            <span
+                                className={
+                                    'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
+                                    (user.status === 'active'
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
+                                        : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
+                                }
+                            >
+                                {user.status === 'active' ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
 
                         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <Info label="Name" value={user.name} />
+                            <Info label="Email" value={user.email || '—'} />
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Default Branch
+                                </div>
+                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                    {user.branch ? (
+                                        <>
+                                            <span className="font-mono text-xs text-gray-600">{user.branch.code}</span>
+                                            <span className="text-gray-500"> — </span>
+                                            {user.branch.name}
+                                        </>
+                                    ) : (
+                                        <span className="text-gray-400">—</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Linked Employee
+                                </div>
+                                <div className="mt-2 flex min-h-6 items-center text-sm font-medium text-gray-900">
+                                    {linkedLine ? (
+                                        <Link
+                                            href={route('hr.employees.show', emp.id)}
+                                            className="text-indigo-600 hover:text-indigo-800"
+                                        >
+                                            {linkedLine}
+                                        </Link>
+                                    ) : (
+                                        <span className="text-gray-400">Not linked</span>
+                                    )}
+                                </div>
+                            </div>
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Roles
@@ -88,18 +137,9 @@ export default function Show({ user, canEdit, canDelete }) {
                                     </div>
                                 </div>
                             </div>
-                            <Info
-                                label="Status"
-                                value={user.status === 'active' ? 'Active' : 'Inactive'}
-                                badge={
-                                    user.status === 'active'
-                                        ? 'bg-green-50 text-green-700'
-                                        : 'bg-gray-100 text-gray-700'
-                                }
-                            />
-                            <div className="rounded-md border border-gray-200 bg-white p-3 sm:col-span-2">
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Branch access
+                                    Branch Access
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-1.5">
                                     {assignedBranches.length > 0 ? (
@@ -115,39 +155,6 @@ export default function Show({ user, canEdit, canDelete }) {
                                         ))
                                     ) : (
                                         <span className="text-sm text-gray-400">—</span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Default branch
-                                </div>
-                                <div className="mt-2 text-sm font-medium text-gray-900">
-                                    {user.branch ? (
-                                        <>
-                                            <span className="font-mono text-xs text-gray-600">{user.branch.code}</span>
-                                            <span className="text-gray-500"> — </span>
-                                            {user.branch.name}
-                                        </>
-                                    ) : (
-                                        <span className="text-gray-400">—</span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Linked employee
-                                </div>
-                                <div className="mt-2 flex min-h-6 items-center text-sm font-medium text-gray-900">
-                                    {linkedLine ? (
-                                        <Link
-                                            href={route('hr.employees.show', emp.id)}
-                                            className="text-indigo-600 hover:text-indigo-800"
-                                        >
-                                            {linkedLine}
-                                        </Link>
-                                    ) : (
-                                        <span className="text-gray-400">Not linked</span>
                                     )}
                                 </div>
                             </div>

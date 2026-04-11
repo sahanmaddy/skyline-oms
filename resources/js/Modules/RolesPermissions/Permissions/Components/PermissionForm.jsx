@@ -22,7 +22,7 @@ export default function PermissionForm({
         >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <InputLabel htmlFor="name" value="Permission key" />
+                    <InputLabel htmlFor="name" value="Permission Key" />
                     <TextInput
                         id="name"
                         className="mt-1 block w-full"
@@ -35,7 +35,7 @@ export default function PermissionForm({
                     <InputError className="mt-2" message={errors.name} />
                 </div>
                 <div>
-                    <InputLabel htmlFor="module" value="Module / group" />
+                    <InputLabel htmlFor="module" value="Module / Group" />
                     <TextInput
                         id="module"
                         className="mt-1 block w-full"
@@ -46,7 +46,7 @@ export default function PermissionForm({
                     <InputError className="mt-2" message={errors.module} />
                 </div>
                 <div className="sm:col-span-2">
-                    <InputLabel htmlFor="display_name" value="Display name" />
+                    <InputLabel htmlFor="display_name" value="Display Name" />
                     <TextInput
                         id="display_name"
                         className="mt-1 block w-full"

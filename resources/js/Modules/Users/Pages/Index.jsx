@@ -1,5 +1,6 @@
 import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import { moduleListSearchInputClass } from '@/lib/dropdownMenuStyles';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
@@ -33,7 +34,7 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                             <div>
                                 <label className="text-xs font-medium text-gray-600">Search</label>
                                 <input
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className={`mt-1 ${moduleListSearchInputClass}`}
                                     value={filters?.q || ''}
                                     onChange={(e) =>
                                         router.get(
@@ -101,7 +102,7 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                     Roles
                                 </th>
                                 <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Linked employee
+                                    Linked Employee
                                 </th>
                                 <th className="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Status
@@ -124,9 +125,12 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                         <td className="px-4 py-3 text-sm text-gray-700">{u.email}</td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
                                             {u.branch ? (
-                                                <span title={u.branch.name}>
-                                                    <span className="font-mono text-xs">{u.branch.code}</span>
-                                                </span>
+                                                <>
+                                                    <div className="font-medium text-gray-900">{u.branch.name}</div>
+                                                    <div className="mt-0.5 font-mono text-xs text-gray-500">
+                                                        {u.branch.code}
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <span className="text-gray-400">—</span>
                                             )}
@@ -149,12 +153,21 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                         </td>
                                         <td className="px-4 py-3 text-sm">
                                             {linkedLabel ? (
-                                                <Link
-                                                    href={route('hr.employees.show', u.employee.id)}
-                                                    className="font-medium text-indigo-600 hover:text-indigo-800"
-                                                >
-                                                    {linkedLabel}
-                                                </Link>
+                                                u.can_view_linked_employee ? (
+                                                    <Link
+                                                        href={route('hr.employees.show', u.employee.id)}
+                                                        className="font-medium text-indigo-600 hover:text-indigo-800"
+                                                    >
+                                                        {linkedLabel}
+                                                    </Link>
+                                                ) : (
+                                                    <span
+                                                        className="text-gray-700"
+                                                        title="Switch branch context or ask for access to open this employee."
+                                                    >
+                                                        {linkedLabel}
+                                                    </span>
+                                                )
                                             ) : (
                                                 <span className="text-xs text-gray-400">Not linked</span>
                                             )}

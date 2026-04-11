@@ -12,8 +12,14 @@ export default function Edit({ branch }) {
         address_line_2: branch.address_line_2 || '',
         city: branch.city || '',
         country: branch.country || 'Sri Lanka',
-        phone: branch.phone || '',
         email: branch.email || '',
+        phone_numbers: (branch.phone_numbers || []).map((p) => ({
+            phone_type: p.phone_type,
+            country_code: p.country_code,
+            country_iso2: p.country_iso2 ?? null,
+            phone_number: p.phone_number,
+            is_primary: !!p.is_primary,
+        })),
         is_active: Boolean(branch.is_active),
         notes: branch.notes || '',
     });
@@ -36,15 +42,13 @@ export default function Edit({ branch }) {
                     />
 
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
-                        <div className="mb-4 text-sm text-gray-600 dark:text-cursor-muted">
-                            Code: <span className="font-mono font-semibold text-gray-900 dark:text-cursor-bright">{branch.code}</span>
-                        </div>
                         <BranchForm
                             data={data}
                             setData={setData}
                             errors={errors}
                             processing={processing}
                             mode="edit"
+                            branchCode={branch.code}
                             submitLabel="Save changes"
                             onSubmit={() =>
                                 put(route('settings.branches.update', branch.id), { preserveScroll: true })

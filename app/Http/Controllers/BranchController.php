@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Branches\DeleteBranchAction;
+use App\Actions\Branches\SyncBranchPhoneNumbersAction;
 use App\Http\Requests\BranchStoreRequest;
 use App\Http\Requests\BranchUpdateRequest;
 use App\Models\Branch;
 use App\Models\User;
 use App\Services\Branches\BranchCodeGeneratorService;
+use App\Services\Branches\BranchScopeService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,16 +27,22 @@ class BranchController extends Controller
     public function index(Request $request): Response
     {
         $query = Branch::query()
+            ->with(['phoneNumbers'])
             ->withCount([
                 'employees',
                 'usersWithAccess as users_count',
+                'users as default_branch_users_count',
             ]);
 
         if ($search = trim((string) $request->string('q'))) {
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('city', 'like', "%{$search}%");
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhereHas(
+                        'phoneNumbers',
+                        fn ($p) => $p->where('phone_number', 'like', "%{$search}%"),
+                    );
             });
         }
 
@@ -49,10 +57,14 @@ class BranchController extends Controller
 
         $branches = $query->orderBy('code')->paginate(15)->withQueryString()->through(
             function (Branch $branch) use ($request) {
+                $inUse = ($branch->users_count > 0)
+                    || ($branch->default_branch_users_count > 0)
+                    || ($branch->employees_count > 0);
+
                 return array_merge($branch->toArray(), [
                     'can_view' => $request->user()?->can('view', $branch) ?? false,
                     'can_edit' => $request->user()?->can('update', $branch) ?? false,
-                    'can_delete' => $request->user()?->can('delete', $branch) ?? false,
+                    'can_delete' => ($request->user()?->can('delete', $branch) ?? false) && ! $inUse,
                 ]);
             }
         );
@@ -82,11 +94,15 @@ class BranchController extends Controller
     public function store(BranchStoreRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $phoneNumbers = $data['phone_numbers'] ?? [];
+        unset($data['phone_numbers']);
 
-        $branch = DB::transaction(function () use ($data) {
+        $branch = DB::transaction(function () use ($data, $phoneNumbers) {
             $data['code'] = app(BranchCodeGeneratorService::class)->nextCode();
+            $branch = Branch::create($data);
+            app(SyncBranchPhoneNumbersAction::class)->execute($branch, $phoneNumbers);
 
-            return Branch::create($data);
+            return $branch;
         });
 
         return redirect()->route('settings.branches.show', $branch)->with('success', 'Branch created.');
@@ -94,9 +110,11 @@ class BranchController extends Controller
 
     public function show(Branch $branch): Response
     {
+        $branch->load(['phoneNumbers']);
         $branch->loadCount([
             'employees',
             'usersWithAccess as users_count',
+            'users as default_branch_users_count',
         ]);
 
         $users = User::query()
@@ -113,7 +131,9 @@ class BranchController extends Controller
             ->limit(20)
             ->get(['id', 'employee_code', 'display_name', 'status']);
 
-        $inUse = $branch->users_count > 0 || $branch->employees_count > 0;
+        $inUse = $branch->users_count > 0
+            || $branch->default_branch_users_count > 0
+            || $branch->employees_count > 0;
 
         return Inertia::render('Modules/Branches/Pages/Show', [
             'branch' => $branch,
@@ -127,25 +147,40 @@ class BranchController extends Controller
     public function edit(Branch $branch): Response
     {
         return Inertia::render('Modules/Branches/Pages/Edit', [
-            'branch' => $branch,
+            'branch' => $branch->load('phoneNumbers'),
         ]);
     }
 
     public function update(BranchUpdateRequest $request, Branch $branch): RedirectResponse
     {
-        $branch->update($request->validated());
+        $data = $request->validated();
+        $phoneNumbers = $data['phone_numbers'] ?? [];
+        unset($data['phone_numbers']);
+
+        DB::transaction(function () use ($branch, $data, $phoneNumbers) {
+            $branch->update($data);
+            app(SyncBranchPhoneNumbersAction::class)->execute($branch, $phoneNumbers);
+        });
 
         return redirect()->route('settings.branches.show', $branch)->with('success', 'Branch updated.');
     }
 
-    public function destroy(Branch $branch, DeleteBranchAction $deleteBranch): RedirectResponse
+    public function destroy(Request $request, Branch $branch, DeleteBranchAction $deleteBranch): RedirectResponse
     {
         $this->authorize('delete', $branch);
+
+        $deletedId = (int) $branch->id;
 
         try {
             $deleteBranch->execute($branch);
         } catch (DomainException $e) {
             return redirect()->route('settings.branches.show', $branch)->with('error', $e->getMessage());
+        }
+
+        $user = $request->user();
+        if ($user instanceof User) {
+            $user->refresh();
+            app(BranchScopeService::class)->clearSessionIfPointingAtRemovedBranch($request, $user, $deletedId);
         }
 
         return redirect()->route('settings.branches.index')->with('success', 'Branch deleted.');

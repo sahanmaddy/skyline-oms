@@ -1,5 +1,6 @@
 import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import { moduleListSearchInputClass } from '@/lib/dropdownMenuStyles';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
@@ -73,7 +74,7 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                 </label>
                                 <input
                                     id="cust-search"
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className={`mt-1 ${moduleListSearchInputClass}`}
                                     value={filters?.q || ''}
                                     onChange={(e) =>
                                         router.get(

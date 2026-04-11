@@ -94,6 +94,17 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
         });
     };
 
+    const headerDisplayName =
+        employee.display_name?.trim() || fullNameWithGivenNames || '—';
+    const codePart = employee.employee_code?.trim();
+    const branchPart = employee.branch
+        ? `${employee.branch.code} — ${employee.branch.name}`
+        : null;
+    const headerCodeAndBranch =
+        codePart && branchPart
+            ? `${codePart} · ${branchPart}`
+            : codePart || branchPart || '—';
+
     return (
         <AuthenticatedLayout
             header={<ModuleStickyTitle module="Human Resource" section={employee.display_name || 'Employee'} />}
@@ -143,7 +154,22 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-8">
-                        <h3 className="text-sm font-semibold text-gray-900">Employee Information</h3>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">{headerDisplayName}</div>
+                                <div className="text-sm text-gray-600">{headerCodeAndBranch}</div>
+                            </div>
+                            <span
+                                className={
+                                    'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
+                                    (employee.status === 'active'
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
+                                        : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
+                                }
+                            >
+                                {employee.status === 'active' ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -219,7 +245,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                 )}
                             />
                             <Info
-                                label="Linked User / Access"
+                                label="Linked User"
                                 value={
                                     employee.user ? (
                                         <Link
@@ -245,15 +271,6 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                <StatusInfo
-                                    label="Status"
-                                    isPositive={employee.status === 'active'}
-                                    value={
-                                        employee.status === 'active'
-                                            ? 'Active'
-                                            : 'Inactive'
-                                    }
-                                />
                                 <Info
                                     label="Designation"
                                     value={employee.designation || '—'}

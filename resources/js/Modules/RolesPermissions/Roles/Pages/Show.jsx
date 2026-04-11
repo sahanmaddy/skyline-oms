@@ -47,16 +47,29 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                         }
                     />
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-lg font-semibold text-gray-900">{role.name}</div>
-                        <div className="mt-1 text-sm text-gray-600">{role.description || '—'}</div>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <Info label="Status" value={role.is_active ? 'Active' : 'Inactive'} />
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-lg font-semibold text-gray-900">{role.name}</div>
+                                <div className="mt-1 text-sm text-gray-600">{role.description || '—'}</div>
+                            </div>
+                            <span
+                                className={
+                                    'shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
+                                    (role.is_active
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
+                                        : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
+                                }
+                            >
+                                {role.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Info label="Permissions" value={String(role.permissions?.length || 0)} />
                             <Info label="Users" value={String(role.users?.length || 0)} />
                         </div>
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">Assigned permissions</div>
+                        <div className="text-sm font-semibold text-gray-900">Assigned Permissions</div>
                         <div className="mt-3 space-y-3">
                             {Object.keys(permissionsGrouped || {}).map((module) => (
                                 <div key={module}>
@@ -71,7 +84,9 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                         </div>
                     </div>
                     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">Assigned users</div>
+                        <div className="text-sm font-semibold text-gray-900">
+                            Assigned Users ({(assignedUsers || []).length})
+                        </div>
                         <div className="mt-2 space-y-2">
                             {(assignedUsers || []).length ? (
                                 assignedUsers.map((user) => (
@@ -80,8 +95,18 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
                                             <div className="truncate text-xs text-gray-500">{user.email}</div>
                                         </div>
-                                        {user.can_view ? (
-                                            <div className="relative z-10 shrink-0">
+                                        <div className="relative z-10 flex shrink-0 items-center gap-2">
+                                            <span
+                                                className={
+                                                    'inline-flex rounded-full px-2 py-0.5 text-xs font-medium ' +
+                                                    (user.status === 'active'
+                                                        ? 'bg-green-50 text-green-700'
+                                                        : 'bg-gray-100 text-gray-700')
+                                                }
+                                            >
+                                                {user.status === 'active' ? 'Active' : 'Inactive'}
+                                            </span>
+                                            {user.can_view ? (
                                                 <Dropdown>
                                                     <Dropdown.Trigger>
                                                         <button
@@ -98,8 +123,8 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                                                         <Dropdown.Link href={route('settings.users.show', user.id)}>View</Dropdown.Link>
                                                     </Dropdown.Content>
                                                 </Dropdown>
-                                            </div>
-                                        ) : null}
+                                            ) : null}
+                                        </div>
                                     </div>
                                 ))
                             ) : (

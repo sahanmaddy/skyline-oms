@@ -1,5 +1,6 @@
 import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import { moduleListSearchInputClass } from '@/lib/dropdownMenuStyles';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
@@ -89,7 +90,7 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                 </label>
                                 <input
                                     id="emp-search"
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className={`mt-1 ${moduleListSearchInputClass}`}
                                     value={filters?.q || ''}
                                     onChange={(e) =>
                                         router.get(
@@ -175,9 +176,12 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
                                         {e.branch ? (
-                                            <span className="font-mono text-xs" title={e.branch.name}>
-                                                {e.branch.code}
-                                            </span>
+                                            <>
+                                                <div className="font-medium text-gray-900">{e.branch.name}</div>
+                                                <div className="mt-0.5 font-mono text-xs text-gray-500">
+                                                    {e.branch.code}
+                                                </div>
+                                            </>
                                         ) : (
                                             <span className="text-gray-400">—</span>
                                         )}

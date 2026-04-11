@@ -1,5 +1,6 @@
 import FormSelect from '@/Components/FormSelect';
 import ModuleListToolbar from '@/Components/ModuleListToolbar';
+import { moduleListSearchInputClass } from '@/lib/dropdownMenuStyles';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Dropdown from '@/Components/Dropdown';
@@ -20,7 +21,7 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
                             <div>
                                 <label className="text-xs font-medium text-gray-600">Search</label>
                                 <input
-                                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className={`mt-1 ${moduleListSearchInputClass}`}
                                     value={filters?.q || ''}
                                     onChange={(e) => router.get(route('settings.roles.index'), { ...filters, q: e.target.value }, { preserveState: true, replace: true })}
                                     placeholder="Search role or description..."
@@ -65,19 +66,46 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
                     }
                 />
                 <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <table className="min-w-full table-auto divide-y divide-gray-200">
-                        <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                    <table className="w-full min-w-full table-fixed divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <th className="w-[44%] px-4 py-3 text-left">Role</th><th className="w-[14%] px-4 py-3 text-left">Permissions</th><th className="w-[12%] px-4 py-3 text-left">Users</th><th className="w-[20%] px-4 py-3 text-left">Status</th><th className="w-[10%] whitespace-nowrap px-4 py-3 text-right">Actions</th>
+                                <th className="w-[46%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Role
+                                </th>
+                                <th className="w-[14%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Permissions
+                                </th>
+                                <th className="w-[14%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Users
+                                </th>
+                                <th className="w-28 whitespace-nowrap px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Status
+                                </th>
+                                <th className="w-16 whitespace-nowrap px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {roles.data.map((role) => (
                                 <tr key={role.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3"><div className="text-sm font-semibold text-gray-900">{role.name}</div><div className="text-xs text-gray-500">{role.description || '—'}</div></td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">{role.permissions_count}</td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">{role.users_count}</td>
-                                    <td className="px-4 py-3"><span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${role.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{role.is_active ? 'Active' : 'Inactive'}</span></td>
+                                    <td className="min-w-0 px-4 py-3">
+                                        <div className="text-sm font-semibold text-gray-900">{role.name}</div>
+                                        <div className="break-words text-xs text-gray-500">
+                                            {role.description || '—'}
+                                        </div>
+                                    </td>
+                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
+                                        {role.permissions_count}
+                                    </td>
+                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">{role.users_count}</td>
+                                    <td className="whitespace-nowrap px-4 py-3">
+                                        <span
+                                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${role.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}
+                                        >
+                                            {role.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
                                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                                         {role.can_view || role.can_edit || role.can_delete ? (
                                             <div className="relative z-50 flex items-center justify-end">

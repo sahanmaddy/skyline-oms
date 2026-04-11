@@ -15,7 +15,6 @@ class Branch extends Model
         'address_line_2',
         'city',
         'country',
-        'phone',
         'email',
         'is_active',
         'notes',
@@ -38,6 +37,11 @@ class Branch extends Model
         return $this->hasMany(Employee::class);
     }
 
+    public function phoneNumbers(): HasMany
+    {
+        return $this->hasMany(BranchPhoneNumber::class);
+    }
+
     public function usersWithAccess(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
@@ -50,6 +54,8 @@ class Branch extends Model
 
     public function isInUse(): bool
     {
-        return $this->usersWithAccess()->exists() || $this->employees()->exists();
+        return $this->users()->exists()
+            || $this->usersWithAccess()->exists()
+            || $this->employees()->exists();
     }
 }

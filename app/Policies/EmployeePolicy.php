@@ -19,11 +19,14 @@ class EmployeePolicy
             return false;
         }
 
-        return app(BranchScopeService::class)->recordMatchesEffectiveBranch(
-            request(),
-            $employee->branch_id,
-            $user,
-        );
+        $scope = app(BranchScopeService::class);
+        $branchId = (int) $employee->branch_id;
+
+        if ($scope->recordMatchesEffectiveBranch(request(), $branchId, $user)) {
+            return true;
+        }
+
+        return $scope->actorMayAccessBranchForHrRead($user, $branchId);
     }
 
     public function create(User $user): bool

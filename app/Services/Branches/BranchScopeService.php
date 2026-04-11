@@ -39,6 +39,37 @@ class BranchScopeService
         return $fallback ? [$fallback] : [];
     }
 
+    /**
+     * After a branch row is removed, ensure session working context is not a stale ID.
+     *
+     * Call after the delete transaction commits; refresh the user so pivot cascades are visible.
+     */
+    public function clearSessionIfPointingAtRemovedBranch(Request $request, User $user, int $removedBranchId): void
+    {
+        $sessionId = (int) $request->session()->get('current_branch_id', 0);
+        if ($sessionId !== $removedBranchId) {
+            return;
+        }
+
+        $allowed = $this->allowedSwitcherBranchIds($user);
+        $allowed = array_values(array_filter($allowed, fn (int $id) => $id !== $removedBranchId));
+
+        $fallback = (int) $user->branch_id;
+        if ($fallback > 0 && $fallback !== $removedBranchId && in_array($fallback, $allowed, true)) {
+            $request->session()->put('current_branch_id', $fallback);
+
+            return;
+        }
+
+        if ($allowed !== []) {
+            $request->session()->put('current_branch_id', (int) $allowed[0]);
+
+            return;
+        }
+
+        $request->session()->forget('current_branch_id');
+    }
+
     public function effectiveBranchId(Request $request, ?User $user = null): int
     {
         $user ??= $request->user();
@@ -204,6 +235,21 @@ class BranchScopeService
     }
 
     /**
+     * Whether the actor may open HR records (e.g. employee profile) for this branch without switching
+     * the navbar. Uses the same branch IDs as the switcher (assigned branches, or home branch_id when
+     * the pivot is empty). Ignores branches.view (directory UI); that must not imply every HR profile.
+     */
+    public function actorMayAccessBranchForHrRead(User $actor, int $branchId): bool
+    {
+        $branchId = (int) $branchId;
+        if ($branchId < 1) {
+            return false;
+        }
+
+        return in_array($branchId, $this->allowedSwitcherBranchIds($actor), true);
+    }
+
+    /**
      * Unlinked users (plus current link on edit) within assignable branches; includes branch_id for UI filtering.
      *
      * @return Collection<int, User>
@@ -252,7 +298,13 @@ class BranchScopeService
         $actor = $request->user();
         abort_unless($actor instanceof User, 403);
 
-        $assignable = $this->assignableBranchIdsForValidation($actor, $editingUser?->branch_id);
+        // Match UserStoreRequest / UserUpdateRequest and branchesForUserAssignmentForms so editors
+        // who may assign org-wide branches still see linkable employees in those branches.
+        $assignable = $this->assignableBranchIdsForUserFormValidation($actor, $editingUser?->branch_id);
+
+        if ($assignable === []) {
+            return collect();
+        }
 
         return Employee::query()
             ->select(['id', 'employee_code', 'display_name', 'branch_id'])
@@ -264,7 +316,8 @@ class BranchScopeService
             })
             ->whereIn('branch_id', $assignable)
             ->orderBy('display_name')
-            ->get();
+            ->get()
+            ->values();
     }
 
     /**

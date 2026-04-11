@@ -1,4 +1,6 @@
+import FormDatePicker from '@/Components/FormDatePicker';
 import FormSelect from '@/Components/FormSelect';
+import LinkedUserCombobox from '@/Components/LinkedUserCombobox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
@@ -10,6 +12,7 @@ import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 import { resolveCountryCallingOption } from '@/lib/phoneCountryDisplay';
 import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
+import { subYears } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 
 /** Same branch rules as usersAvailableForEmployeeForm: home branch_id or assigned_branches. */
@@ -101,29 +104,37 @@ export default function EmployeeForm({
 
     const phoneRows = useMemo(() => data.phone_numbers || [], [data.phone_numbers]);
 
+    const usersList = useMemo(() => {
+        const raw = users;
+        if (!raw) {
+            return [];
+        }
+        return Array.isArray(raw) ? raw : Object.values(raw);
+    }, [users]);
+
     const usersInBranch = useMemo(() => {
-        if (!users?.length) {
+        if (!usersList.length) {
             return [];
         }
         if (!data.branch_id) {
-            return users;
+            return usersList;
         }
-        return users.filter((u) => userAssignableToEmployeeBranch(u, data.branch_id));
-    }, [users, data.branch_id]);
+        return usersList.filter((u) => userAssignableToEmployeeBranch(u, data.branch_id));
+    }, [usersList, data.branch_id]);
 
     useEffect(() => {
-        if (!data.branch_id || !data.user_id || !users?.length) {
+        if (!data.branch_id || !data.user_id || !usersList.length) {
             return;
         }
-        const ok = users.some(
+        const ok = usersList.some(
             (u) =>
-                u.id === data.user_id &&
+                Number(u.id) === Number(data.user_id) &&
                 userAssignableToEmployeeBranch(u, data.branch_id),
         );
         if (!ok) {
             setData('user_id', '');
         }
-    }, [data.branch_id, data.user_id, users, setData]);
+    }, [data.branch_id, data.user_id, usersList, setData]);
 
     useEffect(() => {
         if (data.profile_photo) {
@@ -454,31 +465,26 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="date_of_birth" value="Date of Birth" />
-                        <TextInput
-                            id="date_of_birth"
-                            type="date"
-                            className="mt-1 block w-full"
-                            value={data.date_of_birth || ''}
-                            onChange={(e) => setData('date_of_birth', e.target.value)}
-                        />
+                        <div className="mt-1">
+                            <FormDatePicker
+                                id="date_of_birth"
+                                value={data.date_of_birth || ''}
+                                onChange={(v) => setData('date_of_birth', v)}
+                                maxDate={new Date()}
+                                minDate={subYears(new Date(), 120)}
+                            />
+                        </div>
                         <InputError className="mt-2" message={errors.date_of_birth} />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="user_id" value="Linked User (optional)" />
-                        <FormSelect
+                        <InputLabel htmlFor="user_id" value="Linked User (Optional)" />
+                        <LinkedUserCombobox
                             id="user_id"
                             className="mt-1"
-                            value={data.user_id === '' || data.user_id == null ? '' : data.user_id}
-                            onChange={(v) => setData('user_id', v === '' ? '' : Number(v))}
-                            options={[
-                                { value: '', label: '—' },
-                                ...usersInBranch.map((u) => ({
-                                    value: u.id,
-                                    label: `${u.name} (${u.email})`,
-                                })),
-                            ]}
-                            placeholder="—"
+                            value={data.user_id}
+                            users={usersInBranch}
+                            onChange={(u) => setData('user_id', u ? Number(u.id) : '')}
                         />
                         <InputError className="mt-2" message={errors.user_id} />
                     </div>
@@ -541,13 +547,15 @@ export default function EmployeeForm({
 
                     <div>
                         <InputLabel htmlFor="joined_date" value="Joined Date" />
-                        <TextInput
-                            id="joined_date"
-                            type="date"
-                            className="mt-1 block w-full"
-                            value={data.joined_date || ''}
-                            onChange={(e) => setData('joined_date', e.target.value)}
-                        />
+                        <div className="mt-1">
+                            <FormDatePicker
+                                id="joined_date"
+                                value={data.joined_date || ''}
+                                onChange={(v) => setData('joined_date', v)}
+                                maxDate={new Date()}
+                                minDate={subYears(new Date(), 80)}
+                            />
+                        </div>
                         <InputError className="mt-2" message={errors.joined_date} />
                     </div>
 
@@ -866,6 +874,9 @@ export default function EmployeeForm({
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Payroll & Statutory Details</h3>
+                <p className="mt-1 text-xs text-gray-500">
+                    Banking and statutory numbers used for salary and compliance processing.
+                </p>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <InputLabel htmlFor="bank_name" value="Bank Name" />
