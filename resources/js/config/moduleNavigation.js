@@ -61,7 +61,7 @@ export function settingsSectionNavItems({
             key: 'company',
             label: 'Company Settings',
             href: route('settings.company'),
-            activePattern: 'settings.company',
+            activePattern: 'settings.company*',
         });
     }
 

@@ -7,23 +7,23 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import DocumentDropzone from '@/Modules/Customers/Components/DocumentDropzone';
 import useConfirm from '@/feedback/useConfirm';
+import { formatCompanyCurrency, formatCompanyDateTime } from '@/lib/companyFormat';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
-function formatCreditLimit(value) {
+function formatCreditLimitDisplay(value, company) {
     const trimmed = (value ?? '').toString().trim();
     if (!trimmed) return '—';
 
     const num = Number(trimmed);
     if (Number.isNaN(num)) return trimmed;
 
-    return `Rs. ${new Intl.NumberFormat('en-LK', {
-        maximumFractionDigits: 2,
-    }).format(num)}`;
+    return formatCompanyCurrency(num, company);
 }
 
 export default function Show({ customer, documentTypeOptions, canEdit, canDelete }) {
     const { confirm } = useConfirm();
+    const company = usePage().props.company ?? {};
     const roles = usePage().props.auth.roles ?? [];
     const canManageDocuments =
         roles.includes('Admin') ||
@@ -203,7 +203,7 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                                 isPositive={!!customer.credit_eligible}
                                 value={customer.credit_eligible ? 'Yes' : 'No'}
                             />
-                            <Info label="Credit Limit" value={formatCreditLimit(customer.credit_limit)} />
+                            <Info label="Credit Limit" value={formatCreditLimitDisplay(customer.credit_limit, company)} />
                             <Info label="Guarantor" value={customer.guarantor || '—'} className="sm:col-span-2" />
                         </div>
                     </section>
@@ -301,7 +301,7 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                                                     {d.uploader?.name ? `By ${d.uploader.name}` : ''}
                                                 </div>
                                                 <div className="text-xs text-gray-500">
-                                                    {formatUploadedDateTime(d.created_at)}
+                                                    {formatUploadedDateTime(d.created_at, company)}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-right text-sm">
@@ -435,19 +435,17 @@ function StatusInfo({ label, value, isPositive }) {
     );
 }
 
-function formatUploadedDateTime(value) {
+function formatUploadedDateTime(value, company) {
     if (!value) return '—';
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return value;
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return formatCompanyDateTime(value, company, {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-    }).format(parsed);
+    });
 }
 
 function formatDocumentFileMeta(fileName, fileSize) {

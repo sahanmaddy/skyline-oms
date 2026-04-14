@@ -1,3 +1,4 @@
+import BrandingHead from '@/Components/BrandingHead';
 import Dropdown from '@/Components/Dropdown';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, router, usePage } from '@inertiajs/react';
@@ -19,6 +20,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const permissions = page.props.auth.permissions ?? [];
     const contextBranch = page.props.auth.context_branch;
     const branchesForContext = page.props.auth.branches_for_context ?? [];
+    const companyName = page.props.company?.name || 'Skyline OMS';
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
 
@@ -34,11 +36,12 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-cursor-bg">
+            <BrandingHead />
             <div className="flex min-h-screen">
                 <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface lg:flex">
                     <div className="flex h-16 items-center justify-between px-4">
                         <Link href={route('dashboard')} className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
-                            Skyline OMS
+                            {companyName}
                         </Link>
                         <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-cursor-raised dark:text-cursor-fg">
                             {roles[0] ?? 'User'}

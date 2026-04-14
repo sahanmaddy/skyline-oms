@@ -155,6 +155,12 @@ final class PermissionCatalog
                 'description' => 'Access the Company Settings area when it is enabled for the role.',
             ],
             [
+                'name' => 'settings.company.edit',
+                'display_name' => 'Edit company settings',
+                'module' => 'Settings',
+                'description' => 'Update organization profile, branding, localization, phones, and bank details.',
+            ],
+            [
                 'name' => 'settings.system.view',
                 'display_name' => 'View system settings',
                 'module' => 'Settings',

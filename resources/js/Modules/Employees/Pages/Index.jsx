@@ -7,23 +7,23 @@ import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import useConfirm from '@/feedback/useConfirm';
-import { Head, Link, router } from '@inertiajs/react';
+import { formatCompanyDate, formatCompanyDateTime } from '@/lib/companyFormat';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 
-function formatJoinedDate(value) {
+function formatJoinedDate(value, company) {
     if (!value) {
         return '—';
     }
 
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-        return value;
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return formatCompanyDate(value, company);
     }
 
-    return new Intl.DateTimeFormat('en-LK', {
+    return formatCompanyDateTime(value, company, {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
-    }).format(parsed);
+    });
 }
 
 function formatPrimaryPhone(phoneNumbers) {
@@ -70,6 +70,7 @@ function renderPhoneList(phoneNumbers, max = 3) {
 
 export default function Index({ employees, filters, statusOptions, canCreate }) {
     const { confirm } = useConfirm();
+    const company = usePage().props.company ?? {};
     const formatStatusLabel = (value) => {
         if (value === 'active') return 'Active';
         if (value === 'inactive') return 'Inactive';
@@ -202,7 +203,7 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                             {e.employment_type || '—'}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            Joined: {formatJoinedDate(e.joined_date)}
+                                            Joined: {formatJoinedDate(e.joined_date, company)}
                                         </div>
                                     </td>
                                     <td className="px-4 py-3">

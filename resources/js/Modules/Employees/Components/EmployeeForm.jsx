@@ -14,6 +14,7 @@ import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
 import { subYears } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 
 /** Same branch rules as usersAvailableForEmployeeForm: home branch_id or assigned_branches. */
 function userAssignableToEmployeeBranch(u, employeeBranchId) {
@@ -39,7 +40,7 @@ function formatMoneyWithCommas(value) {
         return trimmed;
     }
 
-    return new Intl.NumberFormat('en-LK', {
+    return new Intl.NumberFormat(undefined, {
         maximumFractionDigits: 2,
     }).format(num);
 }
@@ -79,6 +80,9 @@ export default function EmployeeForm({
     profilePhotoUrl,
     mode = 'create',
 }) {
+    const company = usePage().props.company ?? {};
+    const currencyLabel = (company.currency_symbol || company.currency_code || '').trim() || '—';
+
     const [displayNameTouched, setDisplayNameTouched] = useState(false);
     const [photoPreviewSrc, setPhotoPreviewSrc] = useState(profilePhotoUrl || null);
     const [emergencyPhoneTouched, setEmergencyPhoneTouched] = useState(false);
@@ -562,8 +566,8 @@ export default function EmployeeForm({
                     <div>
                         <InputLabel htmlFor="basic_salary" value="Basic Salary" />
                         <div className="mt-1 flex items-stretch rounded-md transition duration-150 ease-in-out focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
-                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
-                                Rs.
+                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-cursor-border dark:bg-cursor-raised dark:text-cursor-muted">
+                                {currencyLabel}
                             </div>
                             <input
                                 id="basic_salary"

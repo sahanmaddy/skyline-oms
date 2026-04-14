@@ -72,7 +72,7 @@ export default function BranchForm({
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
-                    Branch information
+                    Branch Information
                 </h3>
                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                     Core identity and whether this branch is active in the system.
@@ -124,7 +124,7 @@ export default function BranchForm({
 
             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
-                    Contact information
+                    Contact Information
                 </h3>
                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                     Branch email and phone numbers for correspondence.

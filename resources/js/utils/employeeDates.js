@@ -1,8 +1,12 @@
 /**
  * Convert API / serialized dates to Y-m-d for date fields (e.g. FormDatePicker / legacy inputs).
- * Uses Asia/Colombo so calendar dates match Laravel (avoids UTC off-by-one).
+ * Uses the configured company time zone so calendar dates match display (avoids UTC off-by-one).
+ *
+ * @param {string|Date|null|undefined} value
+ * @param {string} [timeZone] — IANA zone from Company Settings (e.g. Asia/Colombo)
  */
-export function normalizeDateInputForForm(value) {
+export function normalizeDateInputForForm(value, timeZone = 'UTC') {
+    const tz = timeZone || 'UTC';
     if (!value) {
         return '';
     }
@@ -30,7 +34,7 @@ export function normalizeDateInputForForm(value) {
     if (value instanceof Date) {
         if (!Number.isNaN(value.getTime())) {
             return new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'Asia/Colombo',
+                timeZone: tz,
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
