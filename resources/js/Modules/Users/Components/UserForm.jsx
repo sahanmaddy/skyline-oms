@@ -132,140 +132,152 @@ export default function UserForm({
             }}
             className="space-y-6"
         >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                    <InputLabel htmlFor="name" value="Name" />
-                    <TextInput
-                        id="name"
-                        className="mt-1 block w-full"
-                        value={data.name || ''}
-                        onChange={(e) => setData('name', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.name} />
-                </div>
-
-                <div className="sm:col-span-2">
-                    <InputLabel htmlFor="email" value="Email" />
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email || ''}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
-
-                <div className="sm:col-span-2">
-                    <InputLabel value="Branch Access" />
-                    <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2 dark:border-cursor-border">
-                        <div className="space-y-1.5">
-                            {branchOptions.map((b) => {
-                                const bid = normId(b.id);
-                                const checked = bid !== null && branchIdsNorm.includes(bid);
-                                return (
-                                    <label
-                                        key={b.id}
-                                        className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-cursor-elevated"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                            checked={checked}
-                                            onChange={(e) =>
-                                                toggleBranchAccess(bid, e.target.checked)
-                                            }
-                                        />
-                                        <span>
-                                            <span className="font-mono text-xs text-gray-600 dark:text-cursor-muted">
-                                                {b.code}
-                                            </span>
-                                            <span className="text-gray-500"> — </span>
-                                            {b.name}
-                                        </span>
-                                    </label>
-                                );
-                            })}
-                        </div>
+            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">User Information</h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                    Core account details, branch access scope, and linked employee.
+                </p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="name" value="Name" />
+                        <TextInput
+                            id="name"
+                            className="mt-1 block w-full"
+                            value={data.name || ''}
+                            onChange={(e) => setData('name', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.name} />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                        This user can switch the app context among these branches (active branches
-                        only).
-                    </p>
-                    <InputError className="mt-2" message={errors.branch_ids} />
-                </div>
 
-                <div className="sm:col-span-2">
-                    <InputLabel htmlFor="branch_id" value="Default Branch" />
-                    <FormSelect
-                        id="branch_id"
-                        className="mt-1"
-                        value={data.branch_id ?? ''}
-                        onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
-                        options={[
-                            { value: '', label: 'Select Branch…' },
-                            ...branchOptions
-                                .filter((b) => {
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="email" value="Email" />
+                        <TextInput
+                            id="email"
+                            type="email"
+                            className="mt-1 block w-full"
+                            value={data.email || ''}
+                            onChange={(e) => setData('email', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.email} />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <InputLabel value="Branch Access" />
+                        <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2 dark:border-cursor-border">
+                            <div className="space-y-1.5">
+                                {branchOptions.map((b) => {
                                     const bid = normId(b.id);
-                                    return bid !== null && branchIdsNorm.includes(bid);
-                                })
-                                .map((b) => ({
-                                    value: b.id,
-                                    label: `${b.code} — ${b.name}`,
-                                })),
-                        ]}
-                        placeholder="Select Branch…"
-                    />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                        Default home branch (must be one of the branches above).
-                    </p>
-                    <InputError className="mt-2" message={errors.branch_id} />
-                </div>
+                                    const checked = bid !== null && branchIdsNorm.includes(bid);
+                                    return (
+                                        <label
+                                            key={b.id}
+                                            className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50 dark:hover:bg-cursor-elevated"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                checked={checked}
+                                                onChange={(e) =>
+                                                    toggleBranchAccess(bid, e.target.checked)
+                                                }
+                                            />
+                                            <span>
+                                                <span className="font-mono text-xs text-gray-600 dark:text-cursor-muted">
+                                                    {b.code}
+                                                </span>
+                                                <span className="text-gray-500"> — </span>
+                                                {b.name}
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                            This user can switch the app context among these branches (active branches
+                            only).
+                        </p>
+                        <InputError className="mt-2" message={errors.branch_ids} />
+                    </div>
 
-                <div>
-                    <InputLabel htmlFor="status" value="Status" />
-                    <FormSelect
-                        id="status"
-                        className="mt-1"
-                        value={data.status || statusOptions?.[0] || 'active'}
-                        onChange={(v) => setData('status', v)}
-                        options={
-                            statusOptions?.map((s) => ({
-                                value: s,
-                                label: s === 'active' ? 'Active' : 'Inactive',
-                            })) ?? []
-                        }
-                    />
-                    <InputError className="mt-2" message={errors.status} />
-                </div>
+                    <div className="sm:col-span-2">
+                        <InputLabel htmlFor="branch_id" value="Default Branch" />
+                        <FormSelect
+                            id="branch_id"
+                            className="mt-1"
+                            value={data.branch_id ?? ''}
+                            onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
+                            options={[
+                                { value: '', label: 'Select Branch…' },
+                                ...branchOptions
+                                    .filter((b) => {
+                                        const bid = normId(b.id);
+                                        return bid !== null && branchIdsNorm.includes(bid);
+                                    })
+                                    .map((b) => ({
+                                        value: b.id,
+                                        label: `${b.code} — ${b.name}`,
+                                    })),
+                            ]}
+                            placeholder="Select Branch…"
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                            Default home branch (must be one of the branches above).
+                        </p>
+                        <InputError className="mt-2" message={errors.branch_id} />
+                    </div>
 
-                <div>
-                    <InputLabel htmlFor="employee_id" value="Linked Employee" />
-                    <LinkedEmployeeCombobox
-                        id="employee_id"
-                        className="mt-1"
-                        value={data.employee_id}
-                        employees={employeesInBranch}
-                        onChange={(emp) => {
-                            if (!emp) {
-                                setData('employee_id', '');
-                                return;
+                    <div>
+                        <InputLabel htmlFor="status" value="Status" />
+                        <FormSelect
+                            id="status"
+                            className="mt-1"
+                            value={data.status || statusOptions?.[0] || 'active'}
+                            onChange={(v) => setData('status', v)}
+                            options={
+                                statusOptions?.map((s) => ({
+                                    value: s,
+                                    label: s === 'active' ? 'Active' : 'Inactive',
+                                })) ?? []
                             }
-                            const eb = normId(emp.branch_id);
-                            setData((prev) => ({
-                                ...prev,
-                                employee_id: Number(emp.id),
-                                ...(eb !== null && branchIdsNorm.includes(eb) ? { branch_id: eb } : {}),
-                            }));
-                        }}
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                        Each employee can only be linked to one user.
-                    </p>
-                    <InputError className="mt-2" message={errors.employee_id} />
-                </div>
+                        />
+                        <InputError className="mt-2" message={errors.status} />
+                    </div>
 
-                <div className="sm:col-span-2">
+                    <div>
+                        <InputLabel htmlFor="employee_id" value="Linked Employee" />
+                        <LinkedEmployeeCombobox
+                            id="employee_id"
+                            className="mt-1"
+                            value={data.employee_id}
+                            employees={employeesInBranch}
+                            onChange={(emp) => {
+                                if (!emp) {
+                                    setData('employee_id', '');
+                                    return;
+                                }
+                                const eb = normId(emp.branch_id);
+                                setData((prev) => ({
+                                    ...prev,
+                                    employee_id: Number(emp.id),
+                                    ...(eb !== null && branchIdsNorm.includes(eb) ? { branch_id: eb } : {}),
+                                }));
+                            }}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                            Each employee can only be linked to one user.
+                        </p>
+                        <InputError className="mt-2" message={errors.employee_id} />
+                    </div>
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Role Assignment</h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                    Select one or more roles to control user permissions.
+                </p>
+                <div className="mt-4">
                     <InputLabel value="Roles" />
                     <div className="mt-1 max-h-44 overflow-auto rounded-md border border-gray-300 p-2">
                         <div className="space-y-1.5">
@@ -295,9 +307,15 @@ export default function UserForm({
                     </div>
                     <InputError className="mt-2" message={errors.roles} />
                 </div>
+            </section>
 
-                {showPasswordFields && (
-                    <>
+            {showPasswordFields && (
+                <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Password Setup</h3>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                        Set the initial password for this user account.
+                    </p>
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="sm:col-span-2">
                             <InputLabel htmlFor="password" value="Password" />
                             <TextInput
@@ -326,9 +344,9 @@ export default function UserForm({
                                 autoComplete="new-password"
                             />
                         </div>
-                    </>
-                )}
-            </div>
+                    </div>
+                </section>
+            )}
 
             <div className="flex items-center justify-end gap-3">
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
