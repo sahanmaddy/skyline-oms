@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BranchContextController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerDocumentController;
 use App\Http\Controllers\EmployeeController;
@@ -42,18 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('permissions', PermissionController::class);
 
-        Route::get('company', function () {
-            return Inertia::render('Modules/Shared/ModulePlaceholder', [
-                'area' => 'settings',
-                'moduleTitle' => 'Settings',
-                'headTitle' => 'Settings — Company Settings',
-                'breadcrumbs' => [
-                    ['label' => 'Company Settings'],
-                ],
-                'title' => 'Company settings',
-                'description' => 'Manage organization profile, contacts, branding, and defaults.',
-            ]);
-        })->name('company');
+        Route::get('company', [CompanySettingsController::class, 'edit'])->name('company');
+        Route::put('company', [CompanySettingsController::class, 'update'])->name('company.update');
 
         Route::get('system', [SystemSettingsController::class, 'edit'])->name('system');
         Route::patch('system/theme', [SystemSettingsController::class, 'updateTheme'])->name('system.theme');

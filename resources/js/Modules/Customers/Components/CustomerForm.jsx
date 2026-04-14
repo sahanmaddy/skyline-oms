@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
+import { usePage } from '@inertiajs/react';
 import { useRef } from 'react';
 
 /** True while display name should stay in sync with customer name (until user edits display name). */
@@ -30,7 +31,7 @@ function formatMoneyWithCommas(value) {
         return trimmed;
     }
 
-    return new Intl.NumberFormat('en-LK', {
+    return new Intl.NumberFormat(undefined, {
         maximumFractionDigits: 2,
     }).format(num);
 }
@@ -65,6 +66,9 @@ export default function CustomerForm({
     submitLabel,
     onSubmit,
 }) {
+    const company = usePage().props.company ?? {};
+    const currencyLabel = (company.currency_symbol || company.currency_code || '').trim() || '—';
+
     const displayNameFollowsCustomer = useRef(initialDisplayFollowsCustomer(data));
     const phoneRows = data.phone_numbers || [];
 
@@ -412,8 +416,8 @@ export default function CustomerForm({
                     <div>
                         <InputLabel htmlFor="credit_limit" value="Credit Limit" />
                         <div className="mt-1 flex items-stretch">
-                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
-                                Rs.
+                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-cursor-border dark:bg-cursor-raised dark:text-cursor-muted">
+                                {currencyLabel}
                             </div>
                             <input
                                 id="credit_limit"

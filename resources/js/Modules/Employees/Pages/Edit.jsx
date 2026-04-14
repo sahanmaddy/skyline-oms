@@ -4,9 +4,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ employee, statusOptions, users, activeBranches }) {
+    const companyTz = usePage().props.company?.time_zone || 'UTC';
     const { data, setData, put, processing, errors } = useForm({
         branch_id: employee.branch_id ?? employee.branch?.id ?? '',
         employee_code: employee.employee_code || '',
@@ -21,8 +22,8 @@ export default function Edit({ employee, statusOptions, users, activeBranches })
         marital_status: employee.marital_status || '',
         nic: employee.nic || '',
         status: employee.status || statusOptions?.[0] || 'active',
-        joined_date: normalizeDateInputForForm(employee.joined_date),
-        date_of_birth: normalizeDateInputForForm(employee.date_of_birth),
+        joined_date: normalizeDateInputForForm(employee.joined_date, companyTz),
+        date_of_birth: normalizeDateInputForForm(employee.date_of_birth, companyTz),
         notes: employee.notes || '',
         employment_type: employee.employment_type || '',
         basic_salary:

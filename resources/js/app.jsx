@@ -9,12 +9,20 @@ import FeedbackProvider from '@/feedback/FeedbackProvider';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+function appTitleBase() {
+    return import.meta.env.VITE_APP_NAME || 'Skyline OMS';
+}
 
 const pageComponents = import.meta.glob(['./Pages/**/*.jsx', './Modules/**/*.jsx']);
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (pageTitle) => {
+        const base = appTitleBase();
+        if (!pageTitle) {
+            return base;
+        }
+        return `${pageTitle} — ${base}`;
+    },
     resolve: async (name) => {
         const candidates = [`./Pages/${name}.jsx`, `./${name}.jsx`];
         for (const path of candidates) {

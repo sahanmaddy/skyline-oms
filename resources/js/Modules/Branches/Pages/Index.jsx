@@ -153,7 +153,7 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                         </div>
                                     </td>
                                     <td className="min-w-0 px-4 py-3">
-                                        <div className="text-sm text-gray-900">
+                                        <div className="text-xs text-gray-500">
                                             Users: {b.users_count ?? 0}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">

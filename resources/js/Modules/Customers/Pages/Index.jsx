@@ -7,7 +7,8 @@ import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import useConfirm from '@/feedback/useConfirm';
-import { Head, Link, router } from '@inertiajs/react';
+import { formatCompanyCurrency } from '@/lib/companyFormat';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 
 function renderPhoneList(phoneNumbers, max = 3) {
     const phones = phoneNumbers || [];
@@ -37,7 +38,7 @@ function isSystemCashCustomer(c) {
     return c?.customer_code === 'C-0';
 }
 
-function formatCreditLimit(value) {
+function formatCreditLimit(value, company) {
     if (value === null || value === undefined || value === '') {
         return '—';
     }
@@ -47,13 +48,12 @@ function formatCreditLimit(value) {
         return value;
     }
 
-    return `Rs. ${new Intl.NumberFormat('en-LK', {
-        maximumFractionDigits: 2,
-    }).format(parsed)}`;
+    return formatCompanyCurrency(parsed, company);
 }
 
 export default function Index({ customers, filters, statusOptions, canCreate }) {
     const { confirm } = useConfirm();
+    const company = usePage().props.company ?? {};
     const formatStatusLabel = (value) => {
         if (value === 'active') return 'Active';
         if (value === 'inactive') return 'Inactive';
@@ -208,7 +208,7 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                         </div>
                                         {!isSystemCashCustomer(c) ? (
                                             <div className="mt-2 text-xs text-gray-500">
-                                                Limit: {formatCreditLimit(c.credit_limit)}
+                                                Limit: {formatCreditLimit(c.credit_limit, company)}
                                             </div>
                                         ) : null}
                                         {c.guarantor ? (

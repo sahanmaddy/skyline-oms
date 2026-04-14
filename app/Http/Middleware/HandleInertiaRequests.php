@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Services\Branches\BranchScopeService;
+use App\Services\Organization\CompanySettingsPresenter;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -67,6 +68,9 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            'app_display_name' => fn () => app(CompanySettingsPresenter::class)->shared()['name']
+                ?? config('app.name', 'Skyline OMS'),
+            'company' => fn () => app(CompanySettingsPresenter::class)->shared(),
             'auth' => [
                 'user' => $user,
                 'roles' => $user ? $user->getRoleNames()->values() : [],

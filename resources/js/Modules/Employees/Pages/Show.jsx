@@ -7,10 +7,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import DocumentDropzone from '@/Modules/Employees/Components/DocumentDropzone';
 import useConfirm from '@/feedback/useConfirm';
+import { formatCompanyCurrency, formatCompanyDate, formatCompanyDateTime } from '@/lib/companyFormat';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
-function formatSalary(value) {
+function formatSalaryDisplay(value, company) {
     const trimmed = (value ?? '').toString().trim();
     if (!trimmed) {
         return '—';
@@ -21,13 +22,12 @@ function formatSalary(value) {
         return trimmed;
     }
 
-    return `Rs. ${new Intl.NumberFormat('en-LK', {
-        maximumFractionDigits: 2,
-    }).format(num)}`;
+    return formatCompanyCurrency(num, company);
 }
 
 export default function Show({ employee, documentTypeOptions, canEdit, canDelete }) {
     const { confirm } = useConfirm();
+    const company = usePage().props.company ?? {};
     const roles = usePage().props.auth.roles ?? [];
     const canManageDocuments =
         roles.includes('Admin') ||
@@ -240,9 +240,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                             <Info label="NIC" value={employee.nic || '—'} />
                             <Info
                                 label="Date of Birth"
-                                value={formatDisplayDate(
-                                    employee.date_of_birth,
-                                )}
+                                value={formatDisplayDate(employee.date_of_birth, company)}
                             />
                             <Info
                                 label="Linked User"
@@ -285,13 +283,11 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                 />
                                 <Info
                                     label="Joined Date"
-                                    value={formatDisplayDate(
-                                        employee.joined_date,
-                                    )}
+                                    value={formatDisplayDate(employee.joined_date, company)}
                                 />
                                 <Info
                                     label="Basic Salary"
-                                    value={formatSalary(employee.basic_salary)}
+                                    value={formatSalaryDisplay(employee.basic_salary, company)}
                                 />
                                 <StatusInfo
                                     label="Sales Commission Eligible"
@@ -515,7 +511,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                                     {d.uploader?.name ? `By ${d.uploader.name}` : ''}
                                                 </div>
                                                 <div className="text-xs text-gray-500">
-                                                    {formatUploadedDateTime(d.created_at)}
+                                                    {formatUploadedDateTime(d.created_at, company)}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-right text-sm">
@@ -641,16 +637,18 @@ function Info({ label, value, className = '' }) {
     );
 }
 
-function formatDisplayDate(value) {
+function formatDisplayDate(value, company) {
     if (!value) {
         return '—';
     }
+
+    const tz = company?.time_zone;
 
     // Handle Date objects (rare, but can happen depending on how props are serialized).
     if (value instanceof Date) {
         if (!Number.isNaN(value.getTime())) {
             return new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'Asia/Colombo',
+                timeZone: tz,
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -661,20 +659,15 @@ function formatDisplayDate(value) {
     }
 
     if (typeof value === 'string') {
-        // Keep YYYY-MM-DD as-is if it's already date-only.
         if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-            return value;
+            return formatCompanyDate(value, company);
         }
 
-        // Laravel may serialize date casts as UTC timestamps.
-        // Example: "1995-04-30" (date) can arrive as "1995-04-29T18:30:00.000000Z"
-        // depending on app timezone, which would be wrong if we just slice.
         if (value.includes('T')) {
             const parsed = new Date(value);
             if (!Number.isNaN(parsed.getTime())) {
-                // Output YYYY-MM-DD in the app timezone so the calendar date is correct.
                 return new Intl.DateTimeFormat('en-CA', {
-                    timeZone: 'Asia/Colombo',
+                    timeZone: tz,
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
@@ -688,24 +681,19 @@ function formatDisplayDate(value) {
     return value;
 }
 
-function formatUploadedDateTime(value) {
+function formatUploadedDateTime(value, company) {
     if (!value) {
         return '—';
     }
 
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-        return value;
-    }
-
-    return new Intl.DateTimeFormat('en-GB', {
+    return formatCompanyDateTime(value, company, {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
-    }).format(parsed);
+    });
 }
 
 function StatusInfo({ label, value, isPositive }) {
