@@ -43,6 +43,7 @@ class EmployeeUpdateRequest extends FormRequest
             'gender' => ['nullable', 'string', Rule::in($genders)],
             'marital_status' => ['nullable', 'string', Rule::in($maritalStatuses)],
             'profile_photo' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'remove_profile_photo' => ['sometimes', 'boolean'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('employees', 'email')->ignore($employee->id)],
             'designation' => ['nullable', 'string', 'max:150'],
             'department' => ['nullable', 'string', Rule::in(EmployeeDepartment::values())],
@@ -89,14 +90,12 @@ class EmployeeUpdateRequest extends FormRequest
             'epf_number' => ['nullable', 'string', 'max:100'],
             'etf_number' => ['nullable', 'string', 'max:100'],
             'emergency_contact_person' => ['nullable', 'string', 'max:150'],
-            'emergency_contact_phone' => [
-                'nullable',
-                'string',
-                'max:50',
-                // Require a reasonable number of digits and allow common formatting chars.
-                // Examples: "+94 771234567", "+1 (555) 123-4567", "771234567"
-                'regex:/^(?=(?:.*\d){6,15}$)[+\d\s\-()]+$/',
-            ],
+            'emergency_phone_numbers' => ['array'],
+            'emergency_phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:emergency_phone_numbers.*.country_code,emergency_phone_numbers.*.phone_number'],
+            'emergency_phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:emergency_phone_numbers.*.phone_type,emergency_phone_numbers.*.phone_number'],
+            'emergency_phone_numbers.*.country_iso2' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
+            'emergency_phone_numbers.*.phone_number' => ['nullable', 'string', 'max:50', 'required_with:emergency_phone_numbers.*.phone_type,emergency_phone_numbers.*.country_code'],
+            'emergency_phone_numbers.*.is_primary' => ['boolean'],
             'phone_numbers' => ['array'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.phone_number'],

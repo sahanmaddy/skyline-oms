@@ -4,7 +4,13 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @php
+            $appDisplayName = data_get($page ?? [], 'props.app_display_name', config('app.name', 'Laravel'));
+        @endphp
+        <title inertia>{{ $appDisplayName }}</title>
+        <script>
+            window.__APP_DISPLAY_NAME__ = @json($appDisplayName);
+        </script>
         <script>
             (function () {
                 var storageKey = 'skyline:theme-mode';

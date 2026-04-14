@@ -5,15 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CompanyPhoneNumber extends Model
+class EmployeeEmergencyPhoneNumber extends Model
 {
     protected $fillable = [
-        'company_setting_id',
+        'employee_id',
         'phone_type',
         'country_code',
         'country_iso2',
         'phone_number',
-        'display_order',
         'is_primary',
     ];
 
@@ -24,8 +23,8 @@ class CompanyPhoneNumber extends Model
         ];
     }
 
-    public function companySetting(): BelongsTo
+    public function employee(): BelongsTo
     {
-        return $this->belongsTo(CompanySetting::class);
+        return $this->belongsTo(Employee::class);
     }
 }

@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
 import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
@@ -168,7 +169,7 @@ export default function BranchForm({
                                     </div>
 
                                     <div className="md:col-span-9">
-                                        <InputLabel value="Phone" />
+                                        <InputLabel value="Number" />
                                         <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
                                             <div className="min-w-0 flex-1">
                                                 <PhoneNumberWithCountryField
@@ -188,13 +189,13 @@ export default function BranchForm({
                                                     phoneInputId={`branch_phone_numbers_${idx}_number`}
                                                 />
                                             </div>
-                                            <button
+                                            <SecondaryButton
                                                 type="button"
-                                                className="shrink-0 self-end text-sm font-medium text-gray-700 hover:text-gray-900 sm:self-auto dark:text-cursor-fg dark:hover:text-cursor-bright"
+                                                className="shrink-0 self-end sm:self-auto"
                                                 onClick={() => removePhone(idx)}
                                             >
                                                 Remove
-                                            </button>
+                                            </SecondaryButton>
                                         </div>
                                     </div>
                                 </div>

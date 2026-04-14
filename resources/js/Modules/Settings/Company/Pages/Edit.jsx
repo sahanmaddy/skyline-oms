@@ -4,6 +4,7 @@ import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
+import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TimeZoneCombobox from '@/Components/TimeZoneCombobox';
@@ -11,15 +12,18 @@ import TextInput from '@/Components/TextInput';
 import { currencyCodes } from '@/data/currencyCodes';
 import useConfirm from '@/feedback/useConfirm';
 import { formatCompanyCurrency } from '@/lib/companyFormat';
+import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 function emptyPhoneRow(order) {
     return {
         phone_type: 'Office',
+        country_code: '+94',
+        country_iso2: 'LK',
         phone_number: '',
         display_order: order,
         is_primary: false,
@@ -47,6 +51,69 @@ function currencyPreview(pattern, symbol, code) {
         .trim();
 }
 
+async function cropImageToSquareFile(file) {
+    if (!file || !file.type?.startsWith('image/')) {
+        return file;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Could not read image.'));
+            img.src = objectUrl;
+        });
+
+        const size = Math.min(image.width, image.height);
+        const sx = Math.floor((image.width - size) / 2);
+        const sy = Math.floor((image.height - size) / 2);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            return file;
+        }
+
+        const radius = Math.max(14, Math.round(size * 0.22));
+        const r = Math.min(radius, Math.floor(size / 2));
+        ctx.clearRect(0, 0, size, size);
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.lineTo(size - r, 0);
+        ctx.quadraticCurveTo(size, 0, size, r);
+        ctx.lineTo(size, size - r);
+        ctx.quadraticCurveTo(size, size, size - r, size);
+        ctx.lineTo(r, size);
+        ctx.quadraticCurveTo(0, size, 0, size - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(image, sx, sy, size, size, 0, 0, size, size);
+
+        const outputType = 'image/png';
+        const blob = await new Promise((resolve) => {
+            canvas.toBlob((b) => resolve(b), outputType, 0.92);
+        });
+
+        if (!blob) {
+            return file;
+        }
+
+        const baseName = (file.name || 'site-icon').replace(/\.[^.]+$/, '');
+        return new File([blob], `${baseName}-square-rounded.png`, {
+            type: outputType,
+            lastModified: Date.now(),
+        });
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
+}
+
 export default function Edit({
     companySetting,
     canEdit,
@@ -55,11 +122,15 @@ export default function Edit({
     currencyFormatExamples = [],
 }) {
     const { confirm } = useConfirm();
+    const [iconPreviewUrl, setIconPreviewUrl] = useState(null);
+    const [iconLoadFailed, setIconLoadFailed] = useState(false);
 
     const initialPhones =
         companySetting?.phone_numbers?.length > 0
             ? companySetting.phone_numbers.map((r, i) => ({
                   phone_type: r.phone_type || 'Office',
+                  country_code: r.country_code || '+94',
+                  country_iso2: r.country_iso2 || 'LK',
                   phone_number: r.phone_number || '',
                   display_order: r.display_order ?? i,
                   is_primary: !!r.is_primary,
@@ -79,6 +150,7 @@ export default function Edit({
             : [emptyBankRow(0)];
 
     const transformRegistered = useRef(false);
+    const siteIconInputRef = useRef(null);
 
     const form = useForm({
         company_name: companySetting?.name ?? '',
@@ -207,7 +279,7 @@ export default function Edit({
         }
         const ok = await confirm({
             title: 'Save company settings?',
-            message: 'These details are used across the app for titles, money formatting, dates, and future documents.',
+            message: 'These details are used across the app for titles, money formatting, dates, and documents.',
             confirmText: 'Save',
             cancelText: 'Cancel',
         });
@@ -220,7 +292,20 @@ export default function Edit({
         });
     };
 
-    const showIconPreview = !data.remove_site_icon && companySetting?.site_icon_url;
+    useEffect(() => {
+        return () => {
+            if (iconPreviewUrl) {
+                URL.revokeObjectURL(iconPreviewUrl);
+            }
+        };
+    }, [iconPreviewUrl]);
+
+    useEffect(() => {
+        setIconLoadFailed(false);
+    }, [iconPreviewUrl, companySetting?.site_icon_url, data.remove_site_icon]);
+
+    const showIconPreview =
+        !iconLoadFailed && !data.remove_site_icon && (iconPreviewUrl || companySetting?.site_icon_url);
 
     return (
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Company Settings" />}>
@@ -231,7 +316,7 @@ export default function Edit({
                     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
                         <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Company Identity</h2>
                         <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
-                            Legal name, icon, and how the business appears in the product.
+                            Legal name, icon, and how the business appears in the system.
                         </p>
 
                         <div className="mt-6 space-y-5">
@@ -246,7 +331,7 @@ export default function Edit({
                                     required
                                 />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                                    Used across the system as the business name, site title, and future document header.
+                                    Used across the system as the business name, site title, and document header.
                                 </p>
                                 <InputError className="mt-2" message={errors.company_name} />
                             </div>
@@ -254,41 +339,67 @@ export default function Edit({
                             <div>
                                 <InputLabel value="Site Icon" />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                                    Recommended: 512 × 512 pixels. Square images look best in the sidebar and browser tab.
+                                    Recommended: 512 × 512 pixels. You can upload any size; we auto-crop to a centered square.
                                 </p>
-                                <div className="mt-3 flex flex-wrap items-start gap-4">
-                                    {showIconPreview ? (
-                                        <img
-                                            src={companySetting.site_icon_url}
-                                            alt=""
-                                            className="h-16 w-16 rounded-md border border-gray-200 object-cover dark:border-cursor-border"
-                                        />
-                                    ) : (
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 text-xs text-gray-400 dark:border-cursor-border dark:text-cursor-muted">
-                                            No icon
+                                <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+                                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 dark:border-cursor-border dark:bg-cursor-raised">
+                                        {showIconPreview ? (
+                                            <img
+                                                src={iconPreviewUrl || companySetting.site_icon_url}
+                                                alt="Site icon preview"
+                                                className="h-full w-full object-cover"
+                                                onError={() => setIconLoadFailed(true)}
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full flex items-center justify-center text-sm font-semibold text-gray-400 dark:text-cursor-muted">
+                                                —
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-1 flex-col justify-center sm:min-h-20">
+                                        <div className="rounded-md border border-gray-200 bg-white px-3 py-2 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:hover:bg-cursor-raised dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
+                                            <input
+                                                ref={siteIconInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 focus:outline-none focus:ring-0 dark:text-cursor-fg dark:file:bg-cursor-raised dark:file:text-cursor-bright dark:hover:file:bg-cursor-border"
+                                                disabled={!canEdit}
+                                                onChange={async (e) => {
+                                                    const f = e.target.files?.[0] ?? null;
+                                                    const cropped = f ? await cropImageToSquareFile(f) : null;
+                                                    setData('site_icon', cropped);
+                                                    if (cropped) {
+                                                        setData('remove_site_icon', false);
+                                                        if (iconPreviewUrl) {
+                                                            URL.revokeObjectURL(iconPreviewUrl);
+                                                        }
+                                                        setIconPreviewUrl(URL.createObjectURL(cropped));
+                                                    }
+                                                }}
+                                            />
                                         </div>
-                                    )}
-                                    <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="block w-full max-w-md text-sm text-gray-600 file:me-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-800 hover:file:bg-gray-200 dark:text-cursor-muted dark:file:bg-cursor-raised dark:file:text-cursor-fg dark:hover:file:bg-cursor-border"
-                                            disabled={!canEdit}
-                                            onChange={(e) => {
-                                                const f = e.target.files?.[0] ?? null;
-                                                setData('site_icon', f);
-                                                if (f) {
-                                                    setData('remove_site_icon', false);
-                                                }
-                                            }}
-                                        />
-                                        <div className="flex flex-wrap gap-2">
-                                            {canEdit && companySetting?.site_icon_url ? (
+                                        <div className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                                            Upload JPG/JPEG/PNG/WEBP.
+                                        </div>
+                                        {iconLoadFailed ? (
+                                            <div className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                                Could not preview current icon. Upload a new one to replace it.
+                                            </div>
+                                        ) : null}
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {canEdit && !data.remove_site_icon && (companySetting?.site_icon_url || iconPreviewUrl) ? (
                                                 <SecondaryButton
                                                     type="button"
                                                     onClick={() => {
                                                         setData('remove_site_icon', true);
                                                         setData('site_icon', null);
+                                                        if (iconPreviewUrl) {
+                                                            URL.revokeObjectURL(iconPreviewUrl);
+                                                            setIconPreviewUrl(null);
+                                                        }
+                                                        if (siteIconInputRef.current) {
+                                                            siteIconInputRef.current.value = '';
+                                                        }
                                                     }}
                                                 >
                                                     Remove icon
@@ -305,7 +416,7 @@ export default function Edit({
                     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
                         <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Registered Details</h2>
                         <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
-                            Registered business address used on future invoices and letterheads.
+                            Registered business address used on invoices and letterheads.
                         </p>
                         <div className="mt-6">
                             <InputLabel htmlFor="registered_address" value="Registered Address" />
@@ -351,7 +462,7 @@ export default function Edit({
                                 ) : null}
                             </div>
                             <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                                Mark one number as primary for summaries and future documents.
+                                Mark one number as primary for summaries and documents.
                             </p>
 
                             <div className="mt-4 space-y-3">
@@ -371,21 +482,43 @@ export default function Edit({
                                                     disabled={!canEdit}
                                                 />
                                             </div>
-                                            <div className="md:col-span-6">
+                                            <div className="md:col-span-9">
                                                 <InputLabel value="Number" />
-                                                <TextInput
-                                                    className="mt-1 block w-full"
-                                                    value={row.phone_number || ''}
-                                                    onChange={(e) => updatePhone(idx, { phone_number: e.target.value })}
-                                                    disabled={!canEdit}
-                                                />
+                                                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                                    <div className="min-w-0 flex-1">
+                                                        <PhoneNumberWithCountryField
+                                                            countryCode={row.country_code || '+94'}
+                                                            countryIso2={row.country_iso2}
+                                                            phoneNumber={row.phone_number || ''}
+                                                            onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                                updatePhone(idx, {
+                                                                    country_code: countryCode,
+                                                                    country_iso2: iso2 || null,
+                                                                })
+                                                            }
+                                                            onPhoneNumberChange={(num) =>
+                                                                updatePhone(idx, { phone_number: num })
+                                                            }
+                                                            options={countryCallingCodes}
+                                                            disabled={!canEdit}
+                                                            phoneInputId={`company_phone_numbers_${idx}_number`}
+                                                        />
+                                                    </div>
+                                                    {canEdit ? (
+                                                        <SecondaryButton
+                                                            type="button"
+                                                            className="shrink-0 self-end sm:self-auto"
+                                                            onClick={() => removePhone(idx)}
+                                                        >
+                                                            Remove
+                                                        </SecondaryButton>
+                                                    ) : null}
+                                                </div>
                                                 <InputError
                                                     className="mt-2"
                                                     message={errors[`phone_numbers.${idx}.phone_number`]}
                                                 />
-                                            </div>
-                                            <div className="flex flex-col justify-end gap-2 md:col-span-3">
-                                                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-cursor-fg">
+                                                <label className="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-cursor-fg">
                                                     <Checkbox
                                                         checked={!!row.is_primary}
                                                         disabled={!canEdit}
@@ -393,15 +526,6 @@ export default function Edit({
                                                     />
                                                     Primary
                                                 </label>
-                                                {canEdit ? (
-                                                    <button
-                                                        type="button"
-                                                        className="text-start text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-cursor-fg dark:hover:text-cursor-bright"
-                                                        onClick={() => removePhone(idx)}
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                ) : null}
                                             </div>
                                         </div>
                                     </div>
@@ -413,6 +537,9 @@ export default function Edit({
 
                     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
                         <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Tax Details</h2>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                            Tax identifiers used for statutory records and invoice documents.
+                        </p>
                         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <InputLabel htmlFor="tin_number" value="TIN" />
@@ -444,7 +571,7 @@ export default function Edit({
                             <div>
                                 <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Bank Accounts</h2>
                                 <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
-                                    Accounts shown on future payment instructions and invoices.
+                                    Accounts shown on payment instructions and invoices.
                                 </p>
                             </div>
                             {canEdit ? (
@@ -515,13 +642,9 @@ export default function Edit({
                                                 Primary account
                                             </label>
                                             {canEdit ? (
-                                                <button
-                                                    type="button"
-                                                    className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-cursor-fg dark:hover:text-cursor-bright"
-                                                    onClick={() => removeBank(idx)}
-                                                >
+                                                <SecondaryButton type="button" onClick={() => removeBank(idx)}>
                                                     Remove
-                                                </button>
+                                                </SecondaryButton>
                                             ) : null}
                                         </div>
                                     </div>
