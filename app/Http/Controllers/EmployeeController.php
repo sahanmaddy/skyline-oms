@@ -95,10 +95,12 @@ class EmployeeController extends Controller
         $validated = $request->validated();
         $profilePhoto = $request->file('profile_photo');
         $phoneNumbers = $validated['phone_numbers'] ?? [];
+        $emergencyPhoneNumbers = $validated['emergency_phone_numbers'] ?? [];
         unset($validated['phone_numbers']);
+        unset($validated['emergency_phone_numbers']);
         unset($validated['profile_photo']);
 
-        $employee = app(CreateEmployeeAction::class)->execute($validated, $phoneNumbers, $profilePhoto);
+        $employee = app(CreateEmployeeAction::class)->execute($validated, $phoneNumbers, $emergencyPhoneNumbers, $profilePhoto);
 
         if ($this->branchScope->recordMatchesEffectiveBranch($request, (int) $employee->branch_id, $request->user())) {
             return redirect()->route('hr.employees.show', $employee)->with('success', 'Employee created.');
@@ -116,6 +118,7 @@ class EmployeeController extends Controller
             'branch:id,code,name',
             'user:id,name,email',
             'phoneNumbers',
+            'emergencyPhoneNumbers',
             'documents' => fn ($q) => $q->with('uploader:id,name')->latest(),
         ]);
 
@@ -152,7 +155,7 @@ class EmployeeController extends Controller
         abort_unless($actor instanceof User, 403);
 
         return Inertia::render('Modules/Employees/Pages/Edit', [
-            'employee' => $employee->load(['branch:id,code,name', 'user:id,name,email', 'phoneNumbers']),
+            'employee' => $employee->load(['branch:id,code,name', 'user:id,name,email', 'phoneNumbers', 'emergencyPhoneNumbers']),
             'statusOptions' => EmployeeStatus::values(),
             'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, (int) $employee->branch_id),
             'users' => $this->branchScope->usersAvailableForEmployeeForm($request, $employee),
@@ -163,11 +166,15 @@ class EmployeeController extends Controller
     {
         $validated = $request->validated();
         $profilePhoto = $request->file('profile_photo');
+        $removeProfilePhoto = (bool) $request->boolean('remove_profile_photo');
         $phoneNumbers = $validated['phone_numbers'] ?? [];
+        $emergencyPhoneNumbers = $validated['emergency_phone_numbers'] ?? [];
         unset($validated['phone_numbers']);
+        unset($validated['emergency_phone_numbers']);
         unset($validated['profile_photo']);
+        unset($validated['remove_profile_photo']);
 
-        app(UpdateEmployeeAction::class)->execute($employee, $validated, $phoneNumbers, $profilePhoto);
+        app(UpdateEmployeeAction::class)->execute($employee, $validated, $phoneNumbers, $emergencyPhoneNumbers, $profilePhoto, $removeProfilePhoto);
 
         $employee->refresh();
 

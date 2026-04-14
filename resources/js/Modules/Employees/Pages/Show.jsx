@@ -309,66 +309,80 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                         </div>
                     </section>
 
-                    <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4">
-                        <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
-                        <div className="mt-4 space-y-3">
-                            <Info label="Email" value={employee.email || '—'} />
-                            <div className="rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Phone Numbers
-                                </div>
-                                <div className="mt-2 space-y-2">
-                                    {employee.phone_numbers?.length ? (
-                                        employee.phone_numbers.map((phone) => (
-                                            <div
-                                                key={phone.id}
-                                                className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
-                                            >
-                                                <div className="flex items-center justify-between gap-3 text-sm">
-                                                    <div className="font-medium text-gray-900">
-                                                        {phone.phone_type}
-                                                    </div>
-                                                    <div className="font-medium text-gray-900">
-                                                        {[phone.country_code, phone.phone_number]
-                                                            .filter(Boolean)
-                                                            .join(' ')}
+                    <div className="flex flex-col gap-4 lg:col-span-4">
+                        <section className="rounded-lg border border-gray-200 bg-white p-5">
+                            <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
+                            <div className="mt-4 space-y-3">
+                                <Info label="Email" value={employee.email || '—'} />
+                                <div className="rounded-md border border-gray-200 bg-white p-3">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                        Phone Numbers
+                                    </div>
+                                    <div className="mt-2 space-y-2">
+                                        {employee.phone_numbers?.length ? (
+                                            employee.phone_numbers.map((phone) => (
+                                                <div
+                                                    key={phone.id}
+                                                    className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+                                                >
+                                                    <div className="flex items-center justify-between gap-3 text-sm">
+                                                        <div className="font-medium text-gray-900">
+                                                            {phone.phone_type}
+                                                        </div>
+                                                        <div className="font-medium text-gray-900">
+                                                            {[phone.country_code, phone.phone_number]
+                                                                .filter(Boolean)
+                                                                .join(' ')}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="text-sm text-gray-500">No phone numbers.</div>
-                                    )}
+                                            ))
+                                        ) : (
+                                            <div className="text-sm text-gray-500">No phone numbers.</div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+                        </section>
 
-                            <div className="rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Emergency Contact
-                                </div>
-
-                                <div className="mt-2 space-y-2">
-                                    {employee.emergency_contact_person ||
-                                    employee.emergency_contact_phone ? (
-                                        <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                                            <div className="flex items-center justify-between gap-3 text-sm">
-                                                <div className="font-medium text-gray-900">
-                                                    {employee.emergency_contact_person || '—'}
+                        <section className="rounded-lg border border-gray-200 bg-white p-5">
+                            <h3 className="text-sm font-semibold text-gray-900">Emergency Contact</h3>
+                            <div className="mt-4 space-y-3">
+                                <Info
+                                    label="Contact Person"
+                                    value={employee.emergency_contact_person || '—'}
+                                />
+                                <div className="rounded-md border border-gray-200 bg-white p-3">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                        Phone Numbers
+                                    </div>
+                                    <div className="mt-2 space-y-2">
+                                        {employee.emergency_phone_numbers?.length ? (
+                                            employee.emergency_phone_numbers.map((phone) => (
+                                                <div
+                                                    key={phone.id}
+                                                    className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+                                                >
+                                                    <div className="flex items-center justify-between gap-3 text-sm">
+                                                        <div className="font-medium text-gray-900">
+                                                            {phone.phone_type}
+                                                        </div>
+                                                        <div className="font-medium text-gray-900">
+                                                            {[phone.country_code, phone.phone_number]
+                                                                .filter(Boolean)
+                                                                .join(' ')}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="font-medium text-gray-900">
-                                                    {employee.emergency_contact_phone || '—'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="text-sm text-gray-500">
-                                            No emergency contact.
-                                        </div>
-                                    )}
+                                            ))
+                                        ) : (
+                                            <div className="text-sm text-gray-500">No phone numbers.</div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    </div>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>

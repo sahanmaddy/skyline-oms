@@ -29,6 +29,8 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/company/site-icon', [CompanySettingsController::class, 'siteIcon'])->name('company.site-icon');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', function () {

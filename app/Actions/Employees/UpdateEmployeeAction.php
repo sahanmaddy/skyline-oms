@@ -17,20 +17,29 @@ class UpdateEmployeeAction
         Employee $employee,
         array $employeeData,
         array $phoneNumbers = [],
-        ?UploadedFile $profilePhoto = null
+        array $emergencyPhoneNumbers = [],
+        ?UploadedFile $profilePhoto = null,
+        bool $removeProfilePhoto = false
     ): Employee {
-        return DB::transaction(function () use ($employee, $employeeData, $phoneNumbers, $profilePhoto) {
+        return DB::transaction(function () use ($employee, $employeeData, $phoneNumbers, $emergencyPhoneNumbers, $profilePhoto, $removeProfilePhoto) {
             unset($employeeData['employee_code']);
 
             $employee->update($employeeData);
 
             $this->syncPhoneNumbers($employee, $phoneNumbers);
+            $this->syncEmergencyPhoneNumbers($employee, $emergencyPhoneNumbers);
+
+            if ($removeProfilePhoto && $employee->profile_photo_path) {
+                Storage::disk('local')->delete($employee->profile_photo_path);
+                $employee->update([
+                    'profile_photo_path' => null,
+                ]);
+            }
 
             if ($profilePhoto) {
                 if ($employee->profile_photo_path) {
                     Storage::disk('local')->delete($employee->profile_photo_path);
                 }
-
                 $employee->update([
                     'profile_photo_path' => $this->storeProfilePhoto(
                         $employee->employee_code,
@@ -71,6 +80,36 @@ class UpdateEmployeeAction
         }
 
         $employee->phoneNumbers()->createMany($clean->all());
+    }
+
+    private function syncEmergencyPhoneNumbers(Employee $employee, array $phoneNumbers): void
+    {
+        $clean = collect($phoneNumbers)
+            ->filter(fn ($row) => is_array($row))
+            ->map(function (array $row, int $index) {
+                $normalizedPhoneNumber = $this->phoneNumberNormalizer->normalize(
+                    $row['country_code'] ?? '+94',
+                    $row['phone_number'] ?? '',
+                );
+
+                return [
+                    'phone_type' => $row['phone_type'] ?? 'Mobile',
+                    'country_code' => $row['country_code'] ?? '+94',
+                    'country_iso2' => $this->normalizeCountryIso2($row['country_iso2'] ?? null),
+                    'phone_number' => $normalizedPhoneNumber ?? '',
+                    'is_primary' => (bool) ($row['is_primary'] ?? $index === 0),
+                ];
+            })
+            ->filter(fn (array $row) => trim((string) $row['phone_number']) !== '')
+            ->values();
+
+        $employee->emergencyPhoneNumbers()->delete();
+
+        if ($clean->isEmpty()) {
+            return;
+        }
+
+        $employee->emergencyPhoneNumbers()->createMany($clean->all());
     }
 
     private function storeProfilePhoto(string $employeeCode, UploadedFile $photo): string

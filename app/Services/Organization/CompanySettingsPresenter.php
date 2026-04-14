@@ -59,11 +59,20 @@ class CompanySettingsPresenter
     {
         $iconUrl = null;
         if ($row->site_icon_path && Storage::disk('public')->exists($row->site_icon_path)) {
-            $iconUrl = Storage::disk('public')->url($row->site_icon_path);
+            $iconUrl = route('company.site-icon', ['v' => optional($row->updated_at)->timestamp ?? time()]);
         }
 
         $primaryPhone = $row->phoneNumbers->firstWhere('is_primary', true)
             ?? $row->phoneNumbers->first();
+
+        $primaryDisplay = null;
+        if ($primaryPhone) {
+            $cc = $primaryPhone->country_code ?? '+94';
+            $national = trim((string) $primaryPhone->phone_number);
+            $primaryDisplay = trim(
+                $primaryPhone->phone_type.': '.trim($cc.' '.$national),
+            );
+        }
 
         return [
             'id' => (int) $row->id,
@@ -78,12 +87,12 @@ class CompanySettingsPresenter
             'currency_code' => $row->currency_code,
             'currency_symbol' => $row->currency_symbol,
             'currency_format' => $row->currency_format,
-            'primary_phone' => $primaryPhone
-                ? trim($primaryPhone->phone_type.': '.$primaryPhone->phone_number)
-                : null,
+            'primary_phone' => $primaryDisplay,
             'phone_numbers' => $row->phoneNumbers->map(fn ($p) => [
                 'id' => $p->id,
                 'phone_type' => $p->phone_type,
+                'country_code' => $p->country_code ?? '+94',
+                'country_iso2' => $p->country_iso2 ? strtoupper($p->country_iso2) : 'LK',
                 'phone_number' => $p->phone_number,
                 'display_order' => (int) $p->display_order,
                 'is_primary' => (bool) $p->is_primary,

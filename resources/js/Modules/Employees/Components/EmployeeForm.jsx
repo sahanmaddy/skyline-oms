@@ -6,14 +6,14 @@ import InputLabel from '@/Components/InputLabel';
 import PhoneNumberWithCountryField from '@/Components/PhoneNumberWithCountryField';
 import CountryCombobox from '@/Components/CountryCombobox';
 import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
-import { resolveCountryCallingOption } from '@/lib/phoneCountryDisplay';
 import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
 import { subYears } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 
 /** Same branch rules as usersAvailableForEmployeeForm: home branch_id or assigned_branches. */
@@ -89,6 +89,7 @@ export default function EmployeeForm({
     const [emergencyPhoneCountryCode, setEmergencyPhoneCountryCode] = useState('+94');
     const [emergencyPhoneCountryIso2, setEmergencyPhoneCountryIso2] = useState('LK');
     const [emergencyPhoneNumber, setEmergencyPhoneNumber] = useState('');
+    const profilePhotoInputRef = useRef(null);
 
     useEffect(() => {
         // Only auto-fill on create; on edit, overwriting display_name breaks saves and custom names.
@@ -107,6 +108,11 @@ export default function EmployeeForm({
     }, [data.first_name, data.last_name, mode]);
 
     const phoneRows = useMemo(() => data.phone_numbers || [], [data.phone_numbers]);
+
+    const emergencyPhoneRows = useMemo(
+        () => data.emergency_phone_numbers || [],
+        [data.emergency_phone_numbers],
+    );
 
     const usersList = useMemo(() => {
         const raw = users;
@@ -141,6 +147,11 @@ export default function EmployeeForm({
     }, [data.branch_id, data.user_id, usersList, setData]);
 
     useEffect(() => {
+        if (data.remove_profile_photo) {
+            setPhotoPreviewSrc(null);
+            return;
+        }
+
         if (data.profile_photo) {
             const objUrl = URL.createObjectURL(data.profile_photo);
             setPhotoPreviewSrc(objUrl);
@@ -151,91 +162,7 @@ export default function EmployeeForm({
         }
 
         setPhotoPreviewSrc(profilePhotoUrl || null);
-    }, [data.profile_photo, profilePhotoUrl]);
-
-    useEffect(() => {
-        if (emergencyPhoneTouched) {
-            return;
-        }
-
-        const raw = (data.emergency_contact_phone || '').trim();
-        if (!raw) {
-            setEmergencyPhoneCountryCode('+94');
-            setEmergencyPhoneCountryIso2('LK');
-            setEmergencyPhoneNumber('');
-            return;
-        }
-
-        const sortedCodes = [...countryCallingCodes].sort(
-            (a, b) => b.callingCode.length - a.callingCode.length,
-        );
-
-        const match = sortedCodes.find((c) => raw.startsWith(c.callingCode));
-        if (!match) {
-            setEmergencyPhoneCountryCode('+94');
-            setEmergencyPhoneCountryIso2('LK');
-            setEmergencyPhoneNumber(
-                raw.replace(/[^\d]/g, '').replace(/^0+/, ''),
-            );
-            return;
-        }
-
-        const numberPart = raw
-            .slice(match.callingCode.length)
-            .trim()
-            .replace(/^[-\s]+/, '');
-
-        const resolved = resolveCountryCallingOption(
-            countryCallingCodes,
-            match.callingCode,
-            null,
-        );
-        setEmergencyPhoneCountryCode(resolved.callingCode);
-        setEmergencyPhoneCountryIso2(resolved.iso2);
-        setEmergencyPhoneNumber(
-            numberPart.replace(/[^\d]/g, '').replace(/^0+/, ''),
-        );
-    }, [data.emergency_contact_phone, emergencyPhoneTouched]);
-
-    useEffect(() => {
-        if (!emergencyPhoneTouched) {
-            return;
-        }
-
-        const numberDigitsOnly = (emergencyPhoneNumber || '')
-            .toString()
-            .replace(/[^\d]/g, '');
-
-        if (!numberDigitsOnly) {
-            setData('emergency_contact_phone', null);
-            return;
-        }
-
-        const ccDigits = (emergencyPhoneCountryCode || '')
-            .toString()
-            .replace(/[^\d]/g, '');
-
-        let normalizedDigits = numberDigitsOnly;
-        if (ccDigits && normalizedDigits.startsWith(ccDigits)) {
-            normalizedDigits = normalizedDigits.slice(ccDigits.length);
-        }
-        normalizedDigits = normalizedDigits.replace(/^0+/, '');
-
-        if (!normalizedDigits) {
-            setData('emergency_contact_phone', null);
-            return;
-        }
-
-        setData(
-            'emergency_contact_phone',
-            `${emergencyPhoneCountryCode} ${normalizedDigits}`.trim(),
-        );
-    }, [
-        emergencyPhoneTouched,
-        emergencyPhoneCountryCode,
-        emergencyPhoneNumber,
-        setData,
-    ]);
+    }, [data.profile_photo, data.remove_profile_photo, profilePhotoUrl]);
 
     const addPhone = () => {
         setData('phone_numbers', [
@@ -258,6 +185,31 @@ export default function EmployeeForm({
     const updatePhone = (idx, patch) => {
         const next = phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row));
         setData('phone_numbers', next);
+    };
+
+    const addEmergencyPhone = () => {
+        setData('emergency_phone_numbers', [
+            ...emergencyPhoneRows,
+            {
+                phone_type: 'Mobile',
+                country_code: '+94',
+                country_iso2: 'LK',
+                phone_number: '',
+                is_primary: emergencyPhoneRows.length === 0,
+            },
+        ]);
+    };
+
+    const removeEmergencyPhone = (idx) => {
+        const next = emergencyPhoneRows.filter((_, i) => i !== idx);
+        setData('emergency_phone_numbers', next);
+    };
+
+    const updateEmergencyPhone = (idx, patch) => {
+        setData(
+            'emergency_phone_numbers',
+            emergencyPhoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
+        );
     };
 
     return (
@@ -340,19 +292,38 @@ export default function EmployeeForm({
                             <div className="flex flex-1 flex-col justify-center sm:min-h-20">
                                 <div className="rounded-md border border-gray-200 bg-white px-3 py-2 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:border-cursor-border dark:bg-cursor-surface dark:hover:bg-cursor-raised dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
                                     <input
+                                        ref={profilePhotoInputRef}
                                         type="file"
                                         accept="image/jpeg,image/png,image/webp"
                                         className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 focus:outline-none focus:ring-0"
-                                        onChange={(e) =>
+                                        onChange={(e) => {
                                             setData(
                                                 'profile_photo',
                                                 e.target.files?.[0] || null,
-                                            )
-                                        }
+                                            );
+                                            setData('remove_profile_photo', false);
+                                        }}
                                     />
                                 </div>
                                 <div className="mt-1 text-xs text-gray-500">
                                     Upload JPG/JPEG/PNG/WEBP.
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {photoPreviewSrc ? (
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() => {
+                                                setData('profile_photo', null);
+                                                setData('remove_profile_photo', true);
+                                                setPhotoPreviewSrc(null);
+                                                if (profilePhotoInputRef.current) {
+                                                    profilePhotoInputRef.current.value = '';
+                                                }
+                                            }}
+                                        >
+                                            Remove Photo
+                                        </SecondaryButton>
+                                    ) : null}
                                 </div>
                                 <InputError
                                     className="mt-2"
@@ -718,7 +689,10 @@ export default function EmployeeForm({
 
                     <div className="mt-3 space-y-3">
                         {phoneRows.map((row, idx) => (
-                            <div key={idx} className="rounded-md border border-gray-200 bg-white p-4">
+                            <div
+                                key={idx}
+                                className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
+                            >
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div className="md:col-span-3">
                                         <InputLabel value="Type" />
@@ -730,7 +704,7 @@ export default function EmployeeForm({
                                         />
                                     </div>
                                     <div className="md:col-span-9">
-                                        <InputLabel value="Phone" />
+                                        <InputLabel value="Number" />
                                         <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
                                             <div className="min-w-0 flex-1">
                                                 <PhoneNumberWithCountryField
@@ -750,13 +724,13 @@ export default function EmployeeForm({
                                                     phoneInputId={`employee_phone_numbers_${idx}_number`}
                                                 />
                                             </div>
-                                            <button
+                                            <SecondaryButton
                                                 type="button"
-                                                className="shrink-0 self-end text-sm font-medium text-gray-700 hover:text-gray-900 sm:self-auto"
+                                                className="shrink-0 self-end sm:self-auto"
                                                 onClick={() => removePhone(idx)}
                                             >
                                                 Remove
-                                            </button>
+                                            </SecondaryButton>
                                         </div>
                                     </div>
                                 </div>
@@ -768,63 +742,95 @@ export default function EmployeeForm({
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <h3 className="text-sm font-semibold text-gray-900">
-                    Emergency Contact
-                </h3>
+                <h3 className="text-sm font-semibold text-gray-900">Emergency Contact</h3>
                 <p className="mt-1 text-xs text-gray-500">
-                    Person and phone number for emergencies.
+                    Person and phone numbers for emergencies.
                 </p>
 
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <InputLabel
-                            htmlFor="emergency_contact_person"
-                            value="Contact Person"
-                        />
-                        <TextInput
-                            id="emergency_contact_person"
-                            className="mt-1 block w-full"
-                            value={data.emergency_contact_person || ''}
-                            onChange={(e) =>
-                                setData(
-                                    'emergency_contact_person',
-                                    e.target.value,
-                                )
-                            }
-                        />
-                        <InputError
-                            className="mt-2"
-                            message={errors.emergency_contact_person}
-                        />
+                <div className="mt-4">
+                    <InputLabel htmlFor="emergency_contact_person" value="Contact Person" />
+                    <TextInput
+                        id="emergency_contact_person"
+                        className="mt-1 block w-full"
+                        value={data.emergency_contact_person || ''}
+                        onChange={(e) =>
+                            setData(
+                                'emergency_contact_person',
+                                e.target.value,
+                            )
+                        }
+                    />
+                    <InputError className="mt-2" message={errors.emergency_contact_person} />
+                </div>
+
+                <div className="mt-6 border-t border-gray-200 pt-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <InputLabel value="Phone Numbers" />
+                        </div>
+                        <PrimaryButton type="button" onClick={addEmergencyPhone}>
+                            Add phone
+                        </PrimaryButton>
                     </div>
 
-                    <div className="sm:col-span-2">
-                        <InputLabel value="Phone number" />
-                        <div className="mt-1">
-                            <PhoneNumberWithCountryField
-                                countryCode={emergencyPhoneCountryCode || '+94'}
-                                countryIso2={emergencyPhoneCountryIso2}
-                                phoneNumber={emergencyPhoneNumber || ''}
-                                onPhoneCountryChange={({ countryCode, iso2 }) => {
-                                    setEmergencyPhoneTouched(true);
-                                    setEmergencyPhoneCountryCode(countryCode || '+94');
-                                    setEmergencyPhoneCountryIso2(iso2 || null);
-                                }}
-                                onPhoneNumberChange={(num) => {
-                                    setEmergencyPhoneTouched(true);
-                                    setEmergencyPhoneNumber(num);
-                                }}
-                                options={countryCallingCodes}
-                                phoneInputId="emergency_contact_phone_input"
-                            />
-                        </div>
-
-                        <InputError
-                            className="mt-2"
-                            message={errors.emergency_contact_phone}
-                        />
+                    <div className="mt-3 space-y-3">
+                        {emergencyPhoneRows.map((row, idx) => (
+                            <div
+                                key={`em-${idx}`}
+                                className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
+                            >
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                    <div className="md:col-span-3">
+                                        <InputLabel value="Type" />
+                                        <FormSelect
+                                            className="mt-1"
+                                            value={row.phone_type || 'Mobile'}
+                                            onChange={(v) =>
+                                                updateEmergencyPhone(idx, { phone_type: v })
+                                            }
+                                            options={phoneTypeSelectOptions}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-9">
+                                        <InputLabel value="Number" />
+                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                            <div className="min-w-0 flex-1">
+                                                <PhoneNumberWithCountryField
+                                                    countryCode={row.country_code || '+94'}
+                                                    countryIso2={row.country_iso2}
+                                                    phoneNumber={row.phone_number || ''}
+                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                        updateEmergencyPhone(idx, {
+                                                            country_code: countryCode,
+                                                            country_iso2: iso2 || null,
+                                                        })
+                                                    }
+                                                    onPhoneNumberChange={(num) =>
+                                                        updateEmergencyPhone(idx, { phone_number: num })
+                                                    }
+                                                    options={countryCallingCodes}
+                                                    phoneInputId={`employee_emergency_phone_numbers_${idx}_number`}
+                                                />
+                                            </div>
+                                            <SecondaryButton
+                                                type="button"
+                                                className="shrink-0 self-end sm:self-auto"
+                                                onClick={() => removeEmergencyPhone(idx)}
+                                            >
+                                                Remove
+                                            </SecondaryButton>
+                                        </div>
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`emergency_phone_numbers.${idx}.phone_number`]}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
+                <InputError className="mt-2" message={errors.emergency_phone_numbers} />
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">

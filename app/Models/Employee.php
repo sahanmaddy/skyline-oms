@@ -43,7 +43,6 @@ class Employee extends Model
         'basic_salary',
         'is_overtime_eligible',
         'emergency_contact_person',
-        'emergency_contact_phone',
         'user_id',
         'is_sales_commission_eligible',
         'branch_id',
@@ -75,6 +74,11 @@ class Employee extends Model
     public function phoneNumbers(): HasMany
     {
         return $this->hasMany(EmployeePhoneNumber::class);
+    }
+
+    public function emergencyPhoneNumbers(): HasMany
+    {
+        return $this->hasMany(EmployeeEmergencyPhoneNumber::class)->orderBy('id');
     }
 
     public function scopeActive($query)

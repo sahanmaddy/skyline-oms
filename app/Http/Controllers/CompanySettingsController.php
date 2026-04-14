@@ -9,6 +9,7 @@ use App\Services\Organization\CompanySettingsPresenter;
 use DateTimeZone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,6 +44,24 @@ class CompanySettingsController extends Controller
                 '{amount} {code}',
             ],
         ]);
+    }
+
+    public function siteIcon()
+    {
+        $setting = CompanySetting::query()
+            ->select(['site_icon_path'])
+            ->orderBy('id')
+            ->first();
+
+        if (! $setting?->site_icon_path || ! Storage::disk('public')->exists($setting->site_icon_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response(
+            $setting->site_icon_path,
+            null,
+            ['Cache-Control' => 'public, max-age=3600, stale-while-revalidate=86400'],
+        );
     }
 
     public function update(

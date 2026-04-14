@@ -9,6 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UpdateCompanySettingsAction
 {
@@ -29,7 +30,7 @@ class UpdateCompanySettingsAction
                 if ($setting->site_icon_path) {
                     Storage::disk('public')->delete($setting->site_icon_path);
                 }
-                $setting->site_icon_path = $siteIcon->store('company/icons', 'public');
+                $setting->site_icon_path = $this->storeSquareIcon($siteIcon);
             }
 
             $setting->fill([
@@ -76,14 +77,31 @@ class UpdateCompanySettingsAction
             ->filter(fn ($r) => is_array($r))
             ->values()
             ->map(function (array $r, int $index) {
+                $countryCode = (string) ($r['country_code'] ?? '+94');
+                $normalized = $this->phoneNumberNormalizer->normalize(
+                    $countryCode,
+                    (string) ($r['phone_number'] ?? ''),
+                );
+
                 return [
                     'phone_type' => (string) ($r['phone_type'] ?? 'Office'),
-                    'phone_number' => trim((string) ($r['phone_number'] ?? '')),
+                    'country_code' => $countryCode,
+                    'country_iso2' => $this->normalizeCountryIso2($r['country_iso2'] ?? null),
+                    'phone_number' => $normalized ?? '',
                     'display_order' => (int) ($r['display_order'] ?? $index),
                     'is_primary' => (bool) ($r['is_primary'] ?? false),
                 ];
             })
             ->filter(fn (array $r) => $r['phone_number'] !== '');
+    }
+
+    private function normalizeCountryIso2(mixed $value): ?string
+    {
+        if (! is_string($value) || strlen($value) !== 2) {
+            return null;
+        }
+
+        return ctype_alpha($value) ? strtoupper($value) : null;
     }
 
     /**
@@ -105,5 +123,76 @@ class UpdateCompanySettingsAction
                 ];
             })
             ->filter(fn (array $r) => $r['bank_name'] !== '' && $r['account_number'] !== '');
+    }
+
+    private function storeSquareIcon(UploadedFile $siteIcon): string
+    {
+        $contents = @file_get_contents($siteIcon->getRealPath());
+        if ($contents === false) {
+            return $siteIcon->store('company/icons', 'public');
+        }
+
+        $source = @imagecreatefromstring($contents);
+        if (! $source) {
+            return $siteIcon->store('company/icons', 'public');
+        }
+
+        try {
+            $srcWidth = imagesx($source);
+            $srcHeight = imagesy($source);
+            $size = min($srcWidth, $srcHeight);
+            $srcX = (int) floor(($srcWidth - $size) / 2);
+            $srcY = (int) floor(($srcHeight - $size) / 2);
+
+            $square = imagecreatetruecolor($size, $size);
+            if ($square === false) {
+                return $siteIcon->store('company/icons', 'public');
+            }
+
+            imagealphablending($square, false);
+            imagesavealpha($square, true);
+            $transparent = imagecolorallocatealpha($square, 0, 0, 0, 127);
+            imagefilledrectangle($square, 0, 0, $size, $size, $transparent);
+            imagecopyresampled($square, $source, 0, 0, $srcX, $srcY, $size, $size, $size, $size);
+
+            $filename = 'company/icons/'.Str::uuid().'.png';
+            $radius = max(14, (int) round($size * 0.22));
+            $radius = min($radius, (int) floor($size / 2));
+
+            // Apply rounded corners with transparent edges.
+            for ($x = 0; $x < $size; $x++) {
+                for ($y = 0; $y < $size; $y++) {
+                    $inCornerX = $x < $radius || $x >= $size - $radius;
+                    $inCornerY = $y < $radius || $y >= $size - $radius;
+                    if (! $inCornerX || ! $inCornerY) {
+                        continue;
+                    }
+
+                    $cx = $x < $radius ? $radius - 1 : $size - $radius;
+                    $cy = $y < $radius ? $radius - 1 : $size - $radius;
+                    $dx = $x - $cx;
+                    $dy = $y - $cy;
+                    if (($dx * $dx) + ($dy * $dy) > (($radius - 1) * ($radius - 1))) {
+                        imagesetpixel($square, $x, $y, $transparent);
+                    }
+                }
+            }
+
+            ob_start();
+            $written = imagepng($square, null, 6);
+            $binary = ob_get_clean();
+
+            imagedestroy($square);
+
+            if (! $written || ! is_string($binary) || $binary === '') {
+                return $siteIcon->store('company/icons', 'public');
+            }
+
+            Storage::disk('public')->put($filename, $binary);
+
+            return $filename;
+        } finally {
+            imagedestroy($source);
+        }
     }
 }

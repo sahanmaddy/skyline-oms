@@ -41,11 +41,12 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
         epf_number: '',
         etf_number: '',
         emergency_contact_person: '',
-        emergency_contact_phone: null,
+        emergency_phone_numbers: [],
         user_id: '',
         is_sales_commission_eligible: false,
         profile_photo_path: '',
         profile_photo: null,
+        remove_profile_photo: false,
         phone_numbers: [],
     });
 
