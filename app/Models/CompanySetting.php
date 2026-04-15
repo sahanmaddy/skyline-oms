@@ -19,6 +19,7 @@ class CompanySetting extends Model
         'currency_code',
         'currency_symbol',
         'currency_format',
+        'system_country',
         'created_by',
         'updated_by',
     ];

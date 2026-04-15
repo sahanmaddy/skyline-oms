@@ -22,7 +22,7 @@ class CompanySettingsUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $phoneTypes = ['Office', 'Mobile', 'Hotline', 'WhatsApp', 'Other'];
+        $phoneTypes = ['Mobile', 'Land Phone', 'WhatsApp'];
         $tzList = DateTimeZone::listIdentifiers();
 
         return [
@@ -35,9 +35,10 @@ class CompanySettingsUpdateRequest extends FormRequest
             'currency_code' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'currency_symbol' => ['required', 'string', 'max:32'],
             'currency_format' => ['nullable', 'string', 'max:120'],
+            'system_country' => ['required', 'string', 'max:120'],
             'remove_site_icon' => ['sometimes', 'boolean'],
             'site_icon' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
-            'phone_numbers' => ['nullable', 'array'],
+            'phone_numbers' => ['required', 'array', 'min:1'],
             'phone_numbers.*.id' => ['nullable', 'integer', 'exists:company_phone_numbers,id'],
             'phone_numbers.*.phone_type' => [
                 'nullable',
@@ -94,5 +95,17 @@ class CompanySettingsUpdateRequest extends FormRequest
                 $validator->errors()->add('bank_accounts', 'Only one primary bank account may be selected.');
             }
         });
+    }
+
+    public function messages(): array
+    {
+        return [
+            'phone_numbers.required' => 'At least one phone number is required.',
+            'phone_numbers.min' => 'At least one phone number is required.',
+            'phone_numbers.*.phone_number.required_with' => 'Phone number is required.',
+            'phone_numbers.*.country_code.required_with' => 'Country code is required.',
+            'phone_numbers.*.phone_type.required_with' => 'Phone type is required.',
+            'system_country.required' => 'System country is required.',
+        ];
     }
 }

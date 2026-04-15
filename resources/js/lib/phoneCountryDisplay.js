@@ -9,9 +9,12 @@ export function resolveCountryCallingOption(options, countryCode, countryIso2) {
         return null;
     }
     const cc = countryCode || '';
+    if (cc === '') {
+        return null;
+    }
     const matches = options.filter((o) => o.callingCode === cc);
     if (matches.length === 0) {
-        return options.find((o) => o.callingCode === '+94') || options[0];
+        return null;
     }
     const iso = (countryIso2 && String(countryIso2).trim()) || '';
     if (iso.length === 2) {

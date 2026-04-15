@@ -122,9 +122,10 @@ export default function PhoneNumberWithCountryField({
     className = '',
 }) {
     const [query, setQuery] = useState('');
+    const emptyOption = { name: 'Select country code', iso2: '', callingCode: '' };
 
     const selected = useMemo(() => {
-        return resolveCountryCallingOption(options, countryCode, countryIso2) ?? options[0];
+        return resolveCountryCallingOption(options, countryCode, countryIso2) ?? emptyOption;
     }, [options, countryCode, countryIso2]);
 
     const filtered = useMemo(() => {
@@ -160,6 +161,9 @@ export default function PhoneNumberWithCountryField({
     return (
         <div className={'flex items-start gap-2 ' + (disabled ? 'opacity-60 ' : '') + className}>
             <div className="w-36 shrink-0">
+                <div className="mb-1 block text-sm font-medium text-gray-700 dark:text-cursor-fg">
+                    Country Code
+                </div>
                 <Listbox
                     value={selected}
                     onChange={handleSelect}
@@ -180,8 +184,15 @@ export default function PhoneNumberWithCountryField({
                                 <span className="text-lg leading-none" aria-hidden="true">
                                     {flagEmojiFromIso2(selected?.iso2)}
                                 </span>
-                                <span className="min-w-0 flex-1 truncate font-medium tabular-nums">
-                                    {selected?.callingCode ?? ''}
+                                <span
+                                    className={
+                                        'min-w-0 flex-1 truncate tabular-nums ' +
+                                        (selected?.callingCode
+                                            ? 'font-medium text-gray-900 dark:text-cursor-fg'
+                                            : 'font-normal text-gray-400 dark:text-cursor-muted')
+                                    }
+                                >
+                                    {selected?.callingCode || 'Search...'}
                                 </span>
                                 <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
                             </ListboxButton>
@@ -198,6 +209,9 @@ export default function PhoneNumberWithCountryField({
             </div>
 
             <div className="min-w-0 flex-1">
+                <div className="mb-1 block text-sm font-medium text-gray-700 dark:text-cursor-fg">
+                    Number
+                </div>
                 <input
                     id={phoneInputId}
                     name={phoneInputName}

@@ -3,9 +3,12 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
-import { Head, useForm } from '@inertiajs/react';
+import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, nextCustomerCode }) {
+    const company = usePage().props.company ?? {};
+    const defaultCountry = getCompanyDefaultCountry(company);
     const { data, setData, post, processing, errors } = useForm({
         customer_code: nextCustomerCode || '',
         display_name: '',
@@ -19,7 +22,7 @@ export default function Create({ statusOptions, nextCustomerCode }) {
         address_line_1: '',
         address_line_2: '',
         city: '',
-        country: 'Sri Lanka',
+        country: defaultCountry,
         credit_eligible: false,
         credit_limit: '',
         guarantor: '',

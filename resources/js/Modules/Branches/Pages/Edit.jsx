@@ -3,15 +3,18 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import BranchForm from '@/Modules/Branches/Components/BranchForm';
-import { Head, useForm } from '@inertiajs/react';
+import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ branch }) {
+    const company = usePage().props.company ?? {};
+    const defaultCountry = getCompanyDefaultCountry(company);
     const { data, setData, put, processing, errors } = useForm({
         name: branch.name || '',
         address_line_1: branch.address_line_1 || '',
         address_line_2: branch.address_line_2 || '',
         city: branch.city || '',
-        country: branch.country || 'Sri Lanka',
+        country: branch.country || defaultCountry,
         email: branch.email || '',
         phone_numbers: (branch.phone_numbers || []).map((p) => ({
             phone_type: p.phone_type,

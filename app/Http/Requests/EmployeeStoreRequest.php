@@ -60,7 +60,7 @@ class EmployeeStoreRequest extends FormRequest
             'epf_number' => ['nullable', 'string', 'max:100'],
             'etf_number' => ['nullable', 'string', 'max:100'],
             'emergency_contact_person' => ['nullable', 'string', 'max:150'],
-            'emergency_phone_numbers' => ['array'],
+            'emergency_phone_numbers' => ['required', 'array', 'min:1'],
             'emergency_phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:emergency_phone_numbers.*.country_code,emergency_phone_numbers.*.phone_number'],
             'emergency_phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:emergency_phone_numbers.*.phone_type,emergency_phone_numbers.*.phone_number'],
             'emergency_phone_numbers.*.country_iso2' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
@@ -80,7 +80,7 @@ class EmployeeStoreRequest extends FormRequest
                 }),
             ],
             'is_sales_commission_eligible' => ['boolean'],
-            'phone_numbers' => ['array'],
+            'phone_numbers' => ['required', 'array', 'min:1'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_iso2' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
@@ -106,5 +106,21 @@ class EmployeeStoreRequest extends FormRequest
                 );
             }
         });
+    }
+
+    public function messages(): array
+    {
+        return [
+            'phone_numbers.required' => 'At least one phone number is required.',
+            'phone_numbers.min' => 'At least one phone number is required.',
+            'phone_numbers.*.phone_number.required_with' => 'Phone number is required.',
+            'phone_numbers.*.country_code.required_with' => 'Country code is required.',
+            'phone_numbers.*.phone_type.required_with' => 'Phone type is required.',
+            'emergency_phone_numbers.required' => 'At least one emergency contact phone number is required.',
+            'emergency_phone_numbers.min' => 'At least one emergency contact phone number is required.',
+            'emergency_phone_numbers.*.phone_number.required_with' => 'Emergency contact phone number is required.',
+            'emergency_phone_numbers.*.country_code.required_with' => 'Emergency contact country code is required.',
+            'emergency_phone_numbers.*.phone_type.required_with' => 'Emergency contact phone type is required.',
+        ];
     }
 }

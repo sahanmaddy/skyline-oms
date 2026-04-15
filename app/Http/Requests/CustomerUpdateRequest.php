@@ -36,7 +36,7 @@ class CustomerUpdateRequest extends FormRequest
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
             'guarantor' => ['nullable', 'string', 'max:200'],
             'notes' => ['nullable', 'string'],
-            'phone_numbers' => ['array'],
+            'phone_numbers' => ['required', 'array', 'min:1'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_code' => ['nullable', 'string', 'max:10', 'required_with:phone_numbers.*.phone_type,phone_numbers.*.phone_number'],
             'phone_numbers.*.country_iso2' => ['nullable', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
@@ -87,5 +87,16 @@ class CustomerUpdateRequest extends FormRequest
                 );
             }
         });
+    }
+
+    public function messages(): array
+    {
+        return [
+            'phone_numbers.required' => 'At least one phone number is required.',
+            'phone_numbers.min' => 'At least one phone number is required.',
+            'phone_numbers.*.phone_number.required_with' => 'Phone number is required.',
+            'phone_numbers.*.country_code.required_with' => 'Country code is required.',
+            'phone_numbers.*.phone_type.required_with' => 'Phone type is required.',
+        ];
     }
 }

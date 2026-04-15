@@ -52,7 +52,7 @@ return new class extends Migration
             DB::table('company_settings')->insert([
                 'id' => 1,
                 'company_name' => 'Skyline OMS',
-                'registered_address' => 'Update your registered business address in Company Settings.',
+                'registered_address' => '',
                 'company_email' => null,
                 'tin_number' => null,
                 'vat_number' => null,

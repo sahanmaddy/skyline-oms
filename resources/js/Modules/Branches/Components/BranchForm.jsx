@@ -9,6 +9,9 @@ import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
+import { getCompanyDefaultPhoneCountry } from '@/lib/companyLocationDefaults';
+import { usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 const phoneTypeSelectOptions = [
     { value: 'Mobile', label: 'Mobile' },
@@ -27,6 +30,9 @@ export default function BranchForm({
     submitLabel,
     onSubmit,
 }) {
+    const company = usePage().props.company ?? {};
+    const defaultPhoneCountry = getCompanyDefaultPhoneCountry(company);
+    const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
     const codeDisplay =
         mode === 'create' && nextCode
             ? nextCode
@@ -36,24 +42,47 @@ export default function BranchForm({
 
     const phoneRows = data.phone_numbers || [];
 
+    useEffect(() => {
+        if (phoneRows.length > 0) {
+            return;
+        }
+
+        setData('phone_numbers', [
+            {
+                phone_type: 'Mobile',
+                country_code: defaultPhoneCountry.countryCode,
+                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_number: '',
+                is_primary: true,
+            },
+        ]);
+    }, [defaultPhoneCountry.countryCode, defaultPhoneCountry.countryIso2, phoneRows.length, setData]);
+
     const addPhone = () => {
         setData('phone_numbers', [
             ...phoneRows,
             {
                 phone_type: 'Mobile',
-                country_code: '+94',
-                country_iso2: 'LK',
+                country_code: defaultPhoneCountry.countryCode,
+                country_iso2: defaultPhoneCountry.countryIso2,
                 phone_number: '',
                 is_primary: phoneRows.length === 0,
             },
         ]);
+        setPhoneRemoveWarning('');
     };
 
     const removePhone = (idx) => {
+        if (phoneRows.length <= 1) {
+            setPhoneRemoveWarning('At least one phone number is required.');
+            return;
+        }
+
         setData(
             'phone_numbers',
             phoneRows.filter((_, i) => i !== idx),
         );
+        setPhoneRemoveWarning('');
     };
 
     const updatePhone = (idx, patch) => {
@@ -159,49 +188,64 @@ export default function BranchForm({
                             >
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div className="md:col-span-3">
-                                        <InputLabel value="Type" />
+                                        <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
-                                            className="mt-1"
+                                            className=""
                                             value={row.phone_type || 'Mobile'}
                                             onChange={(v) => updatePhone(idx, { phone_type: v })}
                                             options={phoneTypeSelectOptions}
                                         />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.phone_type`]}
+                                        />
                                     </div>
 
                                     <div className="md:col-span-9">
-                                        <InputLabel value="Number" />
-                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
-                                            <div className="min-w-0 flex-1">
-                                                <PhoneNumberWithCountryField
-                                                    countryCode={row.country_code || '+94'}
-                                                    countryIso2={row.country_iso2}
-                                                    phoneNumber={row.phone_number || ''}
-                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
-                                                        updatePhone(idx, {
-                                                            country_code: countryCode,
-                                                            country_iso2: iso2 || null,
-                                                        })
-                                                    }
-                                                    onPhoneNumberChange={(num) =>
-                                                        updatePhone(idx, { phone_number: num })
-                                                    }
-                                                    options={countryCallingCodes}
-                                                    phoneInputId={`branch_phone_numbers_${idx}_number`}
-                                                />
-                                            </div>
-                                            <SecondaryButton
-                                                type="button"
-                                                className="shrink-0 self-end sm:self-auto"
-                                                onClick={() => removePhone(idx)}
-                                            >
-                                                Remove
-                                            </SecondaryButton>
-                                        </div>
+                                        <PhoneNumberWithCountryField
+                                            countryCode={
+                                                row.country_code || defaultPhoneCountry.countryCode
+                                            }
+                                            countryIso2={row.country_iso2}
+                                            phoneNumber={row.phone_number || ''}
+                                            onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                updatePhone(idx, {
+                                                    country_code: countryCode,
+                                                    country_iso2: iso2 || null,
+                                                })
+                                            }
+                                            onPhoneNumberChange={(num) =>
+                                                updatePhone(idx, { phone_number: num })
+                                            }
+                                            options={countryCallingCodes}
+                                            phoneInputId={`branch_phone_numbers_${idx}_number`}
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.country_code`]}
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.phone_number`]}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-12 flex justify-end">
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() => removePhone(idx)}
+                                        >
+                                            Remove
+                                        </SecondaryButton>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
+                    {phoneRemoveWarning ? (
+                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                            {phoneRemoveWarning}
+                        </div>
+                    ) : null}
 
                     <InputError className="mt-2" message={errors.phone_numbers} />
                 </div>

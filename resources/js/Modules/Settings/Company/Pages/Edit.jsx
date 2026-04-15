@@ -1,4 +1,5 @@
 import Checkbox from '@/Components/Checkbox';
+import CountryCombobox from '@/Components/CountryCombobox';
 import CurrencyCodeCombobox from '@/Components/CurrencyCodeCombobox';
 import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
@@ -9,11 +10,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TimeZoneCombobox from '@/Components/TimeZoneCombobox';
 import TextInput from '@/Components/TextInput';
+import { countries } from '@/data/countries';
 import { currencyCodes } from '@/data/currencyCodes';
 import useConfirm from '@/feedback/useConfirm';
 import { formatCompanyCurrency } from '@/lib/companyFormat';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
-import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import { Head, useForm } from '@inertiajs/react';
@@ -21,9 +22,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 function emptyPhoneRow(order) {
     return {
-        phone_type: 'Office',
-        country_code: '+94',
-        country_iso2: 'LK',
+        phone_type: 'Mobile',
+        country_code: '',
+        country_iso2: '',
         phone_number: '',
         display_order: order,
         is_primary: false,
@@ -49,6 +50,27 @@ function currencyPreview(pattern, symbol, code) {
         .replaceAll('{amount}', amt)
         .replace(/\s+/g, ' ')
         .trim();
+}
+
+function parseRegisteredAddress(value) {
+    const lines = String(value || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+    return {
+        address_line_1: lines[0] || '',
+        address_line_2: lines[1] || '',
+        city: lines[2] || '',
+        country: lines[3] || '',
+    };
+}
+
+function buildRegisteredAddress(addressLine1, addressLine2, city, country) {
+    return [addressLine1, addressLine2, city, country]
+        .map((line) => String(line || '').trim())
+        .filter(Boolean)
+        .join('\n');
 }
 
 async function cropImageToSquareFile(file) {
@@ -124,13 +146,15 @@ export default function Edit({
     const { confirm } = useConfirm();
     const [iconPreviewUrl, setIconPreviewUrl] = useState(null);
     const [iconLoadFailed, setIconLoadFailed] = useState(false);
+    const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
+    const initialAddress = parseRegisteredAddress(companySetting?.registered_address ?? '');
 
     const initialPhones =
         companySetting?.phone_numbers?.length > 0
             ? companySetting.phone_numbers.map((r, i) => ({
-                  phone_type: r.phone_type || 'Office',
-                  country_code: r.country_code || '+94',
-                  country_iso2: r.country_iso2 || 'LK',
+                  phone_type: r.phone_type || 'Mobile',
+                  country_code: r.country_code || '',
+                  country_iso2: r.country_iso2 || '',
                   phone_number: r.phone_number || '',
                   display_order: r.display_order ?? i,
                   is_primary: !!r.is_primary,
@@ -155,9 +179,14 @@ export default function Edit({
     const form = useForm({
         company_name: companySetting?.name ?? '',
         registered_address: companySetting?.registered_address ?? '',
+        address_line_1: initialAddress.address_line_1,
+        address_line_2: initialAddress.address_line_2,
+        city: initialAddress.city,
+        country: initialAddress.country,
         company_email: companySetting?.email ?? '',
         tin_number: companySetting?.tin_number ?? '',
         vat_number: companySetting?.vat_number ?? '',
+        system_country: companySetting?.system_country ?? 'Sri Lanka',
         time_zone: companySetting?.time_zone ?? 'UTC',
         currency_code: companySetting?.currency_code ?? '',
         currency_symbol: companySetting?.currency_symbol ?? '',
@@ -171,6 +200,12 @@ export default function Edit({
     if (!transformRegistered.current) {
         form.transform((payload) => ({
             ...payload,
+            registered_address: buildRegisteredAddress(
+                payload.address_line_1,
+                payload.address_line_2,
+                payload.city,
+                payload.country,
+            ),
             phone_numbers: (payload.phone_numbers || []).filter(
                 (r) => r && String(r.phone_number || '').trim() !== '',
             ),
@@ -233,18 +268,21 @@ export default function Edit({
         );
     };
 
-    const setPrimaryPhone = (idx) => {
-        setData(
-            'phone_numbers',
-            data.phone_numbers.map((row, i) => ({ ...row, is_primary: i === idx })),
-        );
-    };
-
     const addPhone = () => {
-        setData('phone_numbers', [...data.phone_numbers, emptyPhoneRow(data.phone_numbers.length)]);
+        setPhoneRemoveWarning('');
+        setData('phone_numbers', [
+            ...data.phone_numbers,
+            emptyPhoneRow(data.phone_numbers.length),
+        ]);
     };
 
     const removePhone = (idx) => {
+        if ((data.phone_numbers || []).length <= 1) {
+            setPhoneRemoveWarning('At least one phone number is required.');
+            return;
+        }
+
+        setPhoneRemoveWarning('');
         const next = data.phone_numbers.filter((_, i) => i !== idx);
         setData('phone_numbers', next.length ? next : [emptyPhoneRow(0)]);
     };
@@ -313,13 +351,13 @@ export default function Edit({
 
             <SettingsModuleLayout breadcrumbs={[{ label: 'Company Settings' }]}>
                 <form className="space-y-6" onSubmit={submit}>
-                    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Company Identity</h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Company Identity</h3>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Legal name, icon, and how the business appears in the system.
                         </p>
 
-                        <div className="mt-6 space-y-5">
+                        <div className="mt-4 space-y-4">
                             <div>
                                 <InputLabel htmlFor="company_name" value="Company Name" />
                                 <TextInput
@@ -413,33 +451,68 @@ export default function Edit({
                         </div>
                     </section>
 
-                    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Registered Details</h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Registered Details</h3>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Registered business address used on invoices and letterheads.
                         </p>
-                        <div className="mt-6">
-                            <InputLabel htmlFor="registered_address" value="Registered Address" />
-                            <textarea
-                                id="registered_address"
-                                className={`${formTextareaClass} mt-1`}
-                                rows={4}
-                                value={data.registered_address}
-                                onChange={(e) => setData('registered_address', e.target.value)}
-                                disabled={!canEdit}
-                                required
-                            />
-                            <InputError className="mt-2" message={errors.registered_address} />
+                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="sm:col-span-2">
+                                <InputLabel htmlFor="address_line_1" value="Address Line 1" />
+                                <TextInput
+                                    id="address_line_1"
+                                    className="mt-1 block w-full"
+                                    value={data.address_line_1 || ''}
+                                    onChange={(e) => setData('address_line_1', e.target.value)}
+                                    disabled={!canEdit}
+                                    required
+                                />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <InputLabel htmlFor="address_line_2" value="Address Line 2" />
+                                <TextInput
+                                    id="address_line_2"
+                                    className="mt-1 block w-full"
+                                    value={data.address_line_2 || ''}
+                                    onChange={(e) => setData('address_line_2', e.target.value)}
+                                    disabled={!canEdit}
+                                />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="city" value="City/District" />
+                                <TextInput
+                                    id="city"
+                                    className="mt-1 block w-full"
+                                    value={data.city || ''}
+                                    onChange={(e) => setData('city', e.target.value)}
+                                    disabled={!canEdit}
+                                />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="country" value="Country" />
+                                <div className="mt-1">
+                                    <CountryCombobox
+                                        value={data.country || ''}
+                                        onChange={(name) => setData('country', name)}
+                                        options={countries}
+                                        placeholder="Search countries..."
+                                        disabled={!canEdit}
+                                    />
+                                </div>
+                            </div>
+                            <div className="sm:col-span-2">
+                                <InputError className="mt-2" message={errors.registered_address} />
+                            </div>
                         </div>
                     </section>
 
-                    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Contact Details</h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Contact Details</h3>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Email and phone numbers shown where the business is referenced.
                         </p>
 
-                        <div className="mt-6">
+                        <div className="mt-5">
                             <InputLabel htmlFor="company_email" value="Company Email" />
                             <TextInput
                                 id="company_email"
@@ -452,7 +525,7 @@ export default function Edit({
                             <InputError className="mt-2" message={errors.company_email} />
                         </div>
 
-                        <div className="mt-8 border-t border-gray-200 pt-6 dark:border-cursor-border">
+                        <div className="mt-6 border-t border-gray-200 pt-4 dark:border-cursor-border">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <InputLabel value="Phone Numbers" />
                                 {canEdit ? (
@@ -461,11 +534,7 @@ export default function Edit({
                                     </PrimaryButton>
                                 ) : null}
                             </div>
-                            <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                                Mark one number as primary for summaries and documents.
-                            </p>
-
-                            <div className="mt-4 space-y-3">
+                            <div className="mt-3 space-y-3">
                                 {data.phone_numbers.map((row, idx) => (
                                     <div
                                         key={`ph-${idx}`}
@@ -473,74 +542,75 @@ export default function Edit({
                                     >
                                         <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                             <div className="md:col-span-3">
-                                                <InputLabel value="Type" />
+                                                <InputLabel value="Type" className="mb-1" />
                                                 <FormSelect
-                                                    className="mt-1"
-                                                    value={row.phone_type || 'Office'}
+                                                    className=""
+                                                    value={row.phone_type || 'Mobile'}
                                                     onChange={(v) => updatePhone(idx, { phone_type: v })}
                                                     options={phoneTypeSelectOptions}
                                                     disabled={!canEdit}
                                                 />
+                                                <InputError
+                                                    className="mt-2"
+                                                    message={errors[`phone_numbers.${idx}.phone_type`]}
+                                                />
                                             </div>
                                             <div className="md:col-span-9">
-                                                <InputLabel value="Number" />
-                                                <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
-                                                    <div className="min-w-0 flex-1">
-                                                        <PhoneNumberWithCountryField
-                                                            countryCode={row.country_code || '+94'}
-                                                            countryIso2={row.country_iso2}
-                                                            phoneNumber={row.phone_number || ''}
-                                                            onPhoneCountryChange={({ countryCode, iso2 }) =>
-                                                                updatePhone(idx, {
-                                                                    country_code: countryCode,
-                                                                    country_iso2: iso2 || null,
-                                                                })
-                                                            }
-                                                            onPhoneNumberChange={(num) =>
-                                                                updatePhone(idx, { phone_number: num })
-                                                            }
-                                                            options={countryCallingCodes}
-                                                            disabled={!canEdit}
-                                                            phoneInputId={`company_phone_numbers_${idx}_number`}
-                                                        />
-                                                    </div>
-                                                    {canEdit ? (
-                                                        <SecondaryButton
-                                                            type="button"
-                                                            className="shrink-0 self-end sm:self-auto"
-                                                            onClick={() => removePhone(idx)}
-                                                        >
-                                                            Remove
-                                                        </SecondaryButton>
-                                                    ) : null}
-                                                </div>
+                                                <PhoneNumberWithCountryField
+                                                    countryCode={row.country_code || ''}
+                                                    countryIso2={row.country_iso2}
+                                                    phoneNumber={row.phone_number || ''}
+                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                        updatePhone(idx, {
+                                                            country_code: countryCode,
+                                                            country_iso2: iso2 || null,
+                                                        })
+                                                    }
+                                                    onPhoneNumberChange={(num) =>
+                                                        updatePhone(idx, { phone_number: num })
+                                                    }
+                                                    options={countryCallingCodes}
+                                                    disabled={!canEdit}
+                                                    phoneInputId={`company_phone_numbers_${idx}_number`}
+                                                />
+                                                <InputError
+                                                    className="mt-2"
+                                                    message={errors[`phone_numbers.${idx}.country_code`]}
+                                                />
                                                 <InputError
                                                     className="mt-2"
                                                     message={errors[`phone_numbers.${idx}.phone_number`]}
                                                 />
-                                                <label className="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-cursor-fg">
-                                                    <Checkbox
-                                                        checked={!!row.is_primary}
-                                                        disabled={!canEdit}
-                                                        onChange={() => setPrimaryPhone(idx)}
-                                                    />
-                                                    Primary
-                                                </label>
                                             </div>
+                                            {canEdit ? (
+                                                <div className="md:col-span-12 flex justify-end">
+                                                    <SecondaryButton
+                                                        type="button"
+                                                        onClick={() => removePhone(idx)}
+                                                    >
+                                                        Remove
+                                                    </SecondaryButton>
+                                                </div>
+                                            ) : null}
                                         </div>
                                     </div>
                                 ))}
                             </div>
+                            {phoneRemoveWarning ? (
+                                <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                                    {phoneRemoveWarning}
+                                </div>
+                            ) : null}
                             <InputError className="mt-2" message={errors.phone_numbers} />
                         </div>
                     </section>
 
-                    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Tax Details</h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Tax Details</h3>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Tax identifiers used for statutory records and invoice documents.
                         </p>
-                        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <InputLabel htmlFor="tin_number" value="TIN" />
                                 <TextInput
@@ -566,11 +636,11 @@ export default function Edit({
                         </div>
                     </section>
 
-                    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Bank Accounts</h2>
-                                <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Bank Accounts</h3>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                                     Accounts shown on payment instructions and invoices.
                                 </p>
                             </div>
@@ -581,7 +651,7 @@ export default function Edit({
                             ) : null}
                         </div>
 
-                        <div className="mt-6 space-y-3">
+                        <div className="mt-4 space-y-3">
                             {data.bank_accounts.map((row, idx) => (
                                 <div
                                     key={`bk-${idx}`}
@@ -654,13 +724,26 @@ export default function Edit({
                         <InputError className="mt-2" message={errors.bank_accounts} />
                     </section>
 
-                    <section className="overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface sm:p-8">
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-cursor-bright">Localization</h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-cursor-muted">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Localization</h3>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Drives how dates and money appear in the interface.
                         </p>
 
-                        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            <div>
+                                <InputLabel htmlFor="system_country" value="System Country" />
+                                <div className="mt-1">
+                                    <CountryCombobox
+                                        value={data.system_country || ''}
+                                        onChange={(name) => setData('system_country', name)}
+                                        options={countries}
+                                        placeholder="Search countries..."
+                                        disabled={!canEdit}
+                                    />
+                                </div>
+                                <InputError className="mt-2" message={errors.system_country} />
+                            </div>
                             <div>
                                 <InputLabel htmlFor="time_zone" value="Time Zone" />
                                 <TimeZoneCombobox

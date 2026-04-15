@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
+import { getCompanyDefaultPhoneCountry } from '@/lib/companyLocationDefaults';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
@@ -82,13 +83,12 @@ export default function EmployeeForm({
 }) {
     const company = usePage().props.company ?? {};
     const currencyLabel = (company.currency_symbol || company.currency_code || '').trim() || '—';
+    const defaultPhoneCountry = getCompanyDefaultPhoneCountry(company);
 
     const [displayNameTouched, setDisplayNameTouched] = useState(false);
     const [photoPreviewSrc, setPhotoPreviewSrc] = useState(profilePhotoUrl || null);
-    const [emergencyPhoneTouched, setEmergencyPhoneTouched] = useState(false);
-    const [emergencyPhoneCountryCode, setEmergencyPhoneCountryCode] = useState('+94');
-    const [emergencyPhoneCountryIso2, setEmergencyPhoneCountryIso2] = useState('LK');
-    const [emergencyPhoneNumber, setEmergencyPhoneNumber] = useState('');
+    const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
+    const [emergencyPhoneRemoveWarning, setEmergencyPhoneRemoveWarning] = useState('');
     const profilePhotoInputRef = useRef(null);
 
     useEffect(() => {
@@ -113,6 +113,43 @@ export default function EmployeeForm({
         () => data.emergency_phone_numbers || [],
         [data.emergency_phone_numbers],
     );
+
+    useEffect(() => {
+        if (phoneRows.length > 0) {
+            return;
+        }
+
+        setData('phone_numbers', [
+            {
+                phone_type: 'Mobile',
+                country_code: defaultPhoneCountry.countryCode,
+                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_number: '',
+                is_primary: true,
+            },
+        ]);
+    }, [defaultPhoneCountry.countryCode, defaultPhoneCountry.countryIso2, phoneRows.length, setData]);
+
+    useEffect(() => {
+        if (emergencyPhoneRows.length > 0) {
+            return;
+        }
+
+        setData('emergency_phone_numbers', [
+            {
+                phone_type: 'Mobile',
+                country_code: defaultPhoneCountry.countryCode,
+                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_number: '',
+                is_primary: true,
+            },
+        ]);
+    }, [
+        defaultPhoneCountry.countryCode,
+        defaultPhoneCountry.countryIso2,
+        emergencyPhoneRows.length,
+        setData,
+    ]);
 
     const usersList = useMemo(() => {
         const raw = users;
@@ -169,17 +206,24 @@ export default function EmployeeForm({
             ...phoneRows,
             {
                 phone_type: 'Mobile',
-                country_code: '+94',
-                country_iso2: 'LK',
+                country_code: defaultPhoneCountry.countryCode,
+                country_iso2: defaultPhoneCountry.countryIso2,
                 phone_number: '',
                 is_primary: phoneRows.length === 0,
             },
         ]);
+        setPhoneRemoveWarning('');
     };
 
     const removePhone = (idx) => {
+        if (phoneRows.length <= 1) {
+            setPhoneRemoveWarning('At least one phone number is required.');
+            return;
+        }
+
         const next = phoneRows.filter((_, i) => i !== idx);
         setData('phone_numbers', next);
+        setPhoneRemoveWarning('');
     };
 
     const updatePhone = (idx, patch) => {
@@ -192,17 +236,24 @@ export default function EmployeeForm({
             ...emergencyPhoneRows,
             {
                 phone_type: 'Mobile',
-                country_code: '+94',
-                country_iso2: 'LK',
+                country_code: defaultPhoneCountry.countryCode,
+                country_iso2: defaultPhoneCountry.countryIso2,
                 phone_number: '',
                 is_primary: emergencyPhoneRows.length === 0,
             },
         ]);
+        setEmergencyPhoneRemoveWarning('');
     };
 
     const removeEmergencyPhone = (idx) => {
+        if (emergencyPhoneRows.length <= 1) {
+            setEmergencyPhoneRemoveWarning('At least one phone number is required.');
+            return;
+        }
+
         const next = emergencyPhoneRows.filter((_, i) => i !== idx);
         setData('emergency_phone_numbers', next);
+        setEmergencyPhoneRemoveWarning('');
     };
 
     const updateEmergencyPhone = (idx, patch) => {
@@ -695,48 +746,63 @@ export default function EmployeeForm({
                             >
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div className="md:col-span-3">
-                                        <InputLabel value="Type" />
+                                        <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
-                                            className="mt-1"
+                                            className=""
                                             value={row.phone_type || 'Mobile'}
                                             onChange={(v) => updatePhone(idx, { phone_type: v })}
                                             options={phoneTypeSelectOptions}
                                         />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.phone_type`]}
+                                        />
                                     </div>
                                     <div className="md:col-span-9">
-                                        <InputLabel value="Number" />
-                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
-                                            <div className="min-w-0 flex-1">
-                                                <PhoneNumberWithCountryField
-                                                    countryCode={row.country_code || '+94'}
-                                                    countryIso2={row.country_iso2}
-                                                    phoneNumber={row.phone_number || ''}
-                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
-                                                        updatePhone(idx, {
-                                                            country_code: countryCode,
-                                                            country_iso2: iso2 || null,
-                                                        })
-                                                    }
-                                                    onPhoneNumberChange={(num) =>
-                                                        updatePhone(idx, { phone_number: num })
-                                                    }
-                                                    options={countryCallingCodes}
-                                                    phoneInputId={`employee_phone_numbers_${idx}_number`}
-                                                />
-                                            </div>
-                                            <SecondaryButton
-                                                type="button"
-                                                className="shrink-0 self-end sm:self-auto"
-                                                onClick={() => removePhone(idx)}
-                                            >
-                                                Remove
-                                            </SecondaryButton>
-                                        </div>
+                                        <PhoneNumberWithCountryField
+                                            countryCode={
+                                                row.country_code || defaultPhoneCountry.countryCode
+                                            }
+                                            countryIso2={row.country_iso2}
+                                            phoneNumber={row.phone_number || ''}
+                                            onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                updatePhone(idx, {
+                                                    country_code: countryCode,
+                                                    country_iso2: iso2 || null,
+                                                })
+                                            }
+                                            onPhoneNumberChange={(num) =>
+                                                updatePhone(idx, { phone_number: num })
+                                            }
+                                            options={countryCallingCodes}
+                                            phoneInputId={`employee_phone_numbers_${idx}_number`}
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.country_code`]}
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.phone_number`]}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-12 flex justify-end">
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() => removePhone(idx)}
+                                        >
+                                            Remove
+                                        </SecondaryButton>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
+                    {phoneRemoveWarning ? (
+                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                            {phoneRemoveWarning}
+                        </div>
+                    ) : null}
                 </div>
                 <InputError className="mt-2" message={errors['phone_numbers']} />
             </section>
@@ -781,54 +847,65 @@ export default function EmployeeForm({
                             >
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                                     <div className="md:col-span-3">
-                                        <InputLabel value="Type" />
+                                        <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
-                                            className="mt-1"
+                                            className=""
                                             value={row.phone_type || 'Mobile'}
                                             onChange={(v) =>
                                                 updateEmergencyPhone(idx, { phone_type: v })
                                             }
                                             options={phoneTypeSelectOptions}
                                         />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`emergency_phone_numbers.${idx}.phone_type`]}
+                                        />
                                     </div>
                                     <div className="md:col-span-9">
-                                        <InputLabel value="Number" />
-                                        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
-                                            <div className="min-w-0 flex-1">
-                                                <PhoneNumberWithCountryField
-                                                    countryCode={row.country_code || '+94'}
-                                                    countryIso2={row.country_iso2}
-                                                    phoneNumber={row.phone_number || ''}
-                                                    onPhoneCountryChange={({ countryCode, iso2 }) =>
-                                                        updateEmergencyPhone(idx, {
-                                                            country_code: countryCode,
-                                                            country_iso2: iso2 || null,
-                                                        })
-                                                    }
-                                                    onPhoneNumberChange={(num) =>
-                                                        updateEmergencyPhone(idx, { phone_number: num })
-                                                    }
-                                                    options={countryCallingCodes}
-                                                    phoneInputId={`employee_emergency_phone_numbers_${idx}_number`}
-                                                />
-                                            </div>
-                                            <SecondaryButton
-                                                type="button"
-                                                className="shrink-0 self-end sm:self-auto"
-                                                onClick={() => removeEmergencyPhone(idx)}
-                                            >
-                                                Remove
-                                            </SecondaryButton>
-                                        </div>
+                                        <PhoneNumberWithCountryField
+                                            countryCode={
+                                                row.country_code || defaultPhoneCountry.countryCode
+                                            }
+                                            countryIso2={row.country_iso2}
+                                            phoneNumber={row.phone_number || ''}
+                                            onPhoneCountryChange={({ countryCode, iso2 }) =>
+                                                updateEmergencyPhone(idx, {
+                                                    country_code: countryCode,
+                                                    country_iso2: iso2 || null,
+                                                })
+                                            }
+                                            onPhoneNumberChange={(num) =>
+                                                updateEmergencyPhone(idx, { phone_number: num })
+                                            }
+                                            options={countryCallingCodes}
+                                            phoneInputId={`employee_emergency_phone_numbers_${idx}_number`}
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`emergency_phone_numbers.${idx}.country_code`]}
+                                        />
                                         <InputError
                                             className="mt-2"
                                             message={errors[`emergency_phone_numbers.${idx}.phone_number`]}
                                         />
                                     </div>
+                                    <div className="md:col-span-12 flex justify-end">
+                                        <SecondaryButton
+                                            type="button"
+                                            onClick={() => removeEmergencyPhone(idx)}
+                                        >
+                                            Remove
+                                        </SecondaryButton>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
+                    {emergencyPhoneRemoveWarning ? (
+                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                            {emergencyPhoneRemoveWarning}
+                        </div>
+                    ) : null}
                 </div>
                 <InputError className="mt-2" message={errors.emergency_phone_numbers} />
             </section>
