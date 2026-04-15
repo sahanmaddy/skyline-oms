@@ -67,7 +67,7 @@ class CompanySettingsPresenter
 
         $primaryDisplay = null;
         if ($primaryPhone) {
-            $cc = $primaryPhone->country_code ?? '+94';
+            $cc = (string) ($primaryPhone->country_code ?? '');
             $national = trim((string) $primaryPhone->phone_number);
             $primaryDisplay = trim(
                 $primaryPhone->phone_type.': '.trim($cc.' '.$national),
@@ -87,12 +87,13 @@ class CompanySettingsPresenter
             'currency_code' => $row->currency_code,
             'currency_symbol' => $row->currency_symbol,
             'currency_format' => $row->currency_format,
+            'system_country' => $row->system_country ?: 'Sri Lanka',
             'primary_phone' => $primaryDisplay,
             'phone_numbers' => $row->phoneNumbers->map(fn ($p) => [
                 'id' => $p->id,
                 'phone_type' => $p->phone_type,
-                'country_code' => $p->country_code ?? '+94',
-                'country_iso2' => $p->country_iso2 ? strtoupper($p->country_iso2) : 'LK',
+                'country_code' => (string) ($p->country_code ?? ''),
+                'country_iso2' => $p->country_iso2 ? strtoupper($p->country_iso2) : '',
                 'phone_number' => $p->phone_number,
                 'display_order' => (int) $p->display_order,
                 'is_primary' => (bool) $p->is_primary,
@@ -127,6 +128,7 @@ class CompanySettingsPresenter
             'currency_code' => 'USD',
             'currency_symbol' => '$',
             'currency_format' => '{symbol} {amount}',
+            'system_country' => 'Sri Lanka',
             'primary_phone' => null,
             'phone_numbers' => [],
             'bank_accounts' => [],

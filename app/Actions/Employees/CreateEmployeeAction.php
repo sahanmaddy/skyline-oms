@@ -51,13 +51,13 @@ class CreateEmployeeAction
             ->filter(fn ($row) => is_array($row))
             ->map(function (array $row, int $index) {
                 $normalizedPhoneNumber = $this->phoneNumberNormalizer->normalize(
-                    $row['country_code'] ?? '+94',
+                    $row['country_code'] ?? '',
                     $row['phone_number'] ?? '',
                 );
 
                 return [
                     'phone_type' => $row['phone_type'] ?? 'Mobile',
-                    'country_code' => $row['country_code'] ?? '+94',
+                    'country_code' => $row['country_code'] ?? '',
                     'country_iso2' => $this->normalizeCountryIso2($row['country_iso2'] ?? null),
                     'phone_number' => $normalizedPhoneNumber ?? '',
                     'is_primary' => (bool) ($row['is_primary'] ?? $index === 0),
@@ -79,13 +79,13 @@ class CreateEmployeeAction
             ->filter(fn ($row) => is_array($row))
             ->map(function (array $row, int $index) {
                 $normalizedPhoneNumber = $this->phoneNumberNormalizer->normalize(
-                    $row['country_code'] ?? '+94',
+                    $row['country_code'] ?? '',
                     $row['phone_number'] ?? '',
                 );
 
                 return [
                     'phone_type' => $row['phone_type'] ?? 'Mobile',
-                    'country_code' => $row['country_code'] ?? '+94',
+                    'country_code' => $row['country_code'] ?? '',
                     'country_iso2' => $this->normalizeCountryIso2($row['country_iso2'] ?? null),
                     'phone_number' => $normalizedPhoneNumber ?? '',
                     'is_primary' => (bool) ($row['is_primary'] ?? $index === 0),

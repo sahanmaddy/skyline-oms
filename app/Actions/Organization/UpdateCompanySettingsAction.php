@@ -43,6 +43,7 @@ class UpdateCompanySettingsAction
                 'currency_code' => $validated['currency_code'],
                 'currency_symbol' => $validated['currency_symbol'],
                 'currency_format' => $validated['currency_format'] ?? null,
+                'system_country' => $validated['system_country'],
                 'updated_by' => $actor->id,
             ]);
 
@@ -77,14 +78,14 @@ class UpdateCompanySettingsAction
             ->filter(fn ($r) => is_array($r))
             ->values()
             ->map(function (array $r, int $index) {
-                $countryCode = (string) ($r['country_code'] ?? '+94');
+                $countryCode = (string) ($r['country_code'] ?? '');
                 $normalized = $this->phoneNumberNormalizer->normalize(
                     $countryCode,
                     (string) ($r['phone_number'] ?? ''),
                 );
 
                 return [
-                    'phone_type' => (string) ($r['phone_type'] ?? 'Office'),
+                    'phone_type' => (string) ($r['phone_type'] ?? 'Mobile'),
                     'country_code' => $countryCode,
                     'country_iso2' => $this->normalizeCountryIso2($r['country_iso2'] ?? null),
                     'phone_number' => $normalized ?? '',

@@ -3,9 +3,12 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
-import { Head, useForm } from '@inertiajs/react';
+import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, users, nextEmployeeCode, activeBranches, suggestedBranchId }) {
+    const company = usePage().props.company ?? {};
+    const defaultCountry = getCompanyDefaultCountry(company);
     const defaultBranchId =
         suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
             ? suggestedBranchId
@@ -33,7 +36,7 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
         address_line_1: '',
         address_line_2: '',
         city: '',
-        country: 'Sri Lanka',
+        country: defaultCountry,
         bank_name: '',
         bank_branch: '',
         bank_account_number: '',

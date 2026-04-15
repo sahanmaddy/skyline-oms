@@ -3,11 +3,14 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
+import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ employee, statusOptions, users, activeBranches }) {
-    const companyTz = usePage().props.company?.time_zone || 'UTC';
+    const company = usePage().props.company ?? {};
+    const companyTz = company.time_zone || 'UTC';
+    const defaultCountry = getCompanyDefaultCountry(company);
     const { data, setData, put, processing, errors } = useForm({
         branch_id: employee.branch_id ?? employee.branch?.id ?? '',
         employee_code: employee.employee_code || '',
@@ -34,7 +37,7 @@ export default function Edit({ employee, statusOptions, users, activeBranches })
         address_line_1: employee.address_line_1 || '',
         address_line_2: employee.address_line_2 || '',
         city: employee.city || '',
-        country: employee.country || '',
+        country: employee.country || defaultCountry,
         bank_name: employee.bank_name || '',
         bank_branch: employee.bank_branch || '',
         bank_account_number: employee.bank_account_number || '',

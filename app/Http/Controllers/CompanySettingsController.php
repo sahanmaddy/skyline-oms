@@ -37,7 +37,7 @@ class CompanySettingsController extends Controller
             'companySetting' => $this->presenter->forEditPage($setting),
             'canEdit' => $request->user()?->can('update', $setting) ?? false,
             'timeZoneOptions' => $timeZones,
-            'phoneTypeOptions' => ['Office', 'Mobile', 'Hotline', 'WhatsApp', 'Other'],
+            'phoneTypeOptions' => ['Mobile', 'Land Phone', 'WhatsApp'],
             'currencyFormatExamples' => [
                 '{symbol} {amount}',
                 '{code} {amount}',
