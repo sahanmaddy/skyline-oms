@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, users, nextEmployeeCode, activeBranches, suggestedBranchId }) {
@@ -84,6 +85,7 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
                         post(route('hr.employees.store'), {
                             forceFormData: true,
                             preserveScroll: true,
+                            onError: () => scrollToFirstError(),
                         })
                     }
                 />

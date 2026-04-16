@@ -303,10 +303,6 @@ export default function CustomerForm({
                                             onChange={(v) => updatePhone(idx, { phone_type: v })}
                                             options={phoneTypeSelectOptions}
                                         />
-                                        <InputError
-                                            className="mt-2"
-                                            message={errors[`phone_numbers.${idx}.phone_type`]}
-                                        />
                                     </div>
 
                                     <div className="md:col-span-9">
@@ -328,13 +324,17 @@ export default function CustomerForm({
                                             options={countryCallingCodes}
                                             phoneInputId={`customer_phone_numbers_${idx}_number`}
                                         />
+                                    </div>
+                                    <div className="md:col-span-12">
                                         <InputError
-                                            className="mt-2"
-                                            message={errors[`phone_numbers.${idx}.country_code`]}
-                                        />
-                                        <InputError
-                                            className="mt-2"
-                                            message={errors[`phone_numbers.${idx}.phone_number`]}
+                                            className="mt-0"
+                                            message={[
+                                                errors[`phone_numbers.${idx}.phone_type`],
+                                                errors[`phone_numbers.${idx}.country_code`],
+                                                errors[`phone_numbers.${idx}.phone_number`],
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' ')}
                                         />
                                     </div>
                                     <div className="md:col-span-12 flex justify-end">

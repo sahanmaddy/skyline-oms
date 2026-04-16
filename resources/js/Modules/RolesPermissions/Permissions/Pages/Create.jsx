@@ -3,6 +3,7 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import PermissionForm from '@/Modules/RolesPermissions/Permissions/Components/PermissionForm';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Create() {
@@ -26,7 +27,11 @@ export default function Create() {
                             errors={errors}
                             processing={processing}
                             submitLabel="Create permission"
-                            onSubmit={() => post(route('settings.permissions.store'))}
+                            onSubmit={() =>
+                                post(route('settings.permissions.store'), {
+                                    onError: () => scrollToFirstError(),
+                                })
+                            }
                         />
                     </div>
                 </div>

@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import BranchForm from '@/Modules/Branches/Components/BranchForm';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ nextCode }) {
@@ -46,7 +47,11 @@ export default function Create({ nextCode }) {
                             mode="create"
                             nextCode={nextCode}
                             submitLabel="Create branch"
-                            onSubmit={() => post(route('settings.branches.store'))}
+                            onSubmit={() =>
+                                post(route('settings.branches.store'), {
+                                    onError: () => scrollToFirstError(),
+                                })
+                            }
                         />
                     </div>
                 </div>

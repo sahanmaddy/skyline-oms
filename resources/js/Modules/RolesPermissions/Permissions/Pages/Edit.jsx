@@ -3,6 +3,7 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import PermissionForm from '@/Modules/RolesPermissions/Permissions/Components/PermissionForm';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ permission }) {
@@ -32,7 +33,11 @@ export default function Edit({ permission }) {
                             errors={errors}
                             processing={processing}
                             submitLabel="Save changes"
-                            onSubmit={() => put(route('settings.permissions.update', permission.id))}
+                            onSubmit={() =>
+                                put(route('settings.permissions.update', permission.id), {
+                                    onError: () => scrollToFirstError(),
+                                })
+                            }
                             isSystemPermission={!!permission.is_system}
                         />
                     </div>

@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
@@ -105,6 +106,7 @@ export default function Edit({ employee, statusOptions, users, activeBranches })
                         put(route('hr.employees.update', employee.id), {
                             forceFormData: true,
                             preserveScroll: true,
+                            onError: () => scrollToFirstError(),
                         })
                     }
                 />

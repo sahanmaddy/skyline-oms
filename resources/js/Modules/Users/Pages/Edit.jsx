@@ -3,6 +3,7 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ user, roles, statusOptions, employeesForLink, activeBranches }) {
@@ -57,7 +58,11 @@ export default function Edit({ user, roles, statusOptions, employeesForLink, act
                         activeBranches={activeBranches}
                         submitLabel="Save"
                         showPasswordFields
-                        onSubmit={() => put(route('settings.users.update', user.id))}
+                        onSubmit={() =>
+                            put(route('settings.users.update', user.id), {
+                                onError: () => scrollToFirstError(),
+                            })
+                        }
                     />
                 </div>
                 </div>
