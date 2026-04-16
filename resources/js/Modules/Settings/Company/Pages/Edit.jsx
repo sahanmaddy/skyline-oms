@@ -15,6 +15,7 @@ import { currencyCodes } from '@/data/currencyCodes';
 import useConfirm from '@/feedback/useConfirm';
 import { formatCompanyCurrency } from '@/lib/companyFormat';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import { Head, useForm } from '@inertiajs/react';
@@ -38,7 +39,7 @@ function emptyBankRow(order) {
         account_number: '',
         account_name: '',
         display_order: order,
-        is_primary: false,
+        is_primary: order === 0,
     };
 }
 
@@ -161,17 +162,27 @@ export default function Edit({
               }))
             : [emptyPhoneRow(0)];
 
-    const initialBanks =
-        companySetting?.bank_accounts?.length > 0
-            ? companySetting.bank_accounts.map((r, i) => ({
-                  bank_name: r.bank_name || '',
-                  branch_name: r.branch_name || '',
-                  account_number: r.account_number || '',
-                  account_name: r.account_name || '',
-                  display_order: r.display_order ?? i,
-                  is_primary: !!r.is_primary,
-              }))
-            : [emptyBankRow(0)];
+    const initialBanks = (() => {
+        if (companySetting?.bank_accounts?.length > 0) {
+            const rows = companySetting.bank_accounts.map((r, i) => ({
+                bank_name: r.bank_name || '',
+                branch_name: r.branch_name || '',
+                account_number: r.account_number || '',
+                account_name: r.account_name || '',
+                display_order: r.display_order ?? i,
+                is_primary: !!r.is_primary,
+            }));
+            const hasPrimary = rows.some((r) => r.is_primary);
+            return hasPrimary
+                ? rows
+                : rows.map((r, i) => ({
+                      ...r,
+                      is_primary: i === 0,
+                  }));
+        }
+
+        return [emptyBankRow(0)];
+    })();
 
     const transformRegistered = useRef(false);
     const siteIconInputRef = useRef(null);
@@ -307,7 +318,21 @@ export default function Edit({
 
     const removeBank = (idx) => {
         const next = data.bank_accounts.filter((_, i) => i !== idx);
-        setData('bank_accounts', next.length ? next : [emptyBankRow(0)]);
+        if (!next.length) {
+            setData('bank_accounts', [emptyBankRow(0)]);
+            return;
+        }
+
+        const hasPrimary = next.some((row) => !!row.is_primary);
+        setData(
+            'bank_accounts',
+            hasPrimary
+                ? next
+                : next.map((row, i) => ({
+                      ...row,
+                      is_primary: i === 0,
+                  })),
+        );
     };
 
     const submit = async (e) => {
@@ -327,6 +352,7 @@ export default function Edit({
         put(route('settings.company.update'), {
             forceFormData: true,
             preserveScroll: true,
+            onError: () => scrollToFirstError(),
         });
     };
 
@@ -465,8 +491,8 @@ export default function Edit({
                                     value={data.address_line_1 || ''}
                                     onChange={(e) => setData('address_line_1', e.target.value)}
                                     disabled={!canEdit}
-                                    required
                                 />
+                                <InputError className="mt-2" message={errors.address_line_1} />
                             </div>
                             <div className="sm:col-span-2">
                                 <InputLabel htmlFor="address_line_2" value="Address Line 2" />
@@ -477,6 +503,7 @@ export default function Edit({
                                     onChange={(e) => setData('address_line_2', e.target.value)}
                                     disabled={!canEdit}
                                 />
+                                <InputError className="mt-2" message={errors.address_line_2} />
                             </div>
                             <div>
                                 <InputLabel htmlFor="city" value="City/District" />
@@ -487,6 +514,7 @@ export default function Edit({
                                     onChange={(e) => setData('city', e.target.value)}
                                     disabled={!canEdit}
                                 />
+                                <InputError className="mt-2" message={errors.city} />
                             </div>
                             <div>
                                 <InputLabel htmlFor="country" value="Country" />
@@ -499,9 +527,7 @@ export default function Edit({
                                         disabled={!canEdit}
                                     />
                                 </div>
-                            </div>
-                            <div className="sm:col-span-2">
-                                <InputError className="mt-2" message={errors.registered_address} />
+                                <InputError className="mt-2" message={errors.country} />
                             </div>
                         </div>
                     </section>
@@ -550,10 +576,6 @@ export default function Edit({
                                                     options={phoneTypeSelectOptions}
                                                     disabled={!canEdit}
                                                 />
-                                                <InputError
-                                                    className="mt-2"
-                                                    message={errors[`phone_numbers.${idx}.phone_type`]}
-                                                />
                                             </div>
                                             <div className="md:col-span-9">
                                                 <PhoneNumberWithCountryField
@@ -573,13 +595,17 @@ export default function Edit({
                                                     disabled={!canEdit}
                                                     phoneInputId={`company_phone_numbers_${idx}_number`}
                                                 />
+                                            </div>
+                                            <div className="md:col-span-12">
                                                 <InputError
-                                                    className="mt-2"
-                                                    message={errors[`phone_numbers.${idx}.country_code`]}
-                                                />
-                                                <InputError
-                                                    className="mt-2"
-                                                    message={errors[`phone_numbers.${idx}.phone_number`]}
+                                                    className="mt-0"
+                                                    message={[
+                                                        errors[`phone_numbers.${idx}.phone_type`],
+                                                        errors[`phone_numbers.${idx}.country_code`],
+                                                        errors[`phone_numbers.${idx}.phone_number`],
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' ')}
                                                 />
                                             </div>
                                             {canEdit ? (
@@ -652,6 +678,7 @@ export default function Edit({
                         </div>
 
                         <div className="mt-4 space-y-3">
+                            <InputError className="mt-0" message={errors.bank_accounts} />
                             {data.bank_accounts.map((row, idx) => (
                                 <div
                                     key={`bk-${idx}`}
@@ -721,7 +748,6 @@ export default function Edit({
                                 </div>
                             ))}
                         </div>
-                        <InputError className="mt-2" message={errors.bank_accounts} />
                     </section>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">

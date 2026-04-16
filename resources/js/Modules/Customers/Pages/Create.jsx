@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, nextCustomerCode }) {
@@ -54,7 +55,12 @@ export default function Create({ statusOptions, nextCustomerCode }) {
                     processing={processing}
                     statusOptions={statusOptions}
                     submitLabel="Create"
-                    onSubmit={() => post(route('sales.customers.store'), { preserveScroll: true })}
+                    onSubmit={() =>
+                        post(route('sales.customers.store'), {
+                            preserveScroll: true,
+                            onError: () => scrollToFirstError(),
+                        })
+                    }
                 />
             </div>
             </div>

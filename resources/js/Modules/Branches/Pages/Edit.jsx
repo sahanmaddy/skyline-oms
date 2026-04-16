@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import BranchForm from '@/Modules/Branches/Components/BranchForm';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ branch }) {
@@ -54,7 +55,10 @@ export default function Edit({ branch }) {
                             branchCode={branch.code}
                             submitLabel="Save changes"
                             onSubmit={() =>
-                                put(route('settings.branches.update', branch.id), { preserveScroll: true })
+                                put(route('settings.branches.update', branch.id), {
+                                    preserveScroll: true,
+                                    onError: () => scrollToFirstError(),
+                                })
                             }
                         />
                     </div>

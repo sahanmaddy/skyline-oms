@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ customer, statusOptions }) {
@@ -75,7 +76,10 @@ export default function Edit({ customer, statusOptions }) {
                     statusOptions={statusOptions}
                     submitLabel="Save"
                     onSubmit={() =>
-                        put(route('sales.customers.update', customer.id), { preserveScroll: true })
+                        put(route('sales.customers.update', customer.id), {
+                            preserveScroll: true,
+                            onError: () => scrollToFirstError(),
+                        })
                     }
                 />
             </div>

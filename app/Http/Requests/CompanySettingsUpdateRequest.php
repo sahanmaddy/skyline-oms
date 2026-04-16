@@ -27,7 +27,11 @@ class CompanySettingsUpdateRequest extends FormRequest
 
         return [
             'company_name' => ['required', 'string', 'max:255'],
-            'registered_address' => ['required', 'string', 'max:5000'],
+            'registered_address' => ['nullable', 'string', 'max:5000'],
+            'address_line_1' => ['required', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:120'],
+            'country' => ['required', 'string', 'max:120'],
             'company_email' => ['nullable', 'email', 'max:255'],
             'tin_number' => ['nullable', 'string', 'max:100'],
             'vat_number' => ['nullable', 'string', 'max:100'],
@@ -100,6 +104,9 @@ class CompanySettingsUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'address_line_1.required' => 'Address Line 1 is required.',
+            'city.required' => 'City/District is required.',
+            'country.required' => 'Country is required.',
             'phone_numbers.required' => 'At least one phone number is required.',
             'phone_numbers.min' => 'At least one phone number is required.',
             'phone_numbers.*.phone_number.required_with' => 'Phone number is required.',
