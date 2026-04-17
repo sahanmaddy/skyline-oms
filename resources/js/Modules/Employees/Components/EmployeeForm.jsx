@@ -293,14 +293,6 @@ export default function EmployeeForm({
 
     const updatePhone = (idx, patch) => {
         setPhoneRemoveWarning('');
-        setClientErrors((prev) => {
-            const next = { ...prev };
-            delete next.phone_numbers;
-            delete next[`phone_numbers.${idx}.phone_type`];
-            delete next[`phone_numbers.${idx}.country_code`];
-            delete next[`phone_numbers.${idx}.phone_number`];
-            return next;
-        });
         const next = phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row));
         setData('phone_numbers', next);
     };
@@ -332,14 +324,6 @@ export default function EmployeeForm({
 
     const updateEmergencyPhone = (idx, patch) => {
         setEmergencyPhoneRemoveWarning('');
-        setClientErrors((prev) => {
-            const next = { ...prev };
-            delete next.emergency_phone_numbers;
-            delete next[`emergency_phone_numbers.${idx}.phone_type`];
-            delete next[`emergency_phone_numbers.${idx}.country_code`];
-            delete next[`emergency_phone_numbers.${idx}.phone_number`];
-            return next;
-        });
         setData(
             'emergency_phone_numbers',
             emergencyPhoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
@@ -967,17 +951,12 @@ export default function EmployeeForm({
                         id="emergency_contact_person"
                         className="mt-1 block w-full"
                         value={data.emergency_contact_person || ''}
-                        onChange={(e) => {
-                            setClientErrors((prev) => {
-                                const next = { ...prev };
-                                delete next.emergency_contact_person;
-                                return next;
-                            });
+                        onChange={(e) =>
                             setData(
                                 'emergency_contact_person',
                                 e.target.value,
-                            );
-                        }}
+                            )
+                        }
                     />
                     <InputError className="mt-2" message={mergedErrors.emergency_contact_person} />
                 </div>

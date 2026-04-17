@@ -74,8 +74,8 @@ export default function DocumentDropzone({
                 </PrimaryButton>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
+                <div className="sm:col-span-2">
                     <InputLabel value="Document type" />
                     <FormSelect
                         className="mt-1"
