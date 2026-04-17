@@ -18,10 +18,18 @@ class RoleStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->where('guard_name', 'web')],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:255'],
             'is_active' => ['required', 'boolean'],
             'permission_ids' => ['array'],
             'permission_ids.*' => ['integer', Rule::exists((new Permission)->getTable(), 'id')],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Role name is required.',
+            'description.required' => 'Description is required.',
         ];
     }
 }

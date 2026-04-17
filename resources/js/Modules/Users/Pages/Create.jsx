@@ -3,10 +3,12 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
+import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Create({ roles, statusOptions, employeesForLink, activeBranches, suggestedBranchId }) {
+    const toast = useToast();
     const defaultBranchId =
         suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
             ? suggestedBranchId
@@ -52,9 +54,16 @@ export default function Create({ roles, statusOptions, employeesForLink, activeB
                         activeBranches={activeBranches}
                         submitLabel="Create"
                         showPasswordFields
+                        requirePassword
+                        onClientValidationError={() =>
+                            toast.error('Please fix the highlighted fields and try again.')
+                        }
                         onSubmit={() =>
                             post(route('settings.users.store'), {
-                                onError: () => scrollToFirstError(),
+                                onError: () => {
+                                    scrollToFirstError();
+                                    toast.error('Please fix the highlighted fields and try again.');
+                                },
                             })
                         }
                     />

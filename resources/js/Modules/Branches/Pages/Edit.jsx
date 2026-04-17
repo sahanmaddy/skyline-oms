@@ -3,11 +3,13 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import BranchForm from '@/Modules/Branches/Components/BranchForm';
+import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ branch }) {
+    const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultCountry = getCompanyDefaultCountry(company);
     const { data, setData, put, processing, errors } = useForm({
@@ -54,10 +56,16 @@ export default function Edit({ branch }) {
                             mode="edit"
                             branchCode={branch.code}
                             submitLabel="Save changes"
+                            onClientValidationError={() =>
+                                toast.error('Please fix the highlighted fields and try again.')
+                            }
                             onSubmit={() =>
                                 put(route('settings.branches.update', branch.id), {
                                     preserveScroll: true,
-                                    onError: () => scrollToFirstError(),
+                                    onError: () => {
+                                        scrollToFirstError();
+                                        toast.error('Please fix the highlighted fields and try again.');
+                                    },
                                 })
                             }
                         />

@@ -4,7 +4,9 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import PermissionGroupSelector from '@/Modules/RolesPermissions/Components/PermissionGroupSelector';
+import { useMemo, useState } from 'react';
 
 export default function RoleForm({
     data,
@@ -14,14 +16,38 @@ export default function RoleForm({
     permissionGroups,
     submitLabel,
     onSubmit,
+    onClientValidationError,
 }) {
+    const [clientErrors, setClientErrors] = useState({});
+    const mergedErrors = useMemo(() => ({ ...clientErrors, ...errors }), [clientErrors, errors]);
+
+    const validateBeforeSubmit = () => {
+        const nextErrors = {};
+        if (!String(data.name || '').trim()) {
+            nextErrors.name = 'Role name is required.';
+        }
+        if (!String(data.description || '').trim()) {
+            nextErrors.description = 'Description is required.';
+        }
+        setClientErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) {
+            scrollToFirstError();
+            onClientValidationError?.();
+        }
+        return Object.keys(nextErrors).length === 0;
+    };
+
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
+                if (!validateBeforeSubmit()) {
+                    return;
+                }
                 onSubmit();
             }}
             className="space-y-6"
+            noValidate
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Role Information</h3>
@@ -35,9 +61,16 @@ export default function RoleForm({
                             id="name"
                             className="mt-1 block w-full"
                             value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const next = { ...prev };
+                                    delete next.name;
+                                    return next;
+                                });
+                                setData('name', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.name} />
+                        <InputError className="mt-2" message={mergedErrors.name} />
                     </div>
                     <div>
                         <InputLabel htmlFor="is_active" value="Status" />
@@ -50,8 +83,9 @@ export default function RoleForm({
                                 { value: '1', label: 'Active' },
                                 { value: '0', label: 'Inactive' },
                             ]}
+                            placeholder="Select status..."
                         />
-                        <InputError className="mt-2" message={errors.is_active} />
+                        <InputError className="mt-2" message={mergedErrors.is_active} />
                     </div>
                     <div className="sm:col-span-2">
                         <InputLabel htmlFor="description" value="Description" />
@@ -60,9 +94,16 @@ export default function RoleForm({
                             className={`${formTextareaClass} mt-1`}
                             rows={3}
                             value={data.description || ''}
-                            onChange={(e) => setData('description', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const next = { ...prev };
+                                    delete next.description;
+                                    return next;
+                                });
+                                setData('description', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.description} />
+                        <InputError className="mt-2" message={mergedErrors.description} />
                     </div>
                 </div>
             </section>
@@ -77,7 +118,7 @@ export default function RoleForm({
                         groups={permissionGroups}
                         selectedIds={data.permission_ids || []}
                         onChange={(next) => setData('permission_ids', next)}
-                        error={errors.permission_ids}
+                        error={mergedErrors.permission_ids}
                     />
                 </div>
             </section>

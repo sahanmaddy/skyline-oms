@@ -181,7 +181,7 @@ export default function TimeZoneCombobox({
                             className={
                                 selected
                                     ? 'min-w-0 truncate text-gray-900 dark:text-cursor-fg'
-                                    : 'min-w-0 truncate text-gray-500 dark:text-cursor-muted'
+                                    : 'min-w-0 truncate text-gray-400 dark:text-cursor-muted'
                             }
                         >
                             {selected ? `${selected.offset} ${selected.label}` : placeholder}

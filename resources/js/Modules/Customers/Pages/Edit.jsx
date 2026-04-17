@@ -3,14 +3,16 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
 import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
+import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ customer, statusOptions }) {
+    const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultCountry = getCompanyDefaultCountry(company);
-    const { data, setData, put, processing, errors } = useForm({
+    const form = useForm({
         customer_code: customer.customer_code || '',
         display_name: customer.display_name || customer.customer_name || '',
         customer_name: customer.customer_name || '',
@@ -39,6 +41,17 @@ export default function Edit({ customer, statusOptions }) {
             is_primary: !!p.is_primary,
         })),
     });
+    form.transform((payload) => ({
+        ...payload,
+        phone_numbers: (payload.phone_numbers || []).filter(
+            (row) =>
+                row &&
+                [row.phone_type, row.country_code, row.phone_number].some(
+                    (value) => String(value || '').trim() !== '',
+                ),
+        ),
+    }));
+    const { data, setData, put, processing, errors } = form;
 
     return (
         <AuthenticatedLayout
@@ -78,7 +91,10 @@ export default function Edit({ customer, statusOptions }) {
                     onSubmit={() =>
                         put(route('sales.customers.update', customer.id), {
                             preserveScroll: true,
-                            onError: () => scrollToFirstError(),
+                            onError: () => {
+                                scrollToFirstError();
+                                toast.error('Please fix the highlighted fields and try again.');
+                            },
                         })
                     }
                 />

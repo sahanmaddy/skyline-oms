@@ -13,6 +13,7 @@ import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { currencyCodes } from '@/data/currencyCodes';
 import useConfirm from '@/feedback/useConfirm';
+import useToast from '@/feedback/useToast';
 import { formatCompanyCurrency } from '@/lib/companyFormat';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
@@ -23,7 +24,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 function emptyPhoneRow(order) {
     return {
-        phone_type: 'Mobile',
+        phone_type: '',
         country_code: '',
         country_iso2: '',
         phone_number: '',
@@ -145,15 +146,17 @@ export default function Edit({
     currencyFormatExamples = [],
 }) {
     const { confirm } = useConfirm();
+    const toast = useToast();
     const [iconPreviewUrl, setIconPreviewUrl] = useState(null);
     const [iconLoadFailed, setIconLoadFailed] = useState(false);
     const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
+    const [bankRemoveWarning, setBankRemoveWarning] = useState('');
     const initialAddress = parseRegisteredAddress(companySetting?.registered_address ?? '');
 
     const initialPhones =
         companySetting?.phone_numbers?.length > 0
             ? companySetting.phone_numbers.map((r, i) => ({
-                  phone_type: r.phone_type || 'Mobile',
+                  phone_type: r.phone_type || '',
                   country_code: r.country_code || '',
                   country_iso2: r.country_iso2 || '',
                   phone_number: r.phone_number || '',
@@ -218,13 +221,23 @@ export default function Edit({
                 payload.country,
             ),
             phone_numbers: (payload.phone_numbers || []).filter(
-                (r) => r && String(r.phone_number || '').trim() !== '',
+                (r) =>
+                    r &&
+                    [
+                        r.phone_type,
+                        r.country_code,
+                        r.phone_number,
+                    ].some((value) => String(value || '').trim() !== ''),
             ),
             bank_accounts: (payload.bank_accounts || []).filter(
                 (r) =>
                     r &&
-                    String(r.bank_name || '').trim() !== '' &&
-                    String(r.account_number || '').trim() !== '',
+                    [
+                        r.bank_name,
+                        r.branch_name,
+                        r.account_number,
+                        r.account_name,
+                    ].some((value) => String(value || '').trim() !== ''),
             ),
         }));
         transformRegistered.current = true;
@@ -271,8 +284,38 @@ export default function Edit({
             }),
         [data.currency_code, data.currency_symbol, data.currency_format],
     );
+    const hasPhoneNumbersServerErrors = useMemo(
+        () =>
+            Object.keys(errors || {}).some(
+                (k) => k === 'phone_numbers' || k.startsWith('phone_numbers.'),
+            ),
+        [errors],
+    );
+
+    const hasBankAccountsServerErrors = useMemo(
+        () =>
+            Object.keys(errors || {}).some(
+                (k) => k === 'bank_accounts' || k.startsWith('bank_accounts.'),
+            ),
+        [errors],
+    );
+
+    const phoneNumbersBlockMessage = useMemo(() => {
+        if (hasPhoneNumbersServerErrors) {
+            return errors.phone_numbers || '';
+        }
+        return phoneRemoveWarning || errors.phone_numbers || '';
+    }, [errors.phone_numbers, hasPhoneNumbersServerErrors, phoneRemoveWarning]);
+
+    const bankAccountsBlockMessage = useMemo(() => {
+        if (hasBankAccountsServerErrors) {
+            return errors.bank_accounts || '';
+        }
+        return bankRemoveWarning || errors.bank_accounts || '';
+    }, [bankRemoveWarning, errors.bank_accounts, hasBankAccountsServerErrors]);
 
     const updatePhone = (idx, patch) => {
+        setPhoneRemoveWarning('');
         setData(
             'phone_numbers',
             data.phone_numbers.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
@@ -299,6 +342,7 @@ export default function Edit({
     };
 
     const updateBank = (idx, patch) => {
+        setBankRemoveWarning('');
         setData(
             'bank_accounts',
             data.bank_accounts.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
@@ -306,6 +350,7 @@ export default function Edit({
     };
 
     const setPrimaryBank = (idx) => {
+        setBankRemoveWarning('');
         setData(
             'bank_accounts',
             data.bank_accounts.map((row, i) => ({ ...row, is_primary: i === idx })),
@@ -313,16 +358,18 @@ export default function Edit({
     };
 
     const addBank = () => {
+        setBankRemoveWarning('');
         setData('bank_accounts', [...data.bank_accounts, emptyBankRow(data.bank_accounts.length)]);
     };
 
     const removeBank = (idx) => {
-        const next = data.bank_accounts.filter((_, i) => i !== idx);
-        if (!next.length) {
-            setData('bank_accounts', [emptyBankRow(0)]);
+        if ((data.bank_accounts || []).length <= 1) {
+            setBankRemoveWarning('At least one bank account is required.');
             return;
         }
 
+        setBankRemoveWarning('');
+        const next = data.bank_accounts.filter((_, i) => i !== idx);
         const hasPrimary = next.some((row) => !!row.is_primary);
         setData(
             'bank_accounts',
@@ -352,7 +399,10 @@ export default function Edit({
         put(route('settings.company.update'), {
             forceFormData: true,
             preserveScroll: true,
-            onError: () => scrollToFirstError(),
+            onError: () => {
+                scrollToFirstError();
+                toast.error('Please fix the highlighted fields and try again.');
+            },
         });
     };
 
@@ -376,7 +426,7 @@ export default function Edit({
             <Head title="Company Settings · Settings" />
 
             <SettingsModuleLayout breadcrumbs={[{ label: 'Company Settings' }]}>
-                <form className="space-y-6" onSubmit={submit}>
+                <form className="space-y-6" onSubmit={submit} noValidate>
                     <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Company Identity</h3>
                         <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
@@ -392,7 +442,6 @@ export default function Edit({
                                     value={data.company_name}
                                     onChange={(e) => setData('company_name', e.target.value)}
                                     disabled={!canEdit}
-                                    required
                                 />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                                     Used across the system as the business name, site title, and document header.
@@ -478,7 +527,7 @@ export default function Edit({
                     </section>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Registered Details</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Registered Address</h3>
                         <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Registered business address used on invoices and letterheads.
                         </p>
@@ -523,7 +572,7 @@ export default function Edit({
                                         value={data.country || ''}
                                         onChange={(name) => setData('country', name)}
                                         options={countries}
-                                        placeholder="Search countries..."
+                                        placeholder="Select country..."
                                         disabled={!canEdit}
                                     />
                                 </div>
@@ -571,10 +620,15 @@ export default function Edit({
                                                 <InputLabel value="Type" className="mb-1" />
                                                 <FormSelect
                                                     className=""
-                                                    value={row.phone_type || 'Mobile'}
+                                                    value={row.phone_type || ''}
                                                     onChange={(v) => updatePhone(idx, { phone_type: v })}
                                                     options={phoneTypeSelectOptions}
                                                     disabled={!canEdit}
+                                                    placeholder="Select phone type..."
+                                                />
+                                                <InputError
+                                                    className="mt-2"
+                                                    message={errors[`phone_numbers.${idx}.phone_type`]}
                                                 />
                                             </div>
                                             <div className="md:col-span-9">
@@ -594,18 +648,12 @@ export default function Edit({
                                                     options={countryCallingCodes}
                                                     disabled={!canEdit}
                                                     phoneInputId={`company_phone_numbers_${idx}_number`}
-                                                />
-                                            </div>
-                                            <div className="md:col-span-12">
-                                                <InputError
-                                                    className="mt-0"
-                                                    message={[
-                                                        errors[`phone_numbers.${idx}.phone_type`],
-                                                        errors[`phone_numbers.${idx}.country_code`],
-                                                        errors[`phone_numbers.${idx}.phone_number`],
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .join(' ')}
+                                                    countryCodeError={
+                                                        errors[`phone_numbers.${idx}.country_code`]
+                                                    }
+                                                    phoneNumberError={
+                                                        errors[`phone_numbers.${idx}.phone_number`]
+                                                    }
                                                 />
                                             </div>
                                             {canEdit ? (
@@ -622,12 +670,7 @@ export default function Edit({
                                     </div>
                                 ))}
                             </div>
-                            {phoneRemoveWarning ? (
-                                <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                                    {phoneRemoveWarning}
-                                </div>
-                            ) : null}
-                            <InputError className="mt-2" message={errors.phone_numbers} />
+                            <InputError className="mt-2" message={phoneNumbersBlockMessage} />
                         </div>
                     </section>
 
@@ -678,7 +721,6 @@ export default function Edit({
                         </div>
 
                         <div className="mt-4 space-y-3">
-                            <InputError className="mt-0" message={errors.bank_accounts} />
                             {data.bank_accounts.map((row, idx) => (
                                 <div
                                     key={`bk-${idx}`}
@@ -706,6 +748,10 @@ export default function Edit({
                                                 onChange={(e) => updateBank(idx, { branch_name: e.target.value })}
                                                 disabled={!canEdit}
                                             />
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors[`bank_accounts.${idx}.branch_name`]}
+                                            />
                                         </div>
                                         <div className="lg:col-span-3">
                                             <InputLabel value="Account Number" />
@@ -728,6 +774,10 @@ export default function Edit({
                                                 onChange={(e) => updateBank(idx, { account_name: e.target.value })}
                                                 disabled={!canEdit}
                                             />
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors[`bank_accounts.${idx}.account_name`]}
+                                            />
                                         </div>
                                         <div className="flex flex-col gap-2 lg:col-span-12 lg:flex-row lg:items-center lg:justify-between">
                                             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-cursor-fg">
@@ -747,6 +797,7 @@ export default function Edit({
                                     </div>
                                 </div>
                             ))}
+                            <InputError className="mt-2" message={bankAccountsBlockMessage} />
                         </div>
                     </section>
 
@@ -764,7 +815,7 @@ export default function Edit({
                                         value={data.system_country || ''}
                                         onChange={(name) => setData('system_country', name)}
                                         options={countries}
-                                        placeholder="Search countries..."
+                                        placeholder="Select country..."
                                         disabled={!canEdit}
                                     />
                                 </div>
@@ -810,10 +861,11 @@ export default function Edit({
                                 <InputLabel value="Currency Display Pattern" />
                                 <FormSelect
                                     className="mt-1"
-                                    value={data.currency_format || '{symbol} {amount}'}
+                                    value={data.currency_format || ''}
                                     onChange={(v) => setData('currency_format', v)}
                                     options={currencyFormatSelectOptions}
                                     disabled={!canEdit}
+                                    placeholder="Select display pattern..."
                                 />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                                     Live preview: <span className="font-medium text-gray-800 dark:text-cursor-bright">{sampleAmountPreview}</span>

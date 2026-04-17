@@ -35,7 +35,7 @@ export default function PermissionForm({
                             value={data.name}
                             disabled={isSystemPermission}
                             onChange={(e) => setData('name', e.target.value)}
-                            placeholder="employees.view"
+                            placeholder="e.g. employees.view"
                         />
                         <p className="mt-1 text-xs text-gray-500">Use format: module.action</p>
                         <InputError className="mt-2" message={errors.name} />
@@ -47,7 +47,7 @@ export default function PermissionForm({
                             className="mt-1 block w-full"
                             value={data.module}
                             onChange={(e) => setData('module', e.target.value)}
-                            placeholder="Employees"
+                            placeholder="e.g. Employees"
                         />
                         <InputError className="mt-2" message={errors.module} />
                     </div>
@@ -58,7 +58,6 @@ export default function PermissionForm({
                             className="mt-1 block w-full"
                             value={data.display_name}
                             onChange={(e) => setData('display_name', e.target.value)}
-                            placeholder="View employees"
                         />
                         <InputError className="mt-2" message={errors.display_name} />
                     </div>

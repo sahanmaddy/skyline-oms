@@ -3,10 +3,12 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import RoleForm from '@/Modules/RolesPermissions/Roles/Components/RoleForm';
+import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Create({ permissionGroups }) {
+    const toast = useToast();
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
@@ -28,9 +30,15 @@ export default function Create({ permissionGroups }) {
                             processing={processing}
                             permissionGroups={permissionGroups}
                             submitLabel="Create role"
+                            onClientValidationError={() =>
+                                toast.error('Please fix the highlighted fields and try again.')
+                            }
                             onSubmit={() =>
                                 post(route('settings.roles.store'), {
-                                    onError: () => scrollToFirstError(),
+                                    onError: () => {
+                                        scrollToFirstError();
+                                        toast.error('Please fix the highlighted fields and try again.');
+                                    },
                                 })
                             }
                         />

@@ -3,10 +3,12 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import PermissionForm from '@/Modules/RolesPermissions/Permissions/Components/PermissionForm';
+import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ permission }) {
+    const toast = useToast();
     const { data, setData, put, processing, errors } = useForm({
         name: permission.name || '',
         display_name: permission.display_name || '',
@@ -35,7 +37,10 @@ export default function Edit({ permission }) {
                             submitLabel="Save changes"
                             onSubmit={() =>
                                 put(route('settings.permissions.update', permission.id), {
-                                    onError: () => scrollToFirstError(),
+                                    onError: () => {
+                                        scrollToFirstError();
+                                        toast.error('Please fix the highlighted fields and try again.');
+                                    },
                                 })
                             }
                             isSystemPermission={!!permission.is_system}

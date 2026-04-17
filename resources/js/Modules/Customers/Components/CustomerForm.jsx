@@ -10,7 +10,7 @@ import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { getCompanyDefaultPhoneCountry } from '@/lib/companyLocationDefaults';
 import { usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 /** True while display name should stay in sync with customer name (until user edits display name). */
 function initialDisplayFollowsCustomer(formData) {
@@ -75,6 +75,20 @@ export default function CustomerForm({
     const displayNameFollowsCustomer = useRef(initialDisplayFollowsCustomer(data));
     const phoneRows = data.phone_numbers || [];
     const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
+    const hasPhoneNumbersServerErrors = useMemo(
+        () =>
+            Object.keys(errors || {}).some(
+                (k) => k === 'phone_numbers' || k.startsWith('phone_numbers.'),
+            ),
+        [errors],
+    );
+
+    const phoneNumbersBlockMessage = useMemo(() => {
+        if (hasPhoneNumbersServerErrors) {
+            return errors.phone_numbers || '';
+        }
+        return phoneRemoveWarning || errors.phone_numbers || '';
+    }, [errors.phone_numbers, hasPhoneNumbersServerErrors, phoneRemoveWarning]);
 
     useEffect(() => {
         if (phoneRows.length > 0) {
@@ -83,7 +97,7 @@ export default function CustomerForm({
 
         setData('phone_numbers', [
             {
-                phone_type: 'Mobile',
+                phone_type: '',
                 country_code: defaultPhoneCountry.countryCode,
                 country_iso2: defaultPhoneCountry.countryIso2,
                 phone_number: '',
@@ -96,7 +110,7 @@ export default function CustomerForm({
         setData('phone_numbers', [
             ...phoneRows,
             {
-                phone_type: 'Mobile',
+                phone_type: '',
                 country_code: defaultPhoneCountry.countryCode,
                 country_iso2: defaultPhoneCountry.countryIso2,
                 phone_number: '',
@@ -120,6 +134,7 @@ export default function CustomerForm({
     };
 
     const updatePhone = (idx, patch) => {
+        setPhoneRemoveWarning('');
         setData(
             'phone_numbers',
             phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
@@ -133,6 +148,7 @@ export default function CustomerForm({
                 onSubmit();
             }}
             className="space-y-6"
+            noValidate
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Customer Information</h3>
@@ -299,9 +315,14 @@ export default function CustomerForm({
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
                                             className=""
-                                            value={row.phone_type || 'Mobile'}
+                                            value={row.phone_type || ''}
                                             onChange={(v) => updatePhone(idx, { phone_type: v })}
                                             options={phoneTypeSelectOptions}
+                                            placeholder="Select phone type..."
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors[`phone_numbers.${idx}.phone_type`]}
                                         />
                                     </div>
 
@@ -323,18 +344,12 @@ export default function CustomerForm({
                                             }
                                             options={countryCallingCodes}
                                             phoneInputId={`customer_phone_numbers_${idx}_number`}
-                                        />
-                                    </div>
-                                    <div className="md:col-span-12">
-                                        <InputError
-                                            className="mt-0"
-                                            message={[
-                                                errors[`phone_numbers.${idx}.phone_type`],
-                                                errors[`phone_numbers.${idx}.country_code`],
-                                                errors[`phone_numbers.${idx}.phone_number`],
-                                            ]
-                                                .filter(Boolean)
-                                                .join(' ')}
+                                            countryCodeError={
+                                                errors[`phone_numbers.${idx}.country_code`]
+                                            }
+                                            phoneNumberError={
+                                                errors[`phone_numbers.${idx}.phone_number`]
+                                            }
                                         />
                                     </div>
                                     <div className="md:col-span-12 flex justify-end">
@@ -349,13 +364,7 @@ export default function CustomerForm({
                             </div>
                         ))}
                     </div>
-                    {phoneRemoveWarning ? (
-                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                            {phoneRemoveWarning}
-                        </div>
-                    ) : null}
-
-                    <InputError className="mt-2" message={errors.phone_numbers} />
+                    <InputError className="mt-2" message={phoneNumbersBlockMessage} />
                 </div>
             </section>
 
@@ -404,7 +413,7 @@ export default function CustomerForm({
                                 value={data.country || ''}
                                 onChange={(name) => setData('country', name)}
                                 options={countries}
-                                placeholder="Search countries..."
+                                placeholder="Select country..."
                             />
                         </div>
                         <InputError className="mt-2" message={errors.country} />
@@ -460,7 +469,7 @@ export default function CustomerForm({
 
                     <div>
                         <InputLabel htmlFor="credit_limit" value="Credit Limit" />
-                        <div className="mt-1 flex items-stretch">
+                        <div className="mt-1 flex items-stretch rounded-md transition duration-150 ease-in-out focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
                             <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-cursor-border dark:bg-cursor-raised dark:text-cursor-muted">
                                 {currencyLabel}
                             </div>
@@ -468,7 +477,7 @@ export default function CustomerForm({
                                 id="credit_limit"
                                 type="text"
                                 inputMode="decimal"
-                                className="block w-full rounded-none rounded-r-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="block min-h-10 w-full rounded-none rounded-r-md border border-gray-300 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-0 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                 value={formatMoneyWithCommas(data.credit_limit || '')}
                                 placeholder="0.00"
                                 onChange={(e) =>

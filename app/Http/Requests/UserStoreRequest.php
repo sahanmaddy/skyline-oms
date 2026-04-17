@@ -90,4 +90,20 @@ class UserStoreRequest extends FormRequest
             }
         });
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Name is required.',
+            'email.required' => 'Email is required.',
+            'status.required' => 'Status is required.',
+            'branch_ids.required' => 'At least one branch access is required.',
+            'branch_ids.min' => 'At least one branch access is required.',
+            'branch_id.required' => 'Default Branch is required.',
+            'roles.required' => 'At least one role is required.',
+            'roles.min' => 'At least one role is required.',
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Passwords do not match.',
+        ];
+    }
 }

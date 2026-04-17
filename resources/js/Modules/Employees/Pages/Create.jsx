@@ -3,11 +3,13 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
+import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, users, nextEmployeeCode, activeBranches, suggestedBranchId }) {
+    const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultCountry = getCompanyDefaultCountry(company);
     const defaultBranchId =
@@ -81,11 +83,17 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
                     users={users}
                     profilePhotoUrl={null}
                     submitLabel="Create"
+                    onClientValidationError={() =>
+                        toast.error('Please fix the highlighted fields and try again.')
+                    }
                     onSubmit={() =>
                         post(route('hr.employees.store'), {
                             forceFormData: true,
                             preserveScroll: true,
-                            onError: () => scrollToFirstError(),
+                            onError: () => {
+                                scrollToFirstError();
+                                toast.error('Please fix the highlighted fields and try again.');
+                            },
                         })
                     }
                 />

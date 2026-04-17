@@ -101,7 +101,7 @@ export default function CurrencyCodeCombobox({
     onChange,
     options,
     disabled = false,
-    placeholder = 'Search currency code...',
+    placeholder = 'Select currency code...',
     className = '',
 }) {
     const [query, setQuery] = useState('');
@@ -138,7 +138,7 @@ export default function CurrencyCodeCombobox({
                             className={
                                 selected
                                     ? 'min-w-0 truncate text-gray-900 dark:text-cursor-fg'
-                                    : 'min-w-0 truncate text-gray-500 dark:text-cursor-muted'
+                                    : 'min-w-0 truncate text-gray-400 dark:text-cursor-muted'
                             }
                         >
                             {selected ? `${selected.name} (${selected.code})` : placeholder}

@@ -3,12 +3,14 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
+import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ employee, statusOptions, users, activeBranches }) {
+    const toast = useToast();
     const company = usePage().props.company ?? {};
     const companyTz = company.time_zone || 'UTC';
     const defaultCountry = getCompanyDefaultCountry(company);
@@ -102,11 +104,17 @@ export default function Edit({ employee, statusOptions, users, activeBranches })
                             : null
                     }
                     submitLabel="Save"
+                    onClientValidationError={() =>
+                        toast.error('Please fix the highlighted fields and try again.')
+                    }
                     onSubmit={() =>
                         put(route('hr.employees.update', employee.id), {
                             forceFormData: true,
                             preserveScroll: true,
-                            onError: () => scrollToFirstError(),
+                            onError: () => {
+                                scrollToFirstError();
+                                toast.error('Please fix the highlighted fields and try again.');
+                            },
                         })
                     }
                 />
