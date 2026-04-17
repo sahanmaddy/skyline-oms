@@ -117,14 +117,6 @@ export default function BranchForm({
 
     const updatePhone = (idx, patch) => {
         setPhoneRemoveWarning('');
-        setClientErrors((prev) => {
-            const next = { ...prev };
-            delete next.phone_numbers;
-            delete next[`phone_numbers.${idx}.phone_type`];
-            delete next[`phone_numbers.${idx}.country_code`];
-            delete next[`phone_numbers.${idx}.phone_number`];
-            return next;
-        });
         setData(
             'phone_numbers',
             phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
@@ -147,8 +139,10 @@ export default function BranchForm({
         if (!city) nextErrors.city = 'City is required.';
         if (!country) nextErrors.country = 'Country is required.';
 
-        const hasAnyPhoneNumber = (phoneRows || []).some(
-            (row) => String(row?.phone_number || '').trim() !== '',
+        const hasAnyPhoneNumber = (phoneRows || []).some((row) =>
+            [row?.phone_type, row?.country_code, row?.phone_number].some(
+                (value) => String(value || '').trim() !== '',
+            ),
         );
         if (!hasAnyPhoneNumber) {
             nextErrors.phone_numbers = 'At least one phone number is required.';

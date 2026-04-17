@@ -324,7 +324,7 @@ export default function UserForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="employee_id" value="Linked Employee" />
+                        <InputLabel htmlFor="employee_id" value="Linked Employee (Optional)" />
                         <LinkedEmployeeCombobox
                             id="employee_id"
                             className="mt-1"
