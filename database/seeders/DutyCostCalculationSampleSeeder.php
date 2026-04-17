@@ -1,0 +1,111 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\DutyCostCalculation;
+use App\Models\User;
+use App\Services\Procurement\DutyCostCalculationService;
+use Illuminate\Database\Seeder;
+
+class DutyCostCalculationSampleSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $userId = User::query()->value('id');
+        if (! $userId) {
+            return;
+        }
+
+        if (DutyCostCalculation::query()->exists()) {
+            return;
+        }
+
+        $payload = [
+            'title' => 'Sample Import Estimate - Textile Mix',
+            'reference_no' => 'IMP-EST-001',
+            'supplier_name' => 'Ningbo Textile Co.',
+            'exchange_rate' => 335.25,
+            'exchange_rate_currency_label' => 'USD/LKR',
+            'container_cbm_capacity' => 67.5,
+            'shipping_cost_total_lkr' => 1480000,
+            'loading_cost_lkr' => 85000,
+            'unloading_cost_lkr' => 72000,
+            'transport_cost_lkr' => 64000,
+            'delivery_order_charges_lkr' => 36000,
+            'clearing_charges_lkr' => 92000,
+            'demurrage_cost_lkr' => 0,
+            'calculation_status' => 'draft',
+            'items' => [
+                [
+                    'line_no' => 1,
+                    'product_name' => 'Polyester Fabric Roll',
+                    'product_currency' => 'USD',
+                    'unit_of_measure' => 'Yard',
+                    'quantity' => 8200,
+                    'unit_price_foreign' => 1.95,
+                    'cbm' => 12.8,
+                    'weight_kg' => 2450,
+                    'customs_preset_value_foreign_or_base' => 1.72,
+                    'cid_rate_per_kg_lkr' => 30,
+                ],
+                [
+                    'line_no' => 2,
+                    'product_name' => 'Buttons - Pack',
+                    'product_currency' => 'CNY',
+                    'unit_of_measure' => 'Piece',
+                    'quantity' => 45000,
+                    'unit_price_foreign' => 0.35,
+                    'cbm' => 3.4,
+                    'weight_kg' => 820,
+                    'customs_preset_value_foreign_or_base' => 0.28,
+                    'cid_rate_per_kg_lkr' => 30,
+                ],
+            ],
+            'other_costs' => [
+                ['cost_name' => 'Port Handling', 'amount_lkr' => 18500, 'sort_order' => 1],
+                ['cost_name' => 'Inspection Fee', 'amount_lkr' => 9500, 'sort_order' => 2],
+            ],
+        ];
+
+        $computed = app(DutyCostCalculationService::class)->calculate($payload);
+
+        $row = DutyCostCalculation::create([
+            'calculation_code' => 'DCC-0001',
+            'title' => $payload['title'],
+            'reference_no' => $payload['reference_no'],
+            'supplier_name' => $payload['supplier_name'],
+            'exchange_rate' => $payload['exchange_rate'],
+            'exchange_rate_currency_label' => $payload['exchange_rate_currency_label'],
+            'container_cbm_capacity' => $payload['container_cbm_capacity'],
+            'shipping_cost_total_lkr' => $payload['shipping_cost_total_lkr'],
+            'loading_cost_lkr' => $payload['loading_cost_lkr'],
+            'unloading_cost_lkr' => $payload['unloading_cost_lkr'],
+            'transport_cost_lkr' => $payload['transport_cost_lkr'],
+            'delivery_order_charges_lkr' => $payload['delivery_order_charges_lkr'],
+            'clearing_charges_lkr' => $payload['clearing_charges_lkr'],
+            'demurrage_cost_lkr' => $payload['demurrage_cost_lkr'],
+            'other_costs_lkr_total' => $computed['summary']['other_costs_lkr_total'],
+            'calculation_status' => 'draft',
+            'totals' => $computed['summary'],
+            'item_count' => $computed['summary']['item_count'],
+            'total_product_value_lkr' => $computed['summary']['total_product_value_lkr'],
+            'total_statistical_value_lkr' => $computed['summary']['total_statistical_value_lkr'],
+            'total_cid_lkr' => $computed['summary']['total_cid_lkr'],
+            'total_vat_lkr' => $computed['summary']['total_vat_lkr'],
+            'total_sscl_lkr' => $computed['summary']['total_sscl_lkr'],
+            'total_duty_lkr' => $computed['summary']['total_duty_lkr'],
+            'total_allocated_shipping_lkr' => $computed['summary']['total_allocated_shipping_lkr'],
+            'total_allocated_other_costs_lkr' => $computed['summary']['total_allocated_other_costs_lkr'],
+            'grand_total_landed_cost_lkr' => $computed['summary']['grand_total_landed_cost_lkr'],
+            'total_weight_kg' => $computed['summary']['total_weight_kg'],
+            'total_cbm' => $computed['summary']['total_cbm'],
+            'shipping_cost_per_cbm_lkr' => $computed['summary']['shipping_cost_per_cbm_lkr'],
+            'created_by' => $userId,
+            'updated_by' => $userId,
+        ]);
+
+        $row->items()->createMany($computed['items']);
+        $row->otherCosts()->createMany($computed['other_costs']);
+    }
+}
+

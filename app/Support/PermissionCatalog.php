@@ -71,6 +71,30 @@ final class PermissionCatalog
                 'description' => 'Delete customer records where policy allows.',
             ],
             [
+                'name' => 'calculator.view',
+                'display_name' => 'View duty & cost calculations',
+                'module' => 'Calculator',
+                'description' => 'Browse duty and landed-cost estimation calculations.',
+            ],
+            [
+                'name' => 'calculator.create',
+                'display_name' => 'Create duty & cost calculations',
+                'module' => 'Calculator',
+                'description' => 'Create shipment estimation calculations for import decisions.',
+            ],
+            [
+                'name' => 'calculator.edit',
+                'display_name' => 'Edit duty & cost calculations',
+                'module' => 'Calculator',
+                'description' => 'Update draft or finalized duty and landed-cost calculations.',
+            ],
+            [
+                'name' => 'calculator.delete',
+                'display_name' => 'Delete duty & cost calculations',
+                'module' => 'Calculator',
+                'description' => 'Delete saved duty and landed-cost calculations.',
+            ],
+            [
                 'name' => 'users.view',
                 'display_name' => 'View users',
                 'module' => 'Users',

@@ -109,24 +109,40 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                             </div>
                         </section>
 
-                        <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface lg:col-span-8">
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Address</h3>
-                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <Info
-                                    label="Address"
-                                    value={
-                                        [branch.address_line_1, branch.address_line_2]
-                                            .filter(Boolean)
-                                            .join(', ') || '—'
-                                    }
-                                    className="sm:col-span-2"
-                                />
-                                <Info label="City/District" value={branch.city || '—'} />
-                                <Info label="Country" value={branch.country || '—'} />
-                            </div>
-                        </section>
+                    </div>
 
-                        <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface lg:col-span-4">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                        <div className="self-start space-y-4 lg:col-span-8">
+                            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Address</h3>
+                                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <Info
+                                        label="Address"
+                                        value={
+                                            [branch.address_line_1, branch.address_line_2]
+                                                .filter(Boolean)
+                                                .join(', ') || '—'
+                                        }
+                                        className="sm:col-span-2"
+                                    />
+                                    <Info label="City/District" value={branch.city || '—'} />
+                                    <Info label="Country" value={branch.country || '—'} />
+                                </div>
+                            </section>
+
+                            {branch.notes ? (
+                                <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
+                                        Notes
+                                    </h3>
+                                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-cursor-bright">
+                                        {branch.notes}
+                                    </p>
+                                </section>
+                            ) : null}
+                        </div>
+
+                        <section className="self-start rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface lg:col-span-4 lg:sticky lg:top-20">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                                 Contact Information
                             </h3>
@@ -164,18 +180,9 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                                 </div>
                             </div>
                         </section>
+                    </div>
 
-                        {branch.notes ? (
-                            <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-cursor-border dark:bg-cursor-surface lg:col-span-12">
-                                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
-                                    Notes
-                                </h3>
-                                <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-cursor-bright">
-                                    {branch.notes}
-                                </p>
-                            </section>
-                        ) : null}
-
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                         <div className="grid grid-cols-1 gap-4 lg:col-span-12 lg:grid-cols-2">
                             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
                                 <div className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">

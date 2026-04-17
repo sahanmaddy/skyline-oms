@@ -309,7 +309,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                         </div>
                     </section>
 
-                    <div className="flex flex-col gap-4 lg:col-span-4">
+                    <div className="flex flex-col gap-4 self-start lg:col-span-4 lg:sticky lg:top-20">
                         <section className="rounded-lg border border-gray-200 bg-white p-5">
                             <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
                             <div className="mt-4 space-y-3">
@@ -384,6 +384,9 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                         </section>
                     </div>
 
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
