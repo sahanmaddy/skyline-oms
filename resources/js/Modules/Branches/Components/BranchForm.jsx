@@ -9,9 +9,8 @@ import TextInput from '@/Components/TextInput';
 import { countries } from '@/data/countries';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
-import { getCompanyDefaultPhoneCountry } from '@/lib/companyLocationDefaults';
-import { usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
+import { useEffect, useMemo, useState } from 'react';
 
 const phoneTypeSelectOptions = [
     { value: 'Mobile', label: 'Mobile' },
@@ -29,10 +28,10 @@ export default function BranchForm({
     branchCode,
     submitLabel,
     onSubmit,
+    onClientValidationError,
 }) {
-    const company = usePage().props.company ?? {};
-    const defaultPhoneCountry = getCompanyDefaultPhoneCountry(company);
     const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
+    const [clientErrors, setClientErrors] = useState({});
     const codeDisplay =
         mode === 'create' && nextCode
             ? nextCode
@@ -41,6 +40,37 @@ export default function BranchForm({
               : '';
 
     const phoneRows = data.phone_numbers || [];
+    const mergedErrors = useMemo(() => ({ ...clientErrors, ...errors }), [clientErrors, errors]);
+    const hasPhoneNumbersServerErrors = useMemo(
+        () =>
+            Object.keys(errors || {}).some(
+                (k) => k === 'phone_numbers' || k.startsWith('phone_numbers.'),
+            ),
+        [errors],
+    );
+    const hasPhoneNumbersClientErrors = useMemo(
+        () =>
+            Object.keys(clientErrors || {}).some(
+                (k) => k === 'phone_numbers' || k.startsWith('phone_numbers.'),
+            ),
+        [clientErrors],
+    );
+
+    const phoneNumbersBlockMessage = useMemo(() => {
+        if (hasPhoneNumbersServerErrors) {
+            return errors.phone_numbers || '';
+        }
+        if (hasPhoneNumbersClientErrors) {
+            return clientErrors.phone_numbers || '';
+        }
+        return phoneRemoveWarning || clientErrors.phone_numbers || errors.phone_numbers || '';
+    }, [
+        clientErrors.phone_numbers,
+        errors.phone_numbers,
+        hasPhoneNumbersClientErrors,
+        hasPhoneNumbersServerErrors,
+        phoneRemoveWarning,
+    ]);
 
     useEffect(() => {
         if (phoneRows.length > 0) {
@@ -49,22 +79,22 @@ export default function BranchForm({
 
         setData('phone_numbers', [
             {
-                phone_type: 'Mobile',
-                country_code: defaultPhoneCountry.countryCode,
-                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_type: '',
+                country_code: '',
+                country_iso2: '',
                 phone_number: '',
                 is_primary: true,
             },
         ]);
-    }, [defaultPhoneCountry.countryCode, defaultPhoneCountry.countryIso2, phoneRows.length, setData]);
+    }, [phoneRows.length, setData]);
 
     const addPhone = () => {
         setData('phone_numbers', [
             ...phoneRows,
             {
-                phone_type: 'Mobile',
-                country_code: defaultPhoneCountry.countryCode,
-                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_type: '',
+                country_code: '',
+                country_iso2: '',
                 phone_number: '',
                 is_primary: phoneRows.length === 0,
             },
@@ -86,19 +116,74 @@ export default function BranchForm({
     };
 
     const updatePhone = (idx, patch) => {
+        setPhoneRemoveWarning('');
+        setClientErrors((prev) => {
+            const next = { ...prev };
+            delete next.phone_numbers;
+            delete next[`phone_numbers.${idx}.phone_type`];
+            delete next[`phone_numbers.${idx}.country_code`];
+            delete next[`phone_numbers.${idx}.phone_number`];
+            return next;
+        });
         setData(
             'phone_numbers',
             phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
         );
     };
 
+    const validateBeforeSubmit = () => {
+        const nextErrors = {};
+        const name = String(data.name || '').trim();
+        const email = String(data.email || '').trim();
+        const address1 = String(data.address_line_1 || '').trim();
+        const city = String(data.city || '').trim();
+        const country = String(data.country || '').trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!name) nextErrors.name = 'Branch name is required.';
+        if (!email) nextErrors.email = 'Email is required.';
+        else if (!emailRegex.test(email)) nextErrors.email = 'Enter a valid email address.';
+        if (!address1) nextErrors.address_line_1 = 'Address Line 1 is required.';
+        if (!city) nextErrors.city = 'City is required.';
+        if (!country) nextErrors.country = 'Country is required.';
+
+        const hasAnyPhoneNumber = (phoneRows || []).some(
+            (row) => String(row?.phone_number || '').trim() !== '',
+        );
+        if (!hasAnyPhoneNumber) {
+            nextErrors.phone_numbers = 'At least one phone number is required.';
+        }
+
+        phoneRows.forEach((row, idx) => {
+            const type = String(row?.phone_type || '').trim();
+            const code = String(row?.country_code || '').trim();
+            const number = String(row?.phone_number || '').trim();
+            const hasAny = Boolean(type || code || number);
+            if (!hasAny) return;
+            if (!type) nextErrors[`phone_numbers.${idx}.phone_type`] = 'Type is required.';
+            if (!code) nextErrors[`phone_numbers.${idx}.country_code`] = 'Code is required.';
+            if (!number) nextErrors[`phone_numbers.${idx}.phone_number`] = 'Phone number is required.';
+        });
+
+        setClientErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) {
+            scrollToFirstError();
+            onClientValidationError?.();
+        }
+        return Object.keys(nextErrors).length === 0;
+    };
+
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
+                if (!validateBeforeSubmit()) {
+                    return;
+                }
                 onSubmit();
             }}
             className="space-y-6"
+            noValidate
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
@@ -135,8 +220,9 @@ export default function BranchForm({
                                 { value: '1', label: 'Active' },
                                 { value: '0', label: 'Inactive' },
                             ]}
+                            placeholder="Select status..."
                         />
-                        <InputError className="mt-2" message={errors.is_active} />
+                        <InputError className="mt-2" message={mergedErrors.is_active} />
                     </div>
 
                     <div className="sm:col-span-2">
@@ -145,9 +231,16 @@ export default function BranchForm({
                             id="name"
                             className="mt-1 block w-full"
                             value={data.name || ''}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const next = { ...prev };
+                                    delete next.name;
+                                    return next;
+                                });
+                                setData('name', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.name} />
+                        <InputError className="mt-2" message={mergedErrors.name} />
                     </div>
                 </div>
             </section>
@@ -167,9 +260,16 @@ export default function BranchForm({
                         type="email"
                         className="mt-1 block w-full"
                         value={data.email || ''}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(e) => {
+                            setClientErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.email;
+                                return next;
+                            });
+                            setData('email', e.target.value);
+                        }}
                     />
-                    <InputError className="mt-2" message={errors.email} />
+                    <InputError className="mt-2" message={mergedErrors.email} />
                 </div>
 
                 <div className="mt-6 border-t border-gray-200 pt-4 dark:border-cursor-border">
@@ -191,16 +291,21 @@ export default function BranchForm({
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
                                             className=""
-                                            value={row.phone_type || 'Mobile'}
+                                            value={row.phone_type || ''}
                                             onChange={(v) => updatePhone(idx, { phone_type: v })}
                                             options={phoneTypeSelectOptions}
+                                            placeholder="Select phone type..."
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={mergedErrors[`phone_numbers.${idx}.phone_type`]}
                                         />
                                     </div>
 
                                     <div className="md:col-span-9">
                                         <PhoneNumberWithCountryField
                                             countryCode={
-                                                row.country_code || defaultPhoneCountry.countryCode
+                                                row.country_code || ''
                                             }
                                             countryIso2={row.country_iso2}
                                             phoneNumber={row.phone_number || ''}
@@ -215,18 +320,12 @@ export default function BranchForm({
                                             }
                                             options={countryCallingCodes}
                                             phoneInputId={`branch_phone_numbers_${idx}_number`}
-                                        />
-                                    </div>
-                                    <div className="md:col-span-12">
-                                        <InputError
-                                            className="mt-0"
-                                            message={[
-                                                errors[`phone_numbers.${idx}.phone_type`],
-                                                errors[`phone_numbers.${idx}.country_code`],
-                                                errors[`phone_numbers.${idx}.phone_number`],
-                                            ]
-                                                .filter(Boolean)
-                                                .join(' ')}
+                                            countryCodeError={
+                                                mergedErrors[`phone_numbers.${idx}.country_code`]
+                                            }
+                                            phoneNumberError={
+                                                mergedErrors[`phone_numbers.${idx}.phone_number`]
+                                            }
                                         />
                                     </div>
                                     <div className="md:col-span-12 flex justify-end">
@@ -241,13 +340,7 @@ export default function BranchForm({
                             </div>
                         ))}
                     </div>
-                    {phoneRemoveWarning ? (
-                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                            {phoneRemoveWarning}
-                        </div>
-                    ) : null}
-
-                    <InputError className="mt-2" message={errors.phone_numbers} />
+                    <InputError className="mt-2" message={phoneNumbersBlockMessage} />
                 </div>
             </section>
 
@@ -264,9 +357,16 @@ export default function BranchForm({
                             id="address_line_1"
                             className="mt-1 block w-full"
                             value={data.address_line_1 || ''}
-                            onChange={(e) => setData('address_line_1', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const next = { ...prev };
+                                    delete next.address_line_1;
+                                    return next;
+                                });
+                                setData('address_line_1', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.address_line_1} />
+                        <InputError className="mt-2" message={mergedErrors.address_line_1} />
                     </div>
 
                     <div className="sm:col-span-2">
@@ -286,9 +386,16 @@ export default function BranchForm({
                             id="city"
                             className="mt-1 block w-full"
                             value={data.city || ''}
-                            onChange={(e) => setData('city', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const next = { ...prev };
+                                    delete next.city;
+                                    return next;
+                                });
+                                setData('city', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.city} />
+                        <InputError className="mt-2" message={mergedErrors.city} />
                     </div>
 
                     <div>
@@ -296,12 +403,19 @@ export default function BranchForm({
                         <div className="mt-1">
                             <CountryCombobox
                                 value={data.country || ''}
-                                onChange={(name) => setData('country', name)}
+                                onChange={(name) => {
+                                    setClientErrors((prev) => {
+                                        const next = { ...prev };
+                                        delete next.country;
+                                        return next;
+                                    });
+                                    setData('country', name);
+                                }}
                                 options={countries}
-                                placeholder="Search countries..."
+                                placeholder="Select country..."
                             />
                         </div>
-                        <InputError className="mt-2" message={errors.country} />
+                        <InputError className="mt-2" message={mergedErrors.country} />
                     </div>
                 </div>
             </section>
@@ -317,7 +431,7 @@ export default function BranchForm({
                         onChange={(e) => setData('notes', e.target.value)}
                         aria-label="Notes"
                     />
-                    <InputError className="mt-2" message={errors.notes} />
+                    <InputError className="mt-2" message={mergedErrors.notes} />
                 </div>
             </section>
 

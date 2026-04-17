@@ -1,3 +1,4 @@
+import InputError from '@/Components/InputError';
 import { countryNativeNames } from '@/data/countryNativeNames';
 import {
     dropdownMenuItemClass,
@@ -75,8 +76,8 @@ function CountryOptionsPanel({ open, query, setQuery, filtered }) {
                         e.stopPropagation();
                     }}
                     className={listboxPanelFilterInputClass}
-                    placeholder="Search countries..."
-                    aria-label="Search countries"
+                    placeholder="Search country codes..."
+                    aria-label="Search country codes"
                     autoComplete="off"
                 />
             </div>
@@ -120,6 +121,8 @@ export default function PhoneNumberWithCountryField({
     phoneInputName,
     phonePlaceholder = 'Phone number',
     className = '',
+    countryCodeError = '',
+    phoneNumberError = '',
 }) {
     const [query, setQuery] = useState('');
     const emptyOption = { name: 'Select country code', iso2: '', callingCode: '' };
@@ -162,7 +165,7 @@ export default function PhoneNumberWithCountryField({
         <div className={'flex items-start gap-2 ' + (disabled ? 'opacity-60 ' : '') + className}>
             <div className="w-36 shrink-0">
                 <div className="mb-1 block text-sm font-medium text-gray-700 dark:text-cursor-fg">
-                    Country Code
+                    Code
                 </div>
                 <Listbox
                     value={selected}
@@ -192,7 +195,7 @@ export default function PhoneNumberWithCountryField({
                                             : 'font-normal text-gray-400 dark:text-cursor-muted')
                                     }
                                 >
-                                    {selected?.callingCode || 'Search...'}
+                                    {selected?.callingCode || 'Select country code...'}
                                 </span>
                                 <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
                             </ListboxButton>
@@ -206,6 +209,7 @@ export default function PhoneNumberWithCountryField({
                         </div>
                     )}
                 </Listbox>
+                <InputError className="mt-2" message={countryCodeError} />
             </div>
 
             <div className="min-w-0 flex-1">
@@ -224,6 +228,7 @@ export default function PhoneNumberWithCountryField({
                     onChange={(e) => onPhoneNumberChange(e.target.value)}
                     className="block min-h-10 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out placeholder:text-gray-400 hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised dark:focus:ring-cursor-accent-soft dark:focus:ring-offset-cursor-bg"
                 />
+                <InputError className="mt-2" message={phoneNumberError} />
             </div>
         </div>
     );

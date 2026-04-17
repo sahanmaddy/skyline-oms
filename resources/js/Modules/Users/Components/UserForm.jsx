@@ -4,7 +4,8 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { useEffect, useMemo } from 'react';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
+import { useEffect, useMemo, useState } from 'react';
 
 function normId(v) {
     const n = Number(v);
@@ -22,8 +23,11 @@ export default function UserForm({
     employeesForLink,
     submitLabel,
     showPasswordFields,
+    requirePassword = false,
     onSubmit,
+    onClientValidationError,
 }) {
+    const [clientErrors, setClientErrors] = useState({});
     const branchOptions = useMemo(
         () =>
             (activeBranches || []).filter(
@@ -49,6 +53,7 @@ export default function UserForm({
     );
 
     const homeBranchId = normId(data.branch_id);
+    const mergedErrors = useMemo(() => ({ ...clientErrors, ...errors }), [clientErrors, errors]);
 
     const employeesInBranch = useMemo(() => {
         if (!employeesList.length) {
@@ -122,15 +127,60 @@ export default function UserForm({
         if (!arr.length) {
             setData('branch_id', '');
         }
+        setClientErrors((prev) => {
+            const nextErrors = { ...prev };
+            delete nextErrors.branch_ids;
+            delete nextErrors.branch_id;
+            return nextErrors;
+        });
+    }
+
+    const validateBeforeSubmit = () => {
+        const nextErrors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!String(data.name || '').trim()) nextErrors.name = 'Name is required.';
+        if (!String(data.email || '').trim()) nextErrors.email = 'Email is required.';
+        else if (!emailRegex.test(String(data.email || '').trim())) {
+            nextErrors.email = 'Enter a valid email address.';
+        }
+        if (!String(data.status || '').trim()) nextErrors.status = 'Status is required.';
+        if (!Array.isArray(data.branch_ids) || data.branch_ids.length === 0) {
+            nextErrors.branch_ids = 'At least one branch access is required.';
+        }
+        if (!data.branch_id) nextErrors.branch_id = 'Default Branch is required.';
+        if (!Array.isArray(data.roles) || data.roles.length === 0) {
+            nextErrors.roles = 'At least one role is required.';
+        }
+        if (requirePassword && showPasswordFields) {
+            const pw = String(data.password || '');
+            const pwc = String(data.password_confirmation || '');
+            if (!pw) nextErrors.password = 'Password is required.';
+            else if (pw.length < 8) nextErrors.password = 'Password must be at least 8 characters.';
+            if (!pwc) nextErrors.password_confirmation = 'Confirm Password is required.';
+            else if (pw !== pwc) nextErrors.password = 'Passwords do not match.';
+        }
+
+        setClientErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) {
+            scrollToFirstError();
+            onClientValidationError?.();
+        }
+
+        return Object.keys(nextErrors).length === 0;
     }
 
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
+                if (!validateBeforeSubmit()) {
+                    return;
+                }
                 onSubmit();
             }}
             className="space-y-6"
+            noValidate
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">User Information</h3>
@@ -144,9 +194,16 @@ export default function UserForm({
                             id="name"
                             className="mt-1 block w-full"
                             value={data.name || ''}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const nextErrors = { ...prev };
+                                    delete nextErrors.name;
+                                    return nextErrors;
+                                });
+                                setData('name', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.name} />
+                        <InputError className="mt-2" message={mergedErrors.name} />
                     </div>
 
                     <div className="sm:col-span-2">
@@ -156,9 +213,16 @@ export default function UserForm({
                             type="email"
                             className="mt-1 block w-full"
                             value={data.email || ''}
-                            onChange={(e) => setData('email', e.target.value)}
+                            onChange={(e) => {
+                                setClientErrors((prev) => {
+                                    const nextErrors = { ...prev };
+                                    delete nextErrors.email;
+                                    return nextErrors;
+                                });
+                                setData('email', e.target.value);
+                            }}
                         />
-                        <InputError className="mt-2" message={errors.email} />
+                        <InputError className="mt-2" message={mergedErrors.email} />
                     </div>
 
                     <div className="sm:col-span-2">
@@ -197,7 +261,7 @@ export default function UserForm({
                             This user can switch the app context among these branches (active branches
                             only).
                         </p>
-                        <InputError className="mt-2" message={errors.branch_ids} />
+                        <InputError className="mt-2" message={mergedErrors.branch_ids} />
                     </div>
 
                     <div className="sm:col-span-2">
@@ -206,7 +270,14 @@ export default function UserForm({
                             id="branch_id"
                             className="mt-1"
                             value={data.branch_id ?? ''}
-                            onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
+                            onChange={(v) => {
+                                setClientErrors((prev) => {
+                                    const nextErrors = { ...prev };
+                                    delete nextErrors.branch_id;
+                                    return nextErrors;
+                                });
+                                setData('branch_id', v === '' ? '' : Number(v));
+                            }}
                             options={[
                                 { value: '', label: 'Select Branch…' },
                                 ...branchOptions
@@ -224,7 +295,7 @@ export default function UserForm({
                         <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                             Default home branch (must be one of the branches above).
                         </p>
-                        <InputError className="mt-2" message={errors.branch_id} />
+                        <InputError className="mt-2" message={mergedErrors.branch_id} />
                     </div>
 
                     <div>
@@ -233,15 +304,23 @@ export default function UserForm({
                             id="status"
                             className="mt-1"
                             value={data.status || statusOptions?.[0] || 'active'}
-                            onChange={(v) => setData('status', v)}
+                            onChange={(v) => {
+                                setClientErrors((prev) => {
+                                    const nextErrors = { ...prev };
+                                    delete nextErrors.status;
+                                    return nextErrors;
+                                });
+                                setData('status', v);
+                            }}
                             options={
                                 statusOptions?.map((s) => ({
                                     value: s,
                                     label: s === 'active' ? 'Active' : 'Inactive',
                                 })) ?? []
                             }
+                            placeholder="Select status..."
                         />
-                        <InputError className="mt-2" message={errors.status} />
+                        <InputError className="mt-2" message={mergedErrors.status} />
                     </div>
 
                     <div>
@@ -253,10 +332,20 @@ export default function UserForm({
                             employees={employeesInBranch}
                             onChange={(emp) => {
                                 if (!emp) {
+                                    setClientErrors((prev) => {
+                                        const nextErrors = { ...prev };
+                                        delete nextErrors.employee_id;
+                                        return nextErrors;
+                                    });
                                     setData('employee_id', '');
                                     return;
                                 }
                                 const eb = normId(emp.branch_id);
+                                setClientErrors((prev) => {
+                                    const nextErrors = { ...prev };
+                                    delete nextErrors.employee_id;
+                                    return nextErrors;
+                                });
                                 setData((prev) => ({
                                     ...prev,
                                     employee_id: Number(emp.id),
@@ -267,7 +356,7 @@ export default function UserForm({
                         <p className="mt-1 text-xs text-gray-500">
                             Each employee can only be linked to one user.
                         </p>
-                        <InputError className="mt-2" message={errors.employee_id} />
+                        <InputError className="mt-2" message={mergedErrors.employee_id} />
                     </div>
                 </div>
             </section>
@@ -293,6 +382,11 @@ export default function UserForm({
                                             className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                             checked={checked}
                                             onChange={(e) => {
+                                                setClientErrors((prev) => {
+                                                    const nextErrors = { ...prev };
+                                                    delete nextErrors.roles;
+                                                    return nextErrors;
+                                                });
                                                 const next = new Set(data.roles || []);
                                                 if (e.target.checked) next.add(r);
                                                 else next.delete(r);
@@ -305,7 +399,7 @@ export default function UserForm({
                             })}
                         </div>
                     </div>
-                    <InputError className="mt-2" message={errors.roles} />
+                    <InputError className="mt-2" message={mergedErrors.roles} />
                 </div>
             </section>
 
@@ -323,10 +417,18 @@ export default function UserForm({
                                 type="password"
                                 className="mt-1 block w-full"
                                 value={data.password || ''}
-                                onChange={(e) => setData('password', e.target.value)}
+                                onChange={(e) => {
+                                    setClientErrors((prev) => {
+                                        const nextErrors = { ...prev };
+                                        delete nextErrors.password;
+                                        delete nextErrors.password_confirmation;
+                                        return nextErrors;
+                                    });
+                                    setData('password', e.target.value);
+                                }}
                                 autoComplete="new-password"
                             />
-                            <InputError className="mt-2" message={errors.password} />
+                            <InputError className="mt-2" message={mergedErrors.password} />
                         </div>
                         <div className="sm:col-span-2">
                             <InputLabel
@@ -338,10 +440,20 @@ export default function UserForm({
                                 type="password"
                                 className="mt-1 block w-full"
                                 value={data.password_confirmation || ''}
-                                onChange={(e) =>
-                                    setData('password_confirmation', e.target.value)
-                                }
+                                onChange={(e) => {
+                                    setClientErrors((prev) => {
+                                        const nextErrors = { ...prev };
+                                        delete nextErrors.password;
+                                        delete nextErrors.password_confirmation;
+                                        return nextErrors;
+                                    });
+                                    setData('password_confirmation', e.target.value);
+                                }}
                                 autoComplete="new-password"
+                            />
+                            <InputError
+                                className="mt-2"
+                                message={mergedErrors.password_confirmation}
                             />
                         </div>
                     </div>

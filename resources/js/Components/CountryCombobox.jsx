@@ -105,7 +105,7 @@ export default function CountryCombobox({
     value,
     onChange,
     options,
-    placeholder = 'Search countries...',
+    placeholder = 'Select country...',
     className = '',
 }) {
     const [query, setQuery] = useState('');
@@ -141,7 +141,7 @@ export default function CountryCombobox({
                                 : '')
                         }
                     >
-                        <span className={selected ? 'min-w-0 truncate text-gray-900 dark:text-cursor-fg' : 'min-w-0 truncate text-gray-500 dark:text-cursor-muted'}>
+                        <span className={selected ? 'min-w-0 truncate text-gray-900 dark:text-cursor-fg' : 'min-w-0 truncate text-gray-400 dark:text-cursor-muted'}>
                             {selected ? countryListLabel(selected.name, selected.iso2) : placeholder}
                         </span>
                         <ChevronDownIcon className="pointer-events-none h-4 w-4 shrink-0 text-gray-400" />

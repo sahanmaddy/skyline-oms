@@ -3,11 +3,13 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import BranchForm from '@/Modules/Branches/Components/BranchForm';
+import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ nextCode }) {
+    const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultCountry = getCompanyDefaultCountry(company);
     const { data, setData, post, processing, errors } = useForm({
@@ -47,9 +49,15 @@ export default function Create({ nextCode }) {
                             mode="create"
                             nextCode={nextCode}
                             submitLabel="Create branch"
+                            onClientValidationError={() =>
+                                toast.error('Please fix the highlighted fields and try again.')
+                            }
                             onSubmit={() =>
                                 post(route('settings.branches.store'), {
-                                    onError: () => scrollToFirstError(),
+                                    onError: () => {
+                                        scrollToFirstError();
+                                        toast.error('Please fix the highlighted fields and try again.');
+                                    },
                                 })
                             }
                         />

@@ -11,6 +11,7 @@ import TextInput from '@/Components/TextInput';
 import { countryCallingCodes } from '@/data/countryCallingCodes';
 import { getCompanyDefaultPhoneCountry } from '@/lib/companyLocationDefaults';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
+import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { countries } from '@/data/countries';
 import { departments } from '@/data/departments';
 import { subYears } from 'date-fns';
@@ -78,6 +79,7 @@ export default function EmployeeForm({
     users,
     submitLabel,
     onSubmit,
+    onClientValidationError,
     profilePhotoUrl,
     mode = 'create',
 }) {
@@ -89,7 +91,9 @@ export default function EmployeeForm({
     const [photoPreviewSrc, setPhotoPreviewSrc] = useState(profilePhotoUrl || null);
     const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
     const [emergencyPhoneRemoveWarning, setEmergencyPhoneRemoveWarning] = useState('');
+    const [clientErrors, setClientErrors] = useState({});
     const profilePhotoInputRef = useRef(null);
+    const mergedErrors = useMemo(() => ({ ...clientErrors, ...errors }), [clientErrors, errors]);
 
     useEffect(() => {
         // Only auto-fill on create; on edit, overwriting display_name breaks saves and custom names.
@@ -113,6 +117,67 @@ export default function EmployeeForm({
         () => data.emergency_phone_numbers || [],
         [data.emergency_phone_numbers],
     );
+    const hasPhoneNumbersServerErrors = useMemo(
+        () =>
+            Object.keys(errors || {}).some(
+                (k) => k === 'phone_numbers' || k.startsWith('phone_numbers.'),
+            ),
+        [errors],
+    );
+    const hasPhoneNumbersClientErrors = useMemo(
+        () =>
+            Object.keys(clientErrors || {}).some(
+                (k) => k === 'phone_numbers' || k.startsWith('phone_numbers.'),
+            ),
+        [clientErrors],
+    );
+
+    const hasEmergencyPhoneNumbersServerErrors = useMemo(
+        () =>
+            Object.keys(errors || {}).some(
+                (k) => k === 'emergency_phone_numbers' || k.startsWith('emergency_phone_numbers.'),
+            ),
+        [errors],
+    );
+    const hasEmergencyPhoneNumbersClientErrors = useMemo(
+        () =>
+            Object.keys(clientErrors || {}).some(
+                (k) => k === 'emergency_phone_numbers' || k.startsWith('emergency_phone_numbers.'),
+            ),
+        [clientErrors],
+    );
+
+    const phoneNumbersBlockMessage = useMemo(() => {
+        if (hasPhoneNumbersServerErrors) {
+            return errors.phone_numbers || '';
+        }
+        if (hasPhoneNumbersClientErrors) {
+            return clientErrors.phone_numbers || '';
+        }
+        return phoneRemoveWarning || clientErrors.phone_numbers || errors.phone_numbers || '';
+    }, [
+        clientErrors.phone_numbers,
+        errors.phone_numbers,
+        hasPhoneNumbersClientErrors,
+        hasPhoneNumbersServerErrors,
+        phoneRemoveWarning,
+    ]);
+
+    const emergencyPhoneNumbersBlockMessage = useMemo(() => {
+        if (hasEmergencyPhoneNumbersServerErrors) {
+            return errors.emergency_phone_numbers || '';
+        }
+        if (hasEmergencyPhoneNumbersClientErrors) {
+            return clientErrors.emergency_phone_numbers || '';
+        }
+        return emergencyPhoneRemoveWarning || clientErrors.emergency_phone_numbers || errors.emergency_phone_numbers || '';
+    }, [
+        clientErrors.emergency_phone_numbers,
+        emergencyPhoneRemoveWarning,
+        errors.emergency_phone_numbers,
+        hasEmergencyPhoneNumbersClientErrors,
+        hasEmergencyPhoneNumbersServerErrors,
+    ]);
 
     useEffect(() => {
         if (phoneRows.length > 0) {
@@ -121,9 +186,9 @@ export default function EmployeeForm({
 
         setData('phone_numbers', [
             {
-                phone_type: 'Mobile',
-                country_code: defaultPhoneCountry.countryCode,
-                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_type: '',
+                country_code: '',
+                country_iso2: '',
                 phone_number: '',
                 is_primary: true,
             },
@@ -137,9 +202,9 @@ export default function EmployeeForm({
 
         setData('emergency_phone_numbers', [
             {
-                phone_type: 'Mobile',
-                country_code: defaultPhoneCountry.countryCode,
-                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_type: '',
+                country_code: '',
+                country_iso2: '',
                 phone_number: '',
                 is_primary: true,
             },
@@ -205,9 +270,9 @@ export default function EmployeeForm({
         setData('phone_numbers', [
             ...phoneRows,
             {
-                phone_type: 'Mobile',
-                country_code: defaultPhoneCountry.countryCode,
-                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_type: '',
+                country_code: '',
+                country_iso2: '',
                 phone_number: '',
                 is_primary: phoneRows.length === 0,
             },
@@ -227,6 +292,15 @@ export default function EmployeeForm({
     };
 
     const updatePhone = (idx, patch) => {
+        setPhoneRemoveWarning('');
+        setClientErrors((prev) => {
+            const next = { ...prev };
+            delete next.phone_numbers;
+            delete next[`phone_numbers.${idx}.phone_type`];
+            delete next[`phone_numbers.${idx}.country_code`];
+            delete next[`phone_numbers.${idx}.phone_number`];
+            return next;
+        });
         const next = phoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row));
         setData('phone_numbers', next);
     };
@@ -235,9 +309,9 @@ export default function EmployeeForm({
         setData('emergency_phone_numbers', [
             ...emergencyPhoneRows,
             {
-                phone_type: 'Mobile',
-                country_code: defaultPhoneCountry.countryCode,
-                country_iso2: defaultPhoneCountry.countryIso2,
+                phone_type: '',
+                country_code: '',
+                country_iso2: '',
                 phone_number: '',
                 is_primary: emergencyPhoneRows.length === 0,
             },
@@ -257,19 +331,103 @@ export default function EmployeeForm({
     };
 
     const updateEmergencyPhone = (idx, patch) => {
+        setEmergencyPhoneRemoveWarning('');
+        setClientErrors((prev) => {
+            const next = { ...prev };
+            delete next.emergency_phone_numbers;
+            delete next[`emergency_phone_numbers.${idx}.phone_type`];
+            delete next[`emergency_phone_numbers.${idx}.country_code`];
+            delete next[`emergency_phone_numbers.${idx}.phone_number`];
+            return next;
+        });
         setData(
             'emergency_phone_numbers',
             emergencyPhoneRows.map((row, i) => (i === idx ? { ...row, ...patch } : row)),
         );
     };
 
+    const validateBeforeSubmit = () => {
+        const nextErrors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!String(data.first_name || '').trim()) nextErrors.first_name = 'First name is required.';
+        if (!String(data.last_name || '').trim()) nextErrors.last_name = 'Last name is required.';
+        if (!String(data.display_name || '').trim()) nextErrors.display_name = 'Display name is required.';
+        if (!String(data.nic || '').trim()) nextErrors.nic = 'NIC is required.';
+        if (!String(data.gender || '').trim()) nextErrors.gender = 'Gender is required.';
+        if (!String(data.marital_status || '').trim()) nextErrors.marital_status = 'Marital status is required.';
+        if (!String(data.date_of_birth || '').trim()) nextErrors.date_of_birth = 'Date of birth is required.';
+        if (!String(data.designation || '').trim()) nextErrors.designation = 'Designation is required.';
+        if (!String(data.department || '').trim()) nextErrors.department = 'Department is required.';
+        if (!String(data.employment_type || '').trim()) nextErrors.employment_type = 'Employment type is required.';
+        if (!String(data.joined_date || '').trim()) nextErrors.joined_date = 'Joined date is required.';
+        if (!String(data.basic_salary || '').trim()) nextErrors.basic_salary = 'Basic salary is required.';
+        if (!String(data.email || '').trim()) nextErrors.email = 'Email is required.';
+        else if (!emailRegex.test(String(data.email || '').trim())) nextErrors.email = 'Enter a valid email address.';
+        if (!String(data.address_line_1 || '').trim()) nextErrors.address_line_1 = 'Address Line 1 is required.';
+        if (!String(data.city || '').trim()) nextErrors.city = 'City is required.';
+        if (!String(data.country || '').trim()) nextErrors.country = 'Country is required.';
+        if (!String(data.bank_name || '').trim()) nextErrors.bank_name = 'Bank name is required.';
+        if (!String(data.bank_branch || '').trim()) nextErrors.bank_branch = 'Branch is required.';
+        if (!String(data.bank_account_number || '').trim()) nextErrors.bank_account_number = 'Bank account number is required.';
+        if (!String(data.emergency_contact_person || '').trim()) {
+            nextErrors.emergency_contact_person = 'Contact person is required.';
+        }
+
+        const hasAnyPhoneNumber = (phoneRows || []).some((row) =>
+            [row?.phone_type, row?.country_code, row?.phone_number].some(
+                (value) => String(value || '').trim() !== '',
+            ),
+        );
+        if (!hasAnyPhoneNumber) nextErrors.phone_numbers = 'At least one phone number is required.';
+        phoneRows.forEach((row, idx) => {
+            const type = String(row?.phone_type || '').trim();
+            const code = String(row?.country_code || '').trim();
+            const number = String(row?.phone_number || '').trim();
+            const hasAny = Boolean(type || code || number);
+            if (!hasAny) return;
+            if (!type) nextErrors[`phone_numbers.${idx}.phone_type`] = 'Type is required.';
+            if (!code) nextErrors[`phone_numbers.${idx}.country_code`] = 'Code is required.';
+            if (!number) nextErrors[`phone_numbers.${idx}.phone_number`] = 'Phone number is required.';
+        });
+
+        const hasAnyEmergencyPhoneNumber = (emergencyPhoneRows || []).some((row) =>
+            [row?.phone_type, row?.country_code, row?.phone_number].some(
+                (value) => String(value || '').trim() !== '',
+            ),
+        );
+        if (!hasAnyEmergencyPhoneNumber) {
+            nextErrors.emergency_phone_numbers = 'At least one emergency contact phone number is required.';
+        }
+        emergencyPhoneRows.forEach((row, idx) => {
+            const type = String(row?.phone_type || '').trim();
+            const code = String(row?.country_code || '').trim();
+            const number = String(row?.phone_number || '').trim();
+            const hasAny = Boolean(type || code || number);
+            if (!hasAny) return;
+            if (!type) nextErrors[`emergency_phone_numbers.${idx}.phone_type`] = 'Emergency contact phone type is required.';
+            if (!code) nextErrors[`emergency_phone_numbers.${idx}.country_code`] = 'Code is required.';
+            if (!number) nextErrors[`emergency_phone_numbers.${idx}.phone_number`] = 'Emergency contact phone number is required.';
+        });
+
+        setClientErrors(nextErrors);
+        if (Object.keys(nextErrors).length > 0) {
+            scrollToFirstError();
+            onClientValidationError?.();
+        }
+        return Object.keys(nextErrors).length === 0;
+    };
+
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
+                if (!validateBeforeSubmit()) {
+                    return;
+                }
                 onSubmit();
             }}
             className="space-y-6"
+            noValidate
         >
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Employee Information</h3>
@@ -392,7 +550,7 @@ export default function EmployeeForm({
                             value={data.first_name || ''}
                             onChange={(e) => setData('first_name', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.first_name} />
+                        <InputError className="mt-2" message={mergedErrors.first_name} />
                     </div>
 
                     <div>
@@ -403,7 +561,7 @@ export default function EmployeeForm({
                             value={data.last_name || ''}
                             onChange={(e) => setData('last_name', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.last_name} />
+                        <InputError className="mt-2" message={mergedErrors.last_name} />
                     </div>
 
                     <div>
@@ -431,7 +589,7 @@ export default function EmployeeForm({
                                 setData('display_name', e.target.value);
                             }}
                         />
-                        <InputError className="mt-2" message={errors.display_name} />
+                        <InputError className="mt-2" message={mergedErrors.display_name} />
                     </div>
 
                     <div>
@@ -442,7 +600,7 @@ export default function EmployeeForm({
                             value={data.nic || ''}
                             onChange={(e) => setData('nic', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.nic} />
+                        <InputError className="mt-2" message={mergedErrors.nic} />
                     </div>
 
                     <div>
@@ -453,15 +611,14 @@ export default function EmployeeForm({
                             value={data.gender || ''}
                             onChange={(v) => setData('gender', v)}
                             options={[
-                                { value: '', label: '—' },
                                 { value: 'Male', label: 'Male' },
                                 { value: 'Female', label: 'Female' },
                                 { value: 'Other', label: 'Other' },
                                 { value: 'Prefer not to say', label: 'Prefer not to say' },
                             ]}
-                            placeholder="—"
+                            placeholder="Select gender..."
                         />
-                        <InputError className="mt-2" message={errors.gender} />
+                        <InputError className="mt-2" message={mergedErrors.gender} />
                     </div>
 
                     <div>
@@ -475,17 +632,16 @@ export default function EmployeeForm({
                             value={data.marital_status || ''}
                             onChange={(v) => setData('marital_status', v)}
                             options={[
-                                { value: '', label: '—' },
                                 { value: 'Single', label: 'Single' },
                                 { value: 'Married', label: 'Married' },
                                 { value: 'Divorced', label: 'Divorced' },
                                 { value: 'Widowed', label: 'Widowed' },
                             ]}
-                            placeholder="—"
+                            placeholder="Select marital status..."
                         />
                         <InputError
                             className="mt-2"
-                            message={errors.marital_status}
+                            message={mergedErrors.marital_status}
                         />
                     </div>
 
@@ -500,7 +656,7 @@ export default function EmployeeForm({
                                 minDate={subYears(new Date(), 120)}
                             />
                         </div>
-                        <InputError className="mt-2" message={errors.date_of_birth} />
+                        <InputError className="mt-2" message={mergedErrors.date_of_birth} />
                     </div>
 
                     <div>
@@ -530,7 +686,7 @@ export default function EmployeeForm({
                             value={data.designation || ''}
                             onChange={(e) => setData('designation', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.designation} />
+                        <InputError className="mt-2" message={mergedErrors.designation} />
                     </div>
 
                     <div>
@@ -541,12 +697,11 @@ export default function EmployeeForm({
                             value={data.department || ''}
                             onChange={(v) => setData('department', v)}
                             options={[
-                                { value: '', label: '—' },
                                 ...departments.map((d) => ({ value: d, label: d })),
                             ]}
-                            placeholder="—"
+                            placeholder="Select department..."
                         />
-                        <InputError className="mt-2" message={errors.department} />
+                        <InputError className="mt-2" message={mergedErrors.department} />
                     </div>
 
                     <div>
@@ -557,17 +712,16 @@ export default function EmployeeForm({
                             value={data.employment_type || ''}
                             onChange={(v) => setData('employment_type', v)}
                             options={[
-                                { value: '', label: '—' },
                                 { value: 'Full-time', label: 'Full-time' },
                                 { value: 'Part-time', label: 'Part-time' },
                                 { value: 'Contract', label: 'Contract' },
                                 { value: 'Intern', label: 'Intern' },
                             ]}
-                            placeholder="—"
+                            placeholder="Select employment type..."
                         />
                         <InputError
                             className="mt-2"
-                            message={errors.employment_type}
+                            message={mergedErrors.employment_type}
                         />
                     </div>
 
@@ -582,7 +736,7 @@ export default function EmployeeForm({
                                 minDate={subYears(new Date(), 80)}
                             />
                         </div>
-                        <InputError className="mt-2" message={errors.joined_date} />
+                        <InputError className="mt-2" message={mergedErrors.joined_date} />
                     </div>
 
                     <div>
@@ -595,7 +749,7 @@ export default function EmployeeForm({
                                 id="basic_salary"
                                 type="text"
                                 inputMode="decimal"
-                                className="block w-full rounded-none rounded-r-md border border-gray-300 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-0"
+                                className="block min-h-10 w-full rounded-none rounded-r-md border border-gray-300 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-0 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                 value={formatMoneyWithCommas(data.basic_salary || '')}
                                 placeholder="0.00"
                                 onChange={(e) =>
@@ -610,7 +764,7 @@ export default function EmployeeForm({
                         </div>
                         <InputError
                             className="mt-2"
-                            message={errors.basic_salary}
+                            message={mergedErrors.basic_salary}
                         />
                     </div>
 
@@ -725,7 +879,7 @@ export default function EmployeeForm({
                         value={data.email || ''}
                         onChange={(e) => setData('email', e.target.value)}
                     />
-                    <InputError className="mt-2" message={errors.email} />
+                    <InputError className="mt-2" message={mergedErrors.email} />
                 </div>
 
                 <div className="mt-6 border-t border-gray-200 pt-4">
@@ -749,15 +903,20 @@ export default function EmployeeForm({
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
                                             className=""
-                                            value={row.phone_type || 'Mobile'}
+                                            value={row.phone_type || ''}
                                             onChange={(v) => updatePhone(idx, { phone_type: v })}
                                             options={phoneTypeSelectOptions}
+                                            placeholder="Select phone type..."
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={mergedErrors[`phone_numbers.${idx}.phone_type`]}
                                         />
                                     </div>
                                     <div className="md:col-span-9">
                                         <PhoneNumberWithCountryField
                                             countryCode={
-                                                row.country_code || defaultPhoneCountry.countryCode
+                                                row.country_code || ''
                                             }
                                             countryIso2={row.country_iso2}
                                             phoneNumber={row.phone_number || ''}
@@ -772,18 +931,12 @@ export default function EmployeeForm({
                                             }
                                             options={countryCallingCodes}
                                             phoneInputId={`employee_phone_numbers_${idx}_number`}
-                                        />
-                                    </div>
-                                    <div className="md:col-span-12">
-                                        <InputError
-                                            className="mt-0"
-                                            message={[
-                                                errors[`phone_numbers.${idx}.phone_type`],
-                                                errors[`phone_numbers.${idx}.country_code`],
-                                                errors[`phone_numbers.${idx}.phone_number`],
-                                            ]
-                                                .filter(Boolean)
-                                                .join(' ')}
+                                            countryCodeError={
+                                                mergedErrors[`phone_numbers.${idx}.country_code`]
+                                            }
+                                            phoneNumberError={
+                                                mergedErrors[`phone_numbers.${idx}.phone_number`]
+                                            }
                                         />
                                     </div>
                                     <div className="md:col-span-12 flex justify-end">
@@ -798,13 +951,8 @@ export default function EmployeeForm({
                             </div>
                         ))}
                     </div>
-                    {phoneRemoveWarning ? (
-                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                            {phoneRemoveWarning}
-                        </div>
-                    ) : null}
+                    <InputError className="mt-2" message={phoneNumbersBlockMessage} />
                 </div>
-                <InputError className="mt-2" message={errors['phone_numbers']} />
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -819,14 +967,19 @@ export default function EmployeeForm({
                         id="emergency_contact_person"
                         className="mt-1 block w-full"
                         value={data.emergency_contact_person || ''}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                            setClientErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.emergency_contact_person;
+                                return next;
+                            });
                             setData(
                                 'emergency_contact_person',
                                 e.target.value,
-                            )
-                        }
+                            );
+                        }}
                     />
-                    <InputError className="mt-2" message={errors.emergency_contact_person} />
+                    <InputError className="mt-2" message={mergedErrors.emergency_contact_person} />
                 </div>
 
                 <div className="mt-6 border-t border-gray-200 pt-4">
@@ -850,17 +1003,24 @@ export default function EmployeeForm({
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
                                             className=""
-                                            value={row.phone_type || 'Mobile'}
+                                            value={row.phone_type || ''}
                                             onChange={(v) =>
                                                 updateEmergencyPhone(idx, { phone_type: v })
                                             }
                                             options={phoneTypeSelectOptions}
+                                            placeholder="Select phone type..."
+                                        />
+                                        <InputError
+                                            className="mt-2"
+                                            message={
+                                                mergedErrors[`emergency_phone_numbers.${idx}.phone_type`]
+                                            }
                                         />
                                     </div>
                                     <div className="md:col-span-9">
                                         <PhoneNumberWithCountryField
                                             countryCode={
-                                                row.country_code || defaultPhoneCountry.countryCode
+                                                row.country_code || ''
                                             }
                                             countryIso2={row.country_iso2}
                                             phoneNumber={row.phone_number || ''}
@@ -875,18 +1035,12 @@ export default function EmployeeForm({
                                             }
                                             options={countryCallingCodes}
                                             phoneInputId={`employee_emergency_phone_numbers_${idx}_number`}
-                                        />
-                                    </div>
-                                    <div className="md:col-span-12">
-                                        <InputError
-                                            className="mt-0"
-                                            message={[
-                                                errors[`emergency_phone_numbers.${idx}.phone_type`],
-                                                errors[`emergency_phone_numbers.${idx}.country_code`],
-                                                errors[`emergency_phone_numbers.${idx}.phone_number`],
-                                            ]
-                                                .filter(Boolean)
-                                                .join(' ')}
+                                            countryCodeError={
+                                                mergedErrors[`emergency_phone_numbers.${idx}.country_code`]
+                                            }
+                                            phoneNumberError={
+                                                mergedErrors[`emergency_phone_numbers.${idx}.phone_number`]
+                                            }
                                         />
                                     </div>
                                     <div className="md:col-span-12 flex justify-end">
@@ -901,13 +1055,8 @@ export default function EmployeeForm({
                             </div>
                         ))}
                     </div>
-                    {emergencyPhoneRemoveWarning ? (
-                        <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                            {emergencyPhoneRemoveWarning}
-                        </div>
-                    ) : null}
+                    <InputError className="mt-2" message={emergencyPhoneNumbersBlockMessage} />
                 </div>
-                <InputError className="mt-2" message={errors.emergency_phone_numbers} />
             </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
@@ -922,7 +1071,7 @@ export default function EmployeeForm({
                             value={data.address_line_1 || ''}
                             onChange={(e) => setData('address_line_1', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.address_line_1} />
+                        <InputError className="mt-2" message={mergedErrors.address_line_1} />
                     </div>
                     <div className="sm:col-span-2">
                         <InputLabel htmlFor="address_line_2" value="Address Line 2" />
@@ -942,7 +1091,7 @@ export default function EmployeeForm({
                             value={data.city || ''}
                             onChange={(e) => setData('city', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.city} />
+                        <InputError className="mt-2" message={mergedErrors.city} />
                     </div>
                     <div>
                         <InputLabel htmlFor="country" value="Country" />
@@ -951,10 +1100,10 @@ export default function EmployeeForm({
                                 value={data.country || ''}
                                 onChange={(name) => setData('country', name)}
                                 options={countries}
-                                placeholder="Search countries..."
+                                placeholder="Select country..."
                             />
                         </div>
-                        <InputError className="mt-2" message={errors.country} />
+                        <InputError className="mt-2" message={mergedErrors.country} />
                     </div>
                 </div>
             </section>
@@ -973,7 +1122,7 @@ export default function EmployeeForm({
                             value={data.bank_name || ''}
                             onChange={(e) => setData('bank_name', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.bank_name} />
+                        <InputError className="mt-2" message={mergedErrors.bank_name} />
                     </div>
                     <div>
                         <InputLabel htmlFor="bank_branch" value="Bank Branch" />
@@ -983,7 +1132,7 @@ export default function EmployeeForm({
                             value={data.bank_branch || ''}
                             onChange={(e) => setData('bank_branch', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.bank_branch} />
+                        <InputError className="mt-2" message={mergedErrors.bank_branch} />
                     </div>
                     <div>
                         <InputLabel
@@ -996,7 +1145,7 @@ export default function EmployeeForm({
                             value={data.bank_account_number || ''}
                             onChange={(e) => setData('bank_account_number', e.target.value)}
                         />
-                        <InputError className="mt-2" message={errors.bank_account_number} />
+                        <InputError className="mt-2" message={mergedErrors.bank_account_number} />
                     </div>
 
                     <div>

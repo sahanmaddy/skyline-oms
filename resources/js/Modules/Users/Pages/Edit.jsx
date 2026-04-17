@@ -3,10 +3,12 @@ import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
+import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ user, roles, statusOptions, employeesForLink, activeBranches }) {
+    const toast = useToast();
     const assignedIds =
         user.assigned_branches?.length > 0
             ? user.assigned_branches.map((b) => b.id)
@@ -58,9 +60,16 @@ export default function Edit({ user, roles, statusOptions, employeesForLink, act
                         activeBranches={activeBranches}
                         submitLabel="Save"
                         showPasswordFields
+                        requirePassword={false}
+                        onClientValidationError={() =>
+                            toast.error('Please fix the highlighted fields and try again.')
+                        }
                         onSubmit={() =>
                             put(route('settings.users.update', user.id), {
-                                onError: () => scrollToFirstError(),
+                                onError: () => {
+                                    scrollToFirstError();
+                                    toast.error('Please fix the highlighted fields and try again.');
+                                },
                             })
                         }
                     />

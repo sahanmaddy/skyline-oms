@@ -6,6 +6,7 @@ use App\Enums\CustomerStatus;
 use App\Models\Customer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\RequiredIf;
 
 class CustomerStoreRequest extends FormRequest
 {
@@ -30,8 +31,18 @@ class CustomerStoreRequest extends FormRequest
             'city' => ['nullable', 'string', 'max:100'],
             'country' => ['nullable', 'string', 'max:100'],
             'credit_eligible' => ['boolean'],
-            'credit_limit' => ['nullable', 'numeric', 'min:0'],
-            'guarantor' => ['nullable', 'string', 'max:200'],
+            'credit_limit' => [
+                new RequiredIf(fn () => $this->boolean('credit_eligible')),
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+            'guarantor' => [
+                new RequiredIf(fn () => $this->boolean('credit_eligible')),
+                'nullable',
+                'string',
+                'max:200',
+            ],
             'notes' => ['nullable', 'string'],
             'phone_numbers' => ['required', 'array', 'min:1'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],
@@ -83,11 +94,15 @@ class CustomerStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'customer_name.required' => 'Customer name is required.',
             'phone_numbers.required' => 'At least one phone number is required.',
             'phone_numbers.min' => 'At least one phone number is required.',
             'phone_numbers.*.phone_number.required_with' => 'Phone number is required.',
-            'phone_numbers.*.country_code.required_with' => 'Country code is required.',
+            'phone_numbers.*.country_code.required_with' => 'Code is required.',
             'phone_numbers.*.phone_type.required_with' => 'Phone type is required.',
+            'credit_limit.required' => 'Credit amount is required when credit is eligible.',
+            'credit_limit.numeric' => 'Credit amount must be a valid number.',
+            'guarantor.required' => 'Guarantor is required when credit is eligible.',
         ];
     }
 }
