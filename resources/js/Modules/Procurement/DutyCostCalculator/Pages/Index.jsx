@@ -36,7 +36,7 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                             { preserveState: true, replace: true },
                                         )
                                     }
-                                    placeholder="Search code, title, reference, supplier..."
+                                    placeholder="Search code, title, supplier..."
                                 />
                             </div>
                             <div>
@@ -114,7 +114,6 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                 {[
                                     'Calculation Code',
                                     'Title',
-                                    'Reference No',
                                     'No. of Items',
                                     'Total Weight',
                                     'Total CBM',
@@ -136,7 +135,6 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                 <tr key={row.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3 font-semibold text-gray-900">{row.calculation_code}</td>
                                     <td className="px-4 py-3">{row.title}</td>
-                                    <td className="px-4 py-3">{row.reference_no || '—'}</td>
                                     <td className="px-4 py-3">{row.item_count}</td>
                                     <td className="px-4 py-3">{row.total_weight_kg}</td>
                                     <td className="px-4 py-3">{row.total_cbm}</td>

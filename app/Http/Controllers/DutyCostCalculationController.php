@@ -29,7 +29,6 @@ class DutyCostCalculationController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('calculation_code', 'like', "%{$search}%")
                     ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhere('reference_no', 'like', "%{$search}%")
                     ->orWhere('supplier_name', 'like', "%{$search}%");
             });
         }
@@ -50,7 +49,6 @@ class DutyCostCalculationController extends Controller
                 'id' => $row->id,
                 'calculation_code' => $row->calculation_code,
                 'title' => $row->title,
-                'reference_no' => $row->reference_no,
                 'item_count' => $row->item_count,
                 'total_weight_kg' => (float) $row->total_weight_kg,
                 'total_cbm' => (float) $row->total_cbm,
@@ -95,13 +93,15 @@ class DutyCostCalculationController extends Controller
             $main = DutyCostCalculation::create([
                 'calculation_code' => $this->nextCode(),
                 'title' => $payload['title'],
-                'reference_no' => $payload['reference_no'] ?? null,
                 'supplier_name' => $payload['supplier_name'] ?? null,
+                'purchasing_currency' => $payload['purchasing_currency'],
+                'local_currency' => $payload['local_currency'],
                 'shipment_currency_basis_notes' => $payload['shipment_currency_basis_notes'] ?? null,
                 'exchange_rate' => $payload['exchange_rate'],
-                'exchange_rate_currency_label' => $payload['exchange_rate_currency_label'] ?? null,
-                'container_cbm_capacity' => $payload['container_cbm_capacity'] ?? null,
-                'shipping_cost_total_lkr' => $payload['shipping_cost_total_lkr'] ?? 0,
+                'freight_currency' => $payload['freight_currency'] ?? null,
+                'freight_exchange_rate' => $payload['freight_exchange_rate'] ?? null,
+                'total_shipment_cbm' => $payload['total_shipment_cbm'] ?? null,
+                'freight_cost_total' => $payload['freight_cost_total'] ?? 0,
                 'loading_cost_lkr' => $payload['loading_cost_lkr'] ?? 0,
                 'unloading_cost_lkr' => $payload['unloading_cost_lkr'] ?? 0,
                 'transport_cost_lkr' => $payload['transport_cost_lkr'] ?? 0,
@@ -166,13 +166,15 @@ class DutyCostCalculationController extends Controller
         DB::transaction(function () use ($dutyCostCalculation, $payload, $computed, $request) {
             $dutyCostCalculation->update([
                 'title' => $payload['title'],
-                'reference_no' => $payload['reference_no'] ?? null,
                 'supplier_name' => $payload['supplier_name'] ?? null,
+                'purchasing_currency' => $payload['purchasing_currency'],
+                'local_currency' => $payload['local_currency'],
                 'shipment_currency_basis_notes' => $payload['shipment_currency_basis_notes'] ?? null,
                 'exchange_rate' => $payload['exchange_rate'],
-                'exchange_rate_currency_label' => $payload['exchange_rate_currency_label'] ?? null,
-                'container_cbm_capacity' => $payload['container_cbm_capacity'] ?? null,
-                'shipping_cost_total_lkr' => $payload['shipping_cost_total_lkr'] ?? 0,
+                'freight_currency' => $payload['freight_currency'] ?? null,
+                'freight_exchange_rate' => $payload['freight_exchange_rate'] ?? null,
+                'total_shipment_cbm' => $payload['total_shipment_cbm'] ?? null,
+                'freight_cost_total' => $payload['freight_cost_total'] ?? 0,
                 'loading_cost_lkr' => $payload['loading_cost_lkr'] ?? 0,
                 'unloading_cost_lkr' => $payload['unloading_cost_lkr'] ?? 0,
                 'transport_cost_lkr' => $payload['transport_cost_lkr'] ?? 0,
@@ -244,7 +246,7 @@ class DutyCostCalculationController extends Controller
     {
         $lastId = (int) DutyCostCalculation::query()->max('id');
 
-        return 'DCC-'.str_pad((string) ($lastId + 1), 4, '0', STR_PAD_LEFT);
+        return 'DCC-'.($lastId + 1);
     }
 
     private function summaryColumns(array $summary): array
@@ -257,12 +259,12 @@ class DutyCostCalculationController extends Controller
             'total_vat_lkr' => $summary['total_vat_lkr'] ?? 0,
             'total_sscl_lkr' => $summary['total_sscl_lkr'] ?? 0,
             'total_duty_lkr' => $summary['total_duty_lkr'] ?? 0,
-            'total_allocated_shipping_lkr' => $summary['total_allocated_shipping_lkr'] ?? 0,
+            'total_allocated_freight_lkr' => $summary['total_allocated_freight_lkr'] ?? 0,
             'total_allocated_other_costs_lkr' => $summary['total_allocated_other_costs_lkr'] ?? 0,
             'grand_total_landed_cost_lkr' => $summary['grand_total_landed_cost_lkr'] ?? 0,
             'total_weight_kg' => $summary['total_weight_kg'] ?? 0,
             'total_cbm' => $summary['total_cbm'] ?? 0,
-            'shipping_cost_per_cbm_lkr' => $summary['shipping_cost_per_cbm_lkr'] ?? 0,
+            'freight_cost_per_cbm_lkr' => $summary['freight_cost_per_cbm_lkr'] ?? 0,
         ];
     }
 }

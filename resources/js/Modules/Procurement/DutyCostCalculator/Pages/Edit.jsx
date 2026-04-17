@@ -9,13 +9,16 @@ export default function Edit({ calculation, statusOptions }) {
     const toast = useToast();
     const form = useForm({
         title: calculation.title || '',
-        reference_no: calculation.reference_no || '',
         supplier_name: calculation.supplier_name || '',
+        purchasing_currency: calculation.purchasing_currency || 'USD',
+        local_currency: calculation.local_currency || 'LKR',
         shipment_currency_basis_notes: calculation.shipment_currency_basis_notes || '',
         exchange_rate: calculation.exchange_rate || '',
-        exchange_rate_currency_label: calculation.exchange_rate_currency_label || '',
-        container_cbm_capacity: calculation.container_cbm_capacity || '',
-        shipping_cost_total_lkr: calculation.shipping_cost_total_lkr || '',
+        freight_currency: calculation.freight_currency || '',
+        freight_exchange_rate: calculation.freight_exchange_rate ?? '',
+        freight_cost_total: calculation.freight_cost_total ?? '',
+        total_shipment_cbm:
+            calculation.total_shipment_cbm ?? calculation.container_cbm_capacity ?? '',
         loading_cost_lkr: calculation.loading_cost_lkr || '',
         unloading_cost_lkr: calculation.unloading_cost_lkr || '',
         transport_cost_lkr: calculation.transport_cost_lkr || '',
@@ -29,7 +32,6 @@ export default function Edit({ calculation, statusOptions }) {
             product_name: row.product_name || '',
             product_code: row.product_code || '',
             description: row.description || '',
-            product_currency: row.product_currency || 'USD',
             unit_of_measure: row.unit_of_measure || 'Piece',
             quantity: row.quantity || '',
             unit_price_foreign: row.unit_price_foreign || '',
@@ -57,6 +59,8 @@ export default function Edit({ calculation, statusOptions }) {
                 ]}
             >
                 <CalculationForm
+                    nextCode={calculation.calculation_code}
+                    showCodeAsReadOnly
                     data={form.data}
                     setData={form.setData}
                     errors={form.errors}

@@ -3,14 +3,13 @@ import useToast from '@/feedback/useToast';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProcurementModuleLayout from '@/Layouts/ProcurementModuleLayout';
 import CalculationForm from '@/Modules/Procurement/DutyCostCalculator/Components/CalculationForm';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 const defaultItem = {
     line_no: 1,
     product_name: '',
     product_code: '',
     description: '',
-    product_currency: 'USD',
     unit_of_measure: 'Piece',
     quantity: '',
     unit_price_foreign: '',
@@ -22,15 +21,20 @@ const defaultItem = {
 
 export default function Create({ nextCode, statusOptions }) {
     const toast = useToast();
+    const company = usePage().props.company ?? {};
+    const defaultLocalCurrency = String(company.currency_code || 'LKR').toUpperCase();
+
     const form = useForm({
         title: '',
-        reference_no: '',
         supplier_name: '',
+        purchasing_currency: 'USD',
+        local_currency: defaultLocalCurrency,
         shipment_currency_basis_notes: '',
         exchange_rate: '',
-        exchange_rate_currency_label: '',
-        container_cbm_capacity: '',
-        shipping_cost_total_lkr: '',
+        freight_currency: 'USD',
+        freight_exchange_rate: '',
+        freight_cost_total: '',
+        total_shipment_cbm: '',
         loading_cost_lkr: '',
         unloading_cost_lkr: '',
         transport_cost_lkr: '',
@@ -53,6 +57,8 @@ export default function Create({ nextCode, statusOptions }) {
                 ]}
             >
                 <CalculationForm
+                    nextCode={nextCode}
+                    showCodeAsReadOnly
                     data={form.data}
                     setData={form.setData}
                     errors={form.errors}

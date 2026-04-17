@@ -13,9 +13,11 @@ function qty(v, p = 4) {
 
 export function calculateDutyCostPreview(data) {
     const exchangeRate = num(data.exchange_rate);
-    const shippingCostTotal = num(data.shipping_cost_total_lkr);
-    const containerCapacity = num(data.container_cbm_capacity);
-    const shippingCostPerCbm = containerCapacity > 0 ? money(shippingCostTotal / containerCapacity) : 0;
+    const freightExchangeRate = num(data.freight_exchange_rate);
+    const freightCostForeign = num(data.freight_cost_total);
+    const freightCostLocal = money(freightCostForeign * freightExchangeRate);
+    const totalShipmentCbm = num(data.total_shipment_cbm);
+    const freightCostPerCbmLocal = totalShipmentCbm > 0 ? money(freightCostLocal / totalShipmentCbm) : 0;
 
     const extraCostTotal = (data.other_costs || []).reduce((sum, row) => sum + num(row?.amount_lkr), 0);
     const otherCommonCostPool = money(
@@ -68,13 +70,13 @@ export function calculateDutyCostPreview(data) {
     const totalCbm = baseItems.reduce((sum, row) => sum + num(row.cbm), 0);
 
     const items = baseItems.map((row) => {
-        const allocatedShipping = money(num(row.cbm) * shippingCostPerCbm);
+        const allocatedFreight = money(num(row.cbm) * freightCostPerCbmLocal);
         const allocatedOther =
             totalWeight > 0 ? money((num(row.weight_kg) / totalWeight) * otherCommonCostPool) : 0;
         const totalLanded = money(
             num(row.product_value_lkr) +
                 num(row.duty_total_lkr) +
-                allocatedShipping +
+                allocatedFreight +
                 allocatedOther,
         );
         const perUnit = num(row.quantity) > 0 ? money(totalLanded / num(row.quantity)) : 0;
@@ -96,7 +98,7 @@ export function calculateDutyCostPreview(data) {
 
         return {
             ...row,
-            allocated_shipping_lkr: allocatedShipping,
+            allocated_freight_lkr: allocatedFreight,
             allocated_other_costs_lkr: allocatedOther,
             total_landed_cost_lkr: totalLanded,
             landed_cost_per_unit_lkr: perUnit,
@@ -112,8 +114,8 @@ export function calculateDutyCostPreview(data) {
         total_vat_lkr: money(items.reduce((sum, row) => sum + num(row.vat_lkr), 0)),
         total_sscl_lkr: money(items.reduce((sum, row) => sum + num(row.sscl_lkr), 0)),
         total_duty_lkr: money(items.reduce((sum, row) => sum + num(row.duty_total_lkr), 0)),
-        total_allocated_shipping_lkr: money(
-            items.reduce((sum, row) => sum + num(row.allocated_shipping_lkr), 0),
+        total_allocated_freight_lkr: money(
+            items.reduce((sum, row) => sum + num(row.allocated_freight_lkr), 0),
         ),
         total_allocated_other_costs_lkr: money(
             items.reduce((sum, row) => sum + num(row.allocated_other_costs_lkr), 0),
@@ -123,7 +125,7 @@ export function calculateDutyCostPreview(data) {
         ),
         total_weight_kg: qty(totalWeight, 3),
         total_cbm: qty(totalCbm, 4),
-        shipping_cost_per_cbm_lkr: shippingCostPerCbm,
+        freight_cost_per_cbm_lkr: freightCostPerCbmLocal,
     };
 
     return { items, summary, otherCommonCostPool };

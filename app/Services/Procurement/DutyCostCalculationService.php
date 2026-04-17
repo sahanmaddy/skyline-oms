@@ -7,8 +7,14 @@ class DutyCostCalculationService
     public function calculate(array $payload): array
     {
         $exchangeRate = $this->num($payload['exchange_rate'] ?? 0);
-        $shippingCostTotal = $this->money($payload['shipping_cost_total_lkr'] ?? 0);
-        $containerCapacity = $this->num($payload['container_cbm_capacity'] ?? 0);
+        $purchasingCurrency = strtoupper(trim((string) ($payload['purchasing_currency'] ?? 'USD')));
+        if ($purchasingCurrency === '') {
+            $purchasingCurrency = 'USD';
+        }
+        $freightExchangeRate = $this->num($payload['freight_exchange_rate'] ?? 0);
+        $freightCostForeign = $this->money($payload['freight_cost_total'] ?? 0);
+        $freightCostLocal = $this->money($freightCostForeign * $freightExchangeRate);
+        $totalShipmentCbm = $this->num($payload['total_shipment_cbm'] ?? 0);
 
         $extraCosts = array_values(array_map(function (array $row, int $index): array {
             return [
@@ -31,8 +37,8 @@ class DutyCostCalculationService
             + $otherCostRowsTotal
         );
 
-        $shippingCostPerCbm = $containerCapacity > 0
-            ? $this->money($shippingCostTotal / $containerCapacity)
+        $freightCostPerCbmLocal = $totalShipmentCbm > 0
+            ? $this->money($freightCostLocal / $totalShipmentCbm)
             : 0.0;
 
         $baseItems = [];
@@ -60,7 +66,7 @@ class DutyCostCalculationService
                 'product_name' => trim((string) ($row['product_name'] ?? '')),
                 'product_code' => trim((string) ($row['product_code'] ?? '')) ?: null,
                 'description' => trim((string) ($row['description'] ?? '')) ?: null,
-                'product_currency' => (string) ($row['product_currency'] ?? 'USD'),
+                'product_currency' => $purchasingCurrency,
                 'unit_of_measure' => (string) ($row['unit_of_measure'] ?? 'Piece'),
                 'quantity' => $this->qty($qty),
                 'unit_price_foreign' => $this->qty($unitPrice),
@@ -82,8 +88,8 @@ class DutyCostCalculationService
         $totalWeight = array_sum(array_column($baseItems, 'weight_kg'));
         $totalCbm = array_sum(array_column($baseItems, 'cbm'));
 
-        $items = array_map(function (array $item) use ($shippingCostPerCbm, $otherCommonCostPool, $totalWeight): array {
-            $allocatedShipping = $this->money($item['cbm'] * $shippingCostPerCbm);
+        $items = array_map(function (array $item) use ($freightCostPerCbmLocal, $otherCommonCostPool, $totalWeight): array {
+            $allocatedFreight = $this->money($item['cbm'] * $freightCostPerCbmLocal);
             $allocatedOther = $totalWeight > 0
                 ? $this->money(($item['weight_kg'] / $totalWeight) * $otherCommonCostPool)
                 : 0.0;
@@ -91,12 +97,12 @@ class DutyCostCalculationService
             $totalLanded = $this->money(
                 $item['product_value_lkr']
                 + $item['duty_total_lkr']
-                + $allocatedShipping
+                + $allocatedFreight
                 + $allocatedOther
             );
 
             $perUnit = $item['quantity'] > 0 ? $this->money($totalLanded / $item['quantity']) : 0.0;
-            $item['allocated_shipping_lkr'] = $allocatedShipping;
+            $item['allocated_freight_lkr'] = $allocatedFreight;
             $item['allocated_other_costs_lkr'] = $allocatedOther;
             $item['total_landed_cost_lkr'] = $totalLanded;
             $item['landed_cost_per_unit_lkr'] = $perUnit;
@@ -130,12 +136,12 @@ class DutyCostCalculationService
             'total_vat_lkr' => $this->money(array_sum(array_column($items, 'vat_lkr'))),
             'total_sscl_lkr' => $this->money(array_sum(array_column($items, 'sscl_lkr'))),
             'total_duty_lkr' => $this->money(array_sum(array_column($items, 'duty_total_lkr'))),
-            'total_allocated_shipping_lkr' => $this->money(array_sum(array_column($items, 'allocated_shipping_lkr'))),
+            'total_allocated_freight_lkr' => $this->money(array_sum(array_column($items, 'allocated_freight_lkr'))),
             'total_allocated_other_costs_lkr' => $this->money(array_sum(array_column($items, 'allocated_other_costs_lkr'))),
             'grand_total_landed_cost_lkr' => $this->money(array_sum(array_column($items, 'total_landed_cost_lkr'))),
             'total_weight_kg' => $this->qty($totalWeight, 3),
             'total_cbm' => $this->qty($totalCbm, 4),
-            'shipping_cost_per_cbm_lkr' => $shippingCostPerCbm,
+            'freight_cost_per_cbm_lkr' => $freightCostPerCbmLocal,
             'other_common_cost_pool_lkr' => $otherCommonCostPool,
             'other_costs_lkr_total' => $otherCostRowsTotal,
         ];

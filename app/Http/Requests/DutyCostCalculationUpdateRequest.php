@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\DutyCostCalculation;
-use Illuminate\Foundation\Http\FormRequest;
 
-class DutyCostCalculationUpdateRequest extends FormRequest
+class DutyCostCalculationUpdateRequest extends DutyCostCalculationStoreRequest
 {
     public function authorize(): bool
     {
@@ -15,15 +14,4 @@ class DutyCostCalculationUpdateRequest extends FormRequest
             ? ($this->user()?->can('update', $calculation) ?? false)
             : false;
     }
-
-    public function rules(): array
-    {
-        return (new DutyCostCalculationStoreRequest())->rules();
-    }
-
-    public function withValidator($validator): void
-    {
-        (new DutyCostCalculationStoreRequest())->withValidator($validator);
-    }
 }
-

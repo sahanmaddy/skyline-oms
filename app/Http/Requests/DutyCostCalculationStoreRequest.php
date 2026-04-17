@@ -13,17 +13,29 @@ class DutyCostCalculationStoreRequest extends FormRequest
         return $this->user()?->can('create', DutyCostCalculation::class) ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        foreach (['purchasing_currency', 'local_currency', 'freight_currency'] as $key) {
+            $code = $this->input($key);
+            if (is_string($code)) {
+                $this->merge([$key => strtoupper($code)]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'reference_no' => ['nullable', 'string', 'max:120'],
             'supplier_name' => ['nullable', 'string', 'max:255'],
+            'purchasing_currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'local_currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'shipment_currency_basis_notes' => ['nullable', 'string'],
             'exchange_rate' => ['required', 'numeric', 'gt:0'],
-            'exchange_rate_currency_label' => ['nullable', 'string', 'max:50'],
-            'container_cbm_capacity' => ['nullable', 'numeric', 'gt:0'],
-            'shipping_cost_total_lkr' => ['nullable', 'numeric', 'min:0'],
+            'freight_currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'freight_exchange_rate' => ['nullable', 'numeric', 'gt:0'],
+            'total_shipment_cbm' => ['nullable', 'numeric', 'gt:0'],
+            'freight_cost_total' => ['nullable', 'numeric', 'min:0'],
             'loading_cost_lkr' => ['nullable', 'numeric', 'min:0'],
             'unloading_cost_lkr' => ['nullable', 'numeric', 'min:0'],
             'transport_cost_lkr' => ['nullable', 'numeric', 'min:0'],
@@ -42,7 +54,6 @@ class DutyCostCalculationStoreRequest extends FormRequest
             'items.*.product_name' => ['required', 'string', 'max:255'],
             'items.*.product_code' => ['nullable', 'string', 'max:120'],
             'items.*.description' => ['nullable', 'string'],
-            'items.*.product_currency' => ['required', Rule::in(['USD', 'CNY'])],
             'items.*.unit_of_measure' => ['required', Rule::in(['Yard', 'Meter', 'KG', 'Set', 'Piece'])],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'items.*.unit_price_foreign' => ['nullable', 'numeric', 'min:0'],
@@ -56,13 +67,22 @@ class DutyCostCalculationStoreRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
-            $shippingCost = (float) $this->input('shipping_cost_total_lkr', 0);
-            $capacity = (float) $this->input('container_cbm_capacity', 0);
-            if ($shippingCost > 0 && $capacity <= 0) {
+            $freightCost = (float) $this->input('freight_cost_total', 0);
+            $capacity = (float) $this->input('total_shipment_cbm', 0);
+            if ($freightCost > 0 && $capacity <= 0) {
                 $validator->errors()->add(
-                    'container_cbm_capacity',
-                    'Container CBM capacity is required when shipping cost is entered.',
+                    'total_shipment_cbm',
+                    'Total CBM is required when freight cost is entered.',
                 );
+            }
+            if ($freightCost > 0) {
+                $fc = $this->input('freight_currency');
+                if (! is_string($fc) || strlen(trim($fc)) !== 3) {
+                    $validator->errors()->add('freight_currency', 'Freight currency is required when freight cost is entered.');
+                }
+                if ((float) $this->input('freight_exchange_rate', 0) <= 0) {
+                    $validator->errors()->add('freight_exchange_rate', 'Freight exchange rate is required when freight cost is entered.');
+                }
             }
 
             $items = $this->input('items', []);
@@ -90,5 +110,17 @@ class DutyCostCalculationStoreRequest extends FormRequest
             }
         });
     }
-}
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'total_shipment_cbm' => 'Total CBM',
+            'freight_cost_total' => 'Freight cost',
+            'freight_currency' => 'Freight currency',
+            'freight_exchange_rate' => 'Freight exchange rate',
+        ];
+    }
+}
