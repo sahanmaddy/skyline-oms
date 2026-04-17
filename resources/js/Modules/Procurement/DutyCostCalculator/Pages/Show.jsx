@@ -138,7 +138,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             ],
                             [
                                 'Total CBM',
-                                calculation.total_shipment_cbm ?? calculation.container_cbm_capacity || '—',
+                                (calculation.total_shipment_cbm ??
+                                    calculation.container_cbm_capacity) || '—',
                             ],
                             [
                                 'Other Costs Total',
