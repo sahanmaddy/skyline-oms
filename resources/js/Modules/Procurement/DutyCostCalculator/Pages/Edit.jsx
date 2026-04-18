@@ -1,3 +1,4 @@
+import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import useToast from '@/feedback/useToast';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -17,14 +18,27 @@ export default function Edit({ calculation, statusOptions }) {
         freight_currency: calculation.freight_currency || '',
         freight_exchange_rate: calculation.freight_exchange_rate ?? '',
         freight_cost_total: calculation.freight_cost_total ?? '',
-        total_shipment_cbm:
-            calculation.total_shipment_cbm ?? calculation.container_cbm_capacity ?? '',
+        total_shipment_cbm: (() => {
+            const raw = calculation.total_shipment_cbm ?? calculation.container_cbm_capacity;
+            if (raw === null || raw === undefined || raw === '') {
+                return '';
+            }
+            const n = Number(raw);
+            return Number.isFinite(n) ? n.toFixed(2) : String(raw);
+        })(),
         loading_cost_lkr: calculation.loading_cost_lkr || '',
         unloading_cost_lkr: calculation.unloading_cost_lkr || '',
         transport_cost_lkr: calculation.transport_cost_lkr || '',
         delivery_order_charges_lkr: calculation.delivery_order_charges_lkr || '',
         clearing_charges_lkr: calculation.clearing_charges_lkr || '',
         demurrage_cost_lkr: calculation.demurrage_cost_lkr || '',
+        cid_rate_per_kg_lkr:
+            calculation.cid_rate_per_kg_lkr ??
+            calculation.items?.[0]?.cid_rate_per_kg_lkr ??
+            '30',
+        duty_base_percent: calculation.duty_base_percent ?? '110',
+        vat_rate_percent: calculation.vat_rate_percent ?? '18',
+        sscl_rate_percent: calculation.sscl_rate_percent ?? '2.5',
         notes: calculation.notes || '',
         calculation_status: calculation.calculation_status || 'draft',
         items: (calculation.items || []).map((row) => ({
@@ -38,7 +52,6 @@ export default function Edit({ calculation, statusOptions }) {
             cbm: row.cbm || '',
             weight_kg: row.weight_kg || '',
             customs_preset_value_foreign_or_base: row.customs_preset_value_foreign_or_base || '',
-            cid_rate_per_kg_lkr: row.cid_rate_per_kg_lkr || 30,
         })),
         other_costs: (calculation.other_costs || []).map((row) => ({
             cost_name: row.cost_name || '',
@@ -58,23 +71,34 @@ export default function Edit({ calculation, statusOptions }) {
                     { label: 'Edit' },
                 ]}
             >
-                <CalculationForm
-                    nextCode={calculation.calculation_code}
-                    showCodeAsReadOnly
-                    data={form.data}
-                    setData={form.setData}
-                    errors={form.errors}
-                    processing={form.processing}
-                    statusOptions={statusOptions}
-                    submitLabel="Update Calculation"
-                    onCancel={() => router.get(route('procurement.duty-cost-calculations.show', calculation.id))}
-                    onSubmit={() =>
-                        form.put(route('procurement.duty-cost-calculations.update', calculation.id), {
-                            onSuccess: () => toast.success('Calculation updated.'),
-                            onError: () => toast.error('Please fix the highlighted fields and try again.'),
-                        })
-                    }
-                />
+                <div className="flex flex-col gap-4">
+                    <ModuleDetailToolbar
+                        backHref={route('procurement.duty-cost-calculations.show', calculation.id)}
+                        backLabel="← Back to calculation"
+                    />
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                        <CalculationForm
+                            nextCode={calculation.calculation_code}
+                            showCodeAsReadOnly
+                            data={form.data}
+                            setData={form.setData}
+                            errors={form.errors}
+                            processing={form.processing}
+                            statusOptions={statusOptions}
+                            submitLabel="Update calculation"
+                            onCancel={() =>
+                                router.get(route('procurement.duty-cost-calculations.show', calculation.id))
+                            }
+                            onSubmit={() =>
+                                form.put(route('procurement.duty-cost-calculations.update', calculation.id), {
+                                    onSuccess: () => toast.success('Calculation updated.'),
+                                    onError: () =>
+                                        toast.error('Please fix the highlighted fields and try again.'),
+                                })
+                            }
+                        />
+                    </div>
+                </div>
             </ProcurementModuleLayout>
         </AuthenticatedLayout>
     );

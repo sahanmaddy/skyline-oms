@@ -5,7 +5,7 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
 import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 
 export default function Edit({ user, roles, statusOptions, employeesForLink, activeBranches }) {
     const toast = useToast();
@@ -58,9 +58,10 @@ export default function Edit({ user, roles, statusOptions, employeesForLink, act
                         statusOptions={statusOptions}
                         employeesForLink={employeesForLink}
                         activeBranches={activeBranches}
-                        submitLabel="Save"
+                        submitLabel="Update user"
                         showPasswordFields
                         requirePassword={false}
+                        onCancel={() => router.get(route('settings.users.show', user.id))}
                         onClientValidationError={() =>
                             toast.error('Please fix the highlighted fields and try again.')
                         }

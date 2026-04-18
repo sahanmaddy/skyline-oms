@@ -37,6 +37,7 @@ export default function CustomerForm({
     statusOptions,
     submitLabel,
     onSubmit,
+    onCancel,
 }) {
     const company = usePage().props.company ?? {};
     const currencyLabel = (company.currency_symbol || company.currency_code || '').trim() || '—';
@@ -477,6 +478,11 @@ export default function CustomerForm({
             </section>
 
             <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

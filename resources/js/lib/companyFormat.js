@@ -143,6 +143,36 @@ export function formatMoneyInputWithCommas(value, maxFractionDigits = 2, options
     }).format(num);
 }
 
+/**
+ * Allow digits and one decimal point; strip commas and other characters.
+ * Truncates the fractional part to maxFractionDigits (0 = integers only).
+ *
+ * @param {string|number|null|undefined} raw
+ * @param {number} maxFractionDigits
+ */
+export function sanitizeMoneyDecimalInput(raw, maxFractionDigits = 2) {
+    const cleaned = String(raw ?? '')
+        .replace(/,/g, '')
+        .replace(/[^\d.]/g, '');
+    if (!cleaned) {
+        return '';
+    }
+    const firstDot = cleaned.indexOf('.');
+    const collapsed =
+        firstDot === -1
+            ? cleaned
+            : cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
+    if (maxFractionDigits <= 0) {
+        const i = collapsed.indexOf('.');
+        return i === -1 ? collapsed : collapsed.slice(0, i);
+    }
+    const i = collapsed.indexOf('.');
+    if (i === -1) {
+        return collapsed;
+    }
+    return collapsed.slice(0, i + 1 + maxFractionDigits);
+}
+
 /** Strip non-numeric except one dot; same rules as employee basic salary input. */
 export function normalizeMoneyInputValue(raw) {
     const v = (raw ?? '').toString();

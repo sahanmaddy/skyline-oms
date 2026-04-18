@@ -5,7 +5,7 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import PermissionForm from '@/Modules/RolesPermissions/Permissions/Components/PermissionForm';
 import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 
 export default function Edit({ permission }) {
     const toast = useToast();
@@ -34,7 +34,8 @@ export default function Edit({ permission }) {
                             setData={setData}
                             errors={errors}
                             processing={processing}
-                            submitLabel="Save changes"
+                            submitLabel="Update permission"
+                            onCancel={() => router.get(route('settings.permissions.show', permission.id))}
                             onSubmit={() =>
                                 put(route('settings.permissions.update', permission.id), {
                                     onError: () => {

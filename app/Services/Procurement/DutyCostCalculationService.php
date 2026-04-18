@@ -41,6 +41,12 @@ class DutyCostCalculationService
             ? $this->money($freightCostLocal / $totalShipmentCbm)
             : 0.0;
 
+        $shipmentCidRate = $this->money($this->numOrDefault($payload['cid_rate_per_kg_lkr'] ?? null, 30));
+        $dutyBasePercent = $this->numOrDefault($payload['duty_base_percent'] ?? null, 110);
+        $dutyBaseMultiplier = $dutyBasePercent > 0 ? $dutyBasePercent / 100.0 : 0.0;
+        $vatRate = $this->numOrDefault($payload['vat_rate_percent'] ?? null, 18) / 100.0;
+        $ssclRate = $this->numOrDefault($payload['sscl_rate_percent'] ?? null, 2.5) / 100.0;
+
         $baseItems = [];
         foreach (($payload['items'] ?? []) as $idx => $row) {
             $lineNo = (int) ($row['line_no'] ?? ($idx + 1));
@@ -49,16 +55,15 @@ class DutyCostCalculationService
             $cbm = $this->num($row['cbm'] ?? 0);
             $weight = $this->num($row['weight_kg'] ?? 0);
             $customsPreset = $this->num($row['customs_preset_value_foreign_or_base'] ?? 0);
-            $cidRate = $this->money($row['cid_rate_per_kg_lkr'] ?? 30);
 
             $totalProductValueForeign = $this->qty($qty * $unitPrice);
             $productValueLkr = $this->money($totalProductValueForeign * $exchangeRate);
 
             $statisticalValue = $this->money($customsPreset * $weight * $exchangeRate);
-            $customsBase110 = $this->money($statisticalValue * 1.10);
-            $cid = $this->money($weight * $cidRate);
-            $vat = $this->money(($customsBase110 + $cid) * 0.18);
-            $sscl = $this->money(($customsBase110 + $cid) * 0.025);
+            $customsBase110 = $this->money($statisticalValue * $dutyBaseMultiplier);
+            $cid = $this->money($weight * $shipmentCidRate);
+            $vat = $this->money(($customsBase110 + $cid) * $vatRate);
+            $sscl = $this->money(($customsBase110 + $cid) * $ssclRate);
             $dutyTotal = $this->money($cid + $vat + $sscl);
 
             $baseItems[] = [
@@ -74,7 +79,7 @@ class DutyCostCalculationService
                 'cbm' => $this->qty($cbm),
                 'weight_kg' => $this->qty($weight),
                 'customs_preset_value_foreign_or_base' => $this->qty($customsPreset),
-                'cid_rate_per_kg_lkr' => $cidRate,
+                'cid_rate_per_kg_lkr' => $shipmentCidRate,
                 'statistical_value_lkr' => $statisticalValue,
                 'customs_base_110_lkr' => $customsBase110,
                 'cid_lkr' => $cid,
@@ -153,6 +158,15 @@ class DutyCostCalculationService
         ];
     }
 
+    private function numOrDefault(mixed $value, float $default): float
+    {
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        return is_numeric($value) ? (float) $value : $default;
+    }
+
     private function num(mixed $value): float
     {
         return (float) (is_numeric($value) ? $value : 0);
@@ -168,4 +182,3 @@ class DutyCostCalculationService
         return round($this->num($value), $precision);
     }
 }
-

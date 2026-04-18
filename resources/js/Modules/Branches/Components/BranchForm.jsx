@@ -28,6 +28,7 @@ export default function BranchForm({
     branchCode,
     submitLabel,
     onSubmit,
+    onCancel,
     onClientValidationError,
 }) {
     const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
@@ -430,6 +431,11 @@ export default function BranchForm({
             </section>
 
             <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

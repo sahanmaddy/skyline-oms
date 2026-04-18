@@ -27,6 +27,10 @@ class DutyCostCalculation extends Model
         'delivery_order_charges_lkr',
         'clearing_charges_lkr',
         'demurrage_cost_lkr',
+        'cid_rate_per_kg_lkr',
+        'duty_base_percent',
+        'vat_rate_percent',
+        'sscl_rate_percent',
         'other_costs_lkr_total',
         'notes',
         'calculation_status',
@@ -51,7 +55,7 @@ class DutyCostCalculation extends Model
     protected $casts = [
         'exchange_rate' => 'decimal:4',
         'freight_exchange_rate' => 'decimal:4',
-        'total_shipment_cbm' => 'decimal:4',
+        'total_shipment_cbm' => 'decimal:2',
         'freight_cost_total' => 'decimal:2',
         'loading_cost_lkr' => 'decimal:2',
         'unloading_cost_lkr' => 'decimal:2',
@@ -59,6 +63,10 @@ class DutyCostCalculation extends Model
         'delivery_order_charges_lkr' => 'decimal:2',
         'clearing_charges_lkr' => 'decimal:2',
         'demurrage_cost_lkr' => 'decimal:2',
+        'cid_rate_per_kg_lkr' => 'decimal:2',
+        'duty_base_percent' => 'decimal:2',
+        'vat_rate_percent' => 'decimal:2',
+        'sscl_rate_percent' => 'decimal:2',
         'other_costs_lkr_total' => 'decimal:2',
         'item_count' => 'integer',
         'total_product_value_lkr' => 'decimal:2',
@@ -96,4 +104,3 @@ class DutyCostCalculation extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 }
-

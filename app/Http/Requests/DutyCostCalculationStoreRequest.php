@@ -42,6 +42,10 @@ class DutyCostCalculationStoreRequest extends FormRequest
             'delivery_order_charges_lkr' => ['nullable', 'numeric', 'min:0'],
             'clearing_charges_lkr' => ['nullable', 'numeric', 'min:0'],
             'demurrage_cost_lkr' => ['nullable', 'numeric', 'min:0'],
+            'cid_rate_per_kg_lkr' => ['nullable', 'numeric', 'min:0'],
+            'duty_base_percent' => ['nullable', 'numeric', 'min:0', 'max:1000'],
+            'vat_rate_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'sscl_rate_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'notes' => ['nullable', 'string'],
             'calculation_status' => ['nullable', Rule::in(['draft', 'finalized'])],
             'other_costs' => ['nullable', 'array'],
@@ -60,7 +64,6 @@ class DutyCostCalculationStoreRequest extends FormRequest
             'items.*.cbm' => ['nullable', 'numeric', 'min:0'],
             'items.*.weight_kg' => ['nullable', 'numeric', 'min:0'],
             'items.*.customs_preset_value_foreign_or_base' => ['nullable', 'numeric', 'min:0'],
-            'items.*.cid_rate_per_kg_lkr' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

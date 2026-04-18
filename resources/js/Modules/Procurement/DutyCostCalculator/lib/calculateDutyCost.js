@@ -11,6 +11,15 @@ function qty(v, p = 4) {
     return Number(num(v).toFixed(p));
 }
 
+function numOrDefault(v, def) {
+    if (v === '' || v === null || v === undefined) {
+        return def;
+    }
+    const n = Number(v);
+
+    return Number.isFinite(n) ? n : def;
+}
+
 export function calculateDutyCostPreview(data) {
     const exchangeRate = num(data.exchange_rate);
     const freightExchangeRate = num(data.freight_exchange_rate);
@@ -30,20 +39,25 @@ export function calculateDutyCostPreview(data) {
             extraCostTotal,
     );
 
+    const shipmentCidRate = numOrDefault(data.cid_rate_per_kg_lkr, 30);
+    const dutyBasePercent = numOrDefault(data.duty_base_percent, 110);
+    const dutyBaseMultiplier = dutyBasePercent > 0 ? dutyBasePercent / 100 : 0;
+    const vatRate = numOrDefault(data.vat_rate_percent, 18) / 100;
+    const ssclRate = numOrDefault(data.sscl_rate_percent, 2.5) / 100;
+
     const baseItems = (data.items || []).map((row, idx) => {
         const quantity = num(row.quantity);
         const unitPriceForeign = num(row.unit_price_foreign);
         const cbm = num(row.cbm);
         const weightKg = num(row.weight_kg);
         const customsPreset = num(row.customs_preset_value_foreign_or_base);
-        const cidRate = num(row.cid_rate_per_kg_lkr || 30);
         const totalProductValueForeign = qty(quantity * unitPriceForeign);
         const productValueLkr = money(totalProductValueForeign * exchangeRate);
         const statisticalValue = money(customsPreset * weightKg * exchangeRate);
-        const customsBase110 = money(statisticalValue * 1.1);
-        const cid = money(weightKg * cidRate);
-        const vat = money((customsBase110 + cid) * 0.18);
-        const sscl = money((customsBase110 + cid) * 0.025);
+        const customsBase110 = money(statisticalValue * dutyBaseMultiplier);
+        const cid = money(weightKg * shipmentCidRate);
+        const vat = money((customsBase110 + cid) * vatRate);
+        const sscl = money((customsBase110 + cid) * ssclRate);
         const dutyTotal = money(cid + vat + sscl);
 
         return {
@@ -54,7 +68,7 @@ export function calculateDutyCostPreview(data) {
             cbm: qty(cbm),
             weight_kg: qty(weightKg),
             customs_preset_value_foreign_or_base: qty(customsPreset),
-            cid_rate_per_kg_lkr: money(cidRate),
+            cid_rate_per_kg_lkr: money(shipmentCidRate),
             total_product_value_foreign: totalProductValueForeign,
             product_value_lkr: productValueLkr,
             statistical_value_lkr: statisticalValue,

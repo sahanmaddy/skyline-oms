@@ -8,6 +8,7 @@ import ProcurementModuleLayout from '@/Layouts/ProcurementModuleLayout';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatCompanyCurrency } from '@/lib/companyFormat';
 import { moduleListSearchInputClass } from '@/lib/dropdownMenuStyles';
+import { formatCalculationStatusLabel } from '@/Modules/Procurement/DutyCostCalculator/lib/formatCalculationStatusLabel';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
 export default function Index({ calculations, filters, statusOptions, canCreate }) {
@@ -56,7 +57,10 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                     }
                                     options={[
                                         { value: '', label: 'All' },
-                                        ...statusOptions.map((s) => ({ value: s, label: s })),
+                                        ...statusOptions.map((s) => ({
+                                            value: s,
+                                            label: formatCalculationStatusLabel(s),
+                                        })),
                                     ]}
                                 />
                             </div>
@@ -142,7 +146,7 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                     <td className="px-4 py-3">{formatCompanyCurrency(row.grand_total_landed_cost_lkr, company)}</td>
                                     <td className="px-4 py-3">
                                         <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${row.calculation_status === 'finalized' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-                                            {row.calculation_status}
+                                            {formatCalculationStatusLabel(row.calculation_status)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">{row.created_by_name || '—'}</td>

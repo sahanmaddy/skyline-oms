@@ -9,6 +9,7 @@ import {
     formatLocalMoneyDisplay,
     formatMoneyInputWithCommas,
 } from '@/lib/companyFormat';
+import { formatCalculationStatusLabel } from '@/Modules/Procurement/DutyCostCalculator/lib/formatCalculationStatusLabel';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
 function fmtDate(value) {
@@ -138,9 +139,28 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             ],
                             [
                                 'Total CBM',
-                                (calculation.total_shipment_cbm ??
-                                    calculation.container_cbm_capacity) || '—',
+                                (() => {
+                                    const raw =
+                                        calculation.total_shipment_cbm ??
+                                        calculation.container_cbm_capacity;
+                                    if (raw === null || raw === undefined || raw === '') {
+                                        return '—';
+                                    }
+                                    const n = Number(raw);
+                                    return Number.isFinite(n) ? n.toFixed(2) : String(raw);
+                                })(),
                             ],
+                            [
+                                'CID / Kg',
+                                formatLocalMoneyDisplay(
+                                    calculation.cid_rate_per_kg_lkr ?? 0,
+                                    localCurrencyCode,
+                                    company,
+                                ),
+                            ],
+                            ['Base Value (%)', calculation.duty_base_percent ?? '—'],
+                            ['VAT Rate (%)', calculation.vat_rate_percent ?? '—'],
+                            ['SSCL Rate (%)', calculation.sscl_rate_percent ?? '—'],
                             [
                                 'Other Costs Total',
                                 formatLocalMoneyDisplay(
@@ -149,7 +169,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                     company,
                                 ),
                             ],
-                            ['Status', calculation.calculation_status],
+                            ['Status', formatCalculationStatusLabel(calculation.calculation_status)],
                             ['Total Weight', totals.total_weight_kg ?? calculation.total_weight_kg],
                             ['Sum of line CBM', totals.total_cbm ?? calculation.total_cbm],
                             [
@@ -171,7 +191,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             <thead className="bg-gray-50">
                                 <tr>
                                     {[
-                                        'Line',
+                                        'No.',
                                         'Product',
                                         'UOM',
                                         'Qty',

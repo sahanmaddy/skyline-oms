@@ -36,6 +36,10 @@ class DutyCostCalculationSampleSeeder extends Seeder
             'delivery_order_charges_lkr' => 36000,
             'clearing_charges_lkr' => 92000,
             'demurrage_cost_lkr' => 0,
+            'cid_rate_per_kg_lkr' => 30,
+            'duty_base_percent' => 110,
+            'vat_rate_percent' => 18,
+            'sscl_rate_percent' => 2.5,
             'calculation_status' => 'draft',
             'items' => [
                 [
@@ -47,7 +51,6 @@ class DutyCostCalculationSampleSeeder extends Seeder
                     'cbm' => 12.8,
                     'weight_kg' => 2450,
                     'customs_preset_value_foreign_or_base' => 1.72,
-                    'cid_rate_per_kg_lkr' => 30,
                 ],
                 [
                     'line_no' => 2,
@@ -58,7 +61,6 @@ class DutyCostCalculationSampleSeeder extends Seeder
                     'cbm' => 3.4,
                     'weight_kg' => 820,
                     'customs_preset_value_foreign_or_base' => 0.28,
-                    'cid_rate_per_kg_lkr' => 30,
                 ],
             ],
             'other_costs' => [
@@ -86,6 +88,10 @@ class DutyCostCalculationSampleSeeder extends Seeder
             'delivery_order_charges_lkr' => $payload['delivery_order_charges_lkr'],
             'clearing_charges_lkr' => $payload['clearing_charges_lkr'],
             'demurrage_cost_lkr' => $payload['demurrage_cost_lkr'],
+            'cid_rate_per_kg_lkr' => $payload['cid_rate_per_kg_lkr'],
+            'duty_base_percent' => $payload['duty_base_percent'],
+            'vat_rate_percent' => $payload['vat_rate_percent'],
+            'sscl_rate_percent' => $payload['sscl_rate_percent'],
             'other_costs_lkr_total' => $computed['summary']['other_costs_lkr_total'],
             'calculation_status' => 'draft',
             'totals' => $computed['summary'],
@@ -110,4 +116,3 @@ class DutyCostCalculationSampleSeeder extends Seeder
         $row->otherCosts()->createMany($computed['other_costs']);
     }
 }
-

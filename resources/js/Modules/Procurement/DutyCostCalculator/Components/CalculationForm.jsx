@@ -1,4 +1,10 @@
-import AtmMoneyInput from '@/Components/AtmMoneyInput';
+import AtmMoneyInput, {
+    atmMoneyInputAddonLeftDefaultClass,
+    atmMoneyInputAddonRightDefaultClass,
+    atmMoneyInputInputLeftOfRightAddonClass,
+    atmMoneyInputInputRightOfLeftAddonClass,
+    atmMoneyInputShellWithLabelClass,
+} from '@/Components/AtmMoneyInput';
 import CurrencyCodeCombobox from '@/Components/CurrencyCodeCombobox';
 import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
@@ -8,6 +14,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { currencyCodes } from '@/data/currencyCodes';
 import { calculateDutyCostPreview } from '@/Modules/Procurement/DutyCostCalculator/lib/calculateDutyCost';
+import { formatCalculationStatusLabel } from '@/Modules/Procurement/DutyCostCalculator/lib/formatCalculationStatusLabel';
 import {
     currencyAddonLabelForIso,
     formatLocalMoneyDisplay,
@@ -24,15 +31,6 @@ const uomOptions = [
     { value: 'Piece', label: 'Piece' },
 ];
 
-const formulaHints = [
-    'Statistical Value = Preset Value × Weight × Exchange Rate',
-    '110% Base = Statistical Value × 110%',
-    'CID = Weight × CID Rate',
-    'VAT = (110% Base + CID) × 18%',
-    'SSCL = (110% Base + CID) × 2.5%',
-    'Duty = CID + VAT + SSCL',
-];
-
 const exchangeRateFormatOptions = { locale: 'en-US', minimumFractionDigits: 3 };
 
 /** Digits and at most one `.` for decimal CBM entry (plain text field, not type="number"). */
@@ -46,6 +44,19 @@ function sanitizeDecimalNumericInput(raw) {
         return cleaned;
     }
     return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
+}
+
+function sanitizeDecimalNumericInputMaxFractionDigits(raw, maxFractionDigits) {
+    const s = sanitizeDecimalNumericInput(raw);
+    if (maxFractionDigits <= 0) {
+        const i = s.indexOf('.');
+        return i === -1 ? s : s.slice(0, i);
+    }
+    const i = s.indexOf('.');
+    if (i === -1) {
+        return s;
+    }
+    return s.slice(0, i + 1 + maxFractionDigits);
 }
 
 export default function CalculationForm({
@@ -84,6 +95,22 @@ export default function CalculationForm({
         [freightCurrencyCode, purchasingCurrencyCode, company],
     );
 
+    const formulaHints = useMemo(() => {
+        const basePct = String(Number(data.duty_base_percent) || 110);
+        const vatPct = String(Number(data.vat_rate_percent) || 18);
+        const ssclPct = String(Number(data.sscl_rate_percent) || 2.5);
+        return [
+            'Statistical Value = Preset Value × Weight × Exchange Rate',
+            `${basePct}% Base = Statistical Value × ${basePct}%`,
+            'CID = Weight × CID / kg',
+            `VAT = (${basePct}% Base + CID) × ${vatPct}%`,
+            `SSCL = (${basePct}% Base + CID) × ${ssclPct}%`,
+            'Duty = CID + VAT + SSCL',
+        ];
+    }, [data.duty_base_percent, data.vat_rate_percent, data.sscl_rate_percent]);
+
+    const dutyBasePercentDisplay = Number(data.duty_base_percent) || 110;
+
     const updateField = (key, value) => setData(key, value);
     const updateItem = (idx, key, value) => {
         const next = [...(data.items || [])];
@@ -104,7 +131,6 @@ export default function CalculationForm({
                 cbm: '',
                 weight_kg: '',
                 customs_preset_value_foreign_or_base: '',
-                cid_rate_per_kg_lkr: 30,
             },
         ]);
     };
@@ -133,6 +159,79 @@ export default function CalculationForm({
         );
     };
 
+    const shipmentSummaryRows = useMemo(
+        () => [
+            ['No. of Products', preview.summary.item_count],
+            [
+                'Total Product Value',
+                formatLocalMoneyDisplay(
+                    preview.summary.total_product_value_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            [
+                'Total Statistical Value',
+                formatLocalMoneyDisplay(
+                    preview.summary.total_statistical_value_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            [
+                'Total CID',
+                formatLocalMoneyDisplay(preview.summary.total_cid_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Total VAT',
+                formatLocalMoneyDisplay(preview.summary.total_vat_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Total SSCL',
+                formatLocalMoneyDisplay(preview.summary.total_sscl_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Total Duty',
+                formatLocalMoneyDisplay(preview.summary.total_duty_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Total Allocated Freight',
+                formatLocalMoneyDisplay(
+                    preview.summary.total_allocated_freight_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            [
+                'Total Allocated Other Costs',
+                formatLocalMoneyDisplay(
+                    preview.summary.total_allocated_other_costs_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            [
+                'Grand Total Landed Cost',
+                formatLocalMoneyDisplay(
+                    preview.summary.grand_total_landed_cost_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            ['Total Weight (KG)', preview.summary.total_weight_kg],
+            ['Sum of line CBM', preview.summary.total_cbm],
+            [
+                'Freight per CBM',
+                formatLocalMoneyDisplay(
+                    preview.summary.freight_cost_per_cbm_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+        ],
+        [preview, localCurrencyCode, company],
+    );
+
     return (
         <form
             onSubmit={(e) => {
@@ -147,9 +246,11 @@ export default function CalculationForm({
                 or stock valuation.
             </section>
 
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-                <section className="rounded-lg border border-gray-200 bg-white p-5 xl:col-span-2">
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900">Shipment Information</h3>
+                    <p className="mt-1 text-xs text-gray-500">
+                        Basic shipment details, currencies, rates, and related costs.
+                    </p>
                     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {showCodeAsReadOnly ? (
                             <div>
@@ -263,7 +364,7 @@ export default function CalculationForm({
                                 onChange={(e) =>
                                     updateField(
                                         'total_shipment_cbm',
-                                        sanitizeDecimalNumericInput(e.target.value),
+                                        sanitizeDecimalNumericInputMaxFractionDigits(e.target.value, 2),
                                     )
                                 }
                             />
@@ -294,104 +395,125 @@ export default function CalculationForm({
                                 className="mt-1"
                                 value={data.calculation_status || 'draft'}
                                 onChange={(v) => updateField('calculation_status', v)}
-                                options={statusOptions.map((s) => ({ value: s, label: s }))}
+                                options={statusOptions.map((s) => ({
+                                    value: s,
+                                    label: formatCalculationStatusLabel(s),
+                                }))}
                             />
                         </div>
                     </div>
-                </section>
-
-                <aside className="sticky top-20 h-fit rounded-lg border border-gray-200 bg-white p-5">
-                    <h3 className="text-sm font-semibold text-gray-900">Shipment Summary</h3>
-                    <div className="mt-3 space-y-2 text-sm">
-                        {[
-                            ['No. of Product Lines', preview.summary.item_count],
-                            [
-                                'Total Product Value',
-                                formatLocalMoneyDisplay(
-                                    preview.summary.total_product_value_lkr,
-                                    localCurrencyCode,
-                                    company,
-                                ),
-                            ],
-                            [
-                                'Total Statistical Value',
-                                formatLocalMoneyDisplay(
-                                    preview.summary.total_statistical_value_lkr,
-                                    localCurrencyCode,
-                                    company,
-                                ),
-                            ],
-                            [
-                                'Total CID',
-                                formatLocalMoneyDisplay(preview.summary.total_cid_lkr, localCurrencyCode, company),
-                            ],
-                            [
-                                'Total VAT',
-                                formatLocalMoneyDisplay(preview.summary.total_vat_lkr, localCurrencyCode, company),
-                            ],
-                            [
-                                'Total SSCL',
-                                formatLocalMoneyDisplay(preview.summary.total_sscl_lkr, localCurrencyCode, company),
-                            ],
-                            [
-                                'Total Duty',
-                                formatLocalMoneyDisplay(preview.summary.total_duty_lkr, localCurrencyCode, company),
-                            ],
-                            [
-                                'Total Allocated Freight',
-                                formatLocalMoneyDisplay(
-                                    preview.summary.total_allocated_freight_lkr,
-                                    localCurrencyCode,
-                                    company,
-                                ),
-                            ],
-                            [
-                                'Total Allocated Other Costs',
-                                formatLocalMoneyDisplay(
-                                    preview.summary.total_allocated_other_costs_lkr,
-                                    localCurrencyCode,
-                                    company,
-                                ),
-                            ],
-                            [
-                                'Grand Total Landed Cost',
-                                formatLocalMoneyDisplay(
-                                    preview.summary.grand_total_landed_cost_lkr,
-                                    localCurrencyCode,
-                                    company,
-                                ),
-                            ],
-                            ['Total Weight (KG)', preview.summary.total_weight_kg],
-                            ['Sum of line CBM', preview.summary.total_cbm],
-                            [
-                                'Freight per CBM',
-                                formatLocalMoneyDisplay(
-                                    preview.summary.freight_cost_per_cbm_lkr,
-                                    localCurrencyCode,
-                                    company,
-                                ),
-                            ],
-                        ].map(([label, value]) => (
-                            <div key={label} className="flex justify-between gap-3 border-b border-gray-100 py-1.5">
-                                <span className="text-gray-600">{label}</span>
-                                <span className="text-right font-medium text-gray-900">{value}</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600">
-                        Freight allocated by CBM. Other common costs allocated by Weight (KG).
-                    </div>
-                </aside>
-            </div>
+            </section>
 
             <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900">Extra Costs</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Duty Rates</h3>
+                <p className="mt-1 text-xs text-gray-500">Customs duty assumptions for this calculation.</p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <InputLabel htmlFor="cid_rate_per_kg_lkr" value="CID / Kg" />
+                        <div className={atmMoneyInputShellWithLabelClass}>
+                            <div className={atmMoneyInputAddonLeftDefaultClass}>{localCurrencyAddon}</div>
+                            <input
+                                id="cid_rate_per_kg_lkr"
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                spellCheck={false}
+                                dir="ltr"
+                                className={atmMoneyInputInputRightOfLeftAddonClass}
+                                value={data.cid_rate_per_kg_lkr ?? ''}
+                                onChange={(e) =>
+                                    updateField(
+                                        'cid_rate_per_kg_lkr',
+                                        sanitizeDecimalNumericInput(e.target.value),
+                                    )
+                                }
+                            />
+                        </div>
+                        <InputError className="mt-2" message={errors.cid_rate_per_kg_lkr} />
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="duty_base_percent" value="Base Value (%)" />
+                        <div className={atmMoneyInputShellWithLabelClass}>
+                            <input
+                                id="duty_base_percent"
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                spellCheck={false}
+                                dir="ltr"
+                                className={atmMoneyInputInputLeftOfRightAddonClass}
+                                value={data.duty_base_percent ?? ''}
+                                onChange={(e) =>
+                                    updateField(
+                                        'duty_base_percent',
+                                        sanitizeDecimalNumericInput(e.target.value),
+                                    )
+                                }
+                            />
+                            <div className={atmMoneyInputAddonRightDefaultClass}>%</div>
+                        </div>
+                        <InputError className="mt-2" message={errors.duty_base_percent} />
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="vat_rate_percent" value="VAT Rate (%)" />
+                        <div className={atmMoneyInputShellWithLabelClass}>
+                            <input
+                                id="vat_rate_percent"
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                spellCheck={false}
+                                dir="ltr"
+                                className={atmMoneyInputInputLeftOfRightAddonClass}
+                                value={data.vat_rate_percent ?? ''}
+                                onChange={(e) =>
+                                    updateField(
+                                        'vat_rate_percent',
+                                        sanitizeDecimalNumericInput(e.target.value),
+                                    )
+                                }
+                            />
+                            <div className={atmMoneyInputAddonRightDefaultClass}>%</div>
+                        </div>
+                        <InputError className="mt-2" message={errors.vat_rate_percent} />
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="sscl_rate_percent" value="SSCL Rate (%)" />
+                        <div className={atmMoneyInputShellWithLabelClass}>
+                            <input
+                                id="sscl_rate_percent"
+                                type="text"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                spellCheck={false}
+                                dir="ltr"
+                                className={atmMoneyInputInputLeftOfRightAddonClass}
+                                value={data.sscl_rate_percent ?? ''}
+                                onChange={(e) =>
+                                    updateField(
+                                        'sscl_rate_percent',
+                                        sanitizeDecimalNumericInput(e.target.value),
+                                    )
+                                }
+                            />
+                            <div className={atmMoneyInputAddonRightDefaultClass}>%</div>
+                        </div>
+                        <InputError className="mt-2" message={errors.sscl_rate_percent} />
+                    </div>
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-900">Extra Costs</h3>
+                        <p className="mt-1 text-xs text-gray-500">Optional additional charges to include in the estimate.</p>
+                    </div>
                     <PrimaryButton type="button" onClick={addOtherCost}>
                         Add Cost
                     </PrimaryButton>
                 </div>
-                <div className="mt-3 space-y-3">
+                <div className="mt-4 space-y-3">
                     {(data.other_costs || []).map((row, idx) => (
                         <div key={idx} className="grid grid-cols-1 gap-3 rounded-md border border-gray-200 p-3 md:grid-cols-12">
                             <div className="md:col-span-4">
@@ -434,8 +556,10 @@ export default function CalculationForm({
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900">Product Lines</h3>
-                        <div className="mt-1 text-xs text-gray-600">Duty formulas are applied per line.</div>
+                        <h3 className="text-sm font-semibold text-gray-900">Products</h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Line items for this shipment, including quantities, prices, and customs values.
+                        </p>
                     </div>
                     <PrimaryButton type="button" onClick={addItem}>
                         Add Product
@@ -449,32 +573,18 @@ export default function CalculationForm({
                 <InputError className="mt-2" message={errors.items} />
 
                 <div className="mt-4 overflow-x-auto">
-                    <table className="min-w-[2080px] divide-y divide-gray-200 text-sm">
+                    <table className="min-w-[900px] divide-y divide-gray-200 text-sm">
                         <thead className="bg-gray-50">
                             <tr>
                                 {[
-                                    'Line',
+                                    'No.',
                                     'Product',
                                     'UOM',
                                     'Qty',
                                     'Unit Price',
-                                    'Total FCY',
-                                    'Rate',
-                                    'Product',
                                     'CBM',
                                     'Weight',
                                     'Preset',
-                                    'CID / kg',
-                                    'Statistical',
-                                    '110% Base',
-                                    'CID',
-                                    'VAT',
-                                    'SSCL',
-                                    'Duty',
-                                    'Alloc. Freight',
-                                    'Alloc. Other',
-                                    'Total Landed',
-                                    'Landed / Unit',
                                     'Actions',
                                 ].map((h) => (
                                     <th key={h} className="whitespace-nowrap px-2 py-2 text-left text-xs font-semibold text-gray-600">
@@ -520,17 +630,6 @@ export default function CalculationForm({
                                             onChange={(e) => updateItem(idx, 'unit_price_foreign', e.target.value)}
                                         />
                                     </td>
-                                    <td className="px-2 py-2 text-right">{row.total_product_value_foreign}</td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatMoneyInputWithCommas(
-                                            String(Number(data.exchange_rate) || 0),
-                                            3,
-                                            exchangeRateFormatOptions,
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(row.product_value_lkr, localCurrencyCode, company)}
-                                    </td>
                                     <td className="min-w-[120px] px-2 py-2">
                                         <TextInput
                                             type="number"
@@ -564,72 +663,6 @@ export default function CalculationForm({
                                             }
                                         />
                                     </td>
-                                    <td className="min-w-[132px] px-2 py-2 align-top">
-                                        <AtmMoneyInput
-                                            id={`items-${idx}-cid_rate_per_kg_lkr`}
-                                            showLabel={false}
-                                            dense
-                                            addon={localCurrencyAddon}
-                                            value={data.items?.[idx]?.cid_rate_per_kg_lkr ?? ''}
-                                            onChange={(v) => updateItem(idx, 'cid_rate_per_kg_lkr', v)}
-                                            error={errors[`items.${idx}.cid_rate_per_kg_lkr`]}
-                                            fractionDigits={2}
-                                        />
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(
-                                            row.statistical_value_lkr,
-                                            localCurrencyCode,
-                                            company,
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(
-                                            row.customs_base_110_lkr,
-                                            localCurrencyCode,
-                                            company,
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(row.cid_lkr, localCurrencyCode, company)}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(row.vat_lkr, localCurrencyCode, company)}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(row.sscl_lkr, localCurrencyCode, company)}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company)}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(
-                                            row.allocated_freight_lkr,
-                                            localCurrencyCode,
-                                            company,
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right">
-                                        {formatLocalMoneyDisplay(
-                                            row.allocated_other_costs_lkr,
-                                            localCurrencyCode,
-                                            company,
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right font-medium">
-                                        {formatLocalMoneyDisplay(
-                                            row.total_landed_cost_lkr,
-                                            localCurrencyCode,
-                                            company,
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2 text-right font-medium">
-                                        {formatLocalMoneyDisplay(
-                                            row.landed_cost_per_unit_lkr,
-                                            localCurrencyCode,
-                                            company,
-                                        )}
-                                    </td>
                                     <td className="px-2 py-2">
                                         <SecondaryButton type="button" onClick={() => removeItem(idx)}>
                                             Remove
@@ -642,14 +675,143 @@ export default function CalculationForm({
                 </div>
             </section>
 
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:items-start">
+                <section className="rounded-lg border border-gray-200 bg-white p-5 xl:sticky xl:top-20 xl:z-10 xl:self-start dark:border-cursor-border dark:bg-cursor-surface">
+                    <h3 className="text-sm font-semibold text-gray-900">Shipment Summary</h3>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                        Totals for the shipment based on your entries.
+                    </p>
+                    <div className="mt-3 space-y-2 text-sm">
+                        {shipmentSummaryRows.map(([label, value]) => (
+                            <div key={label} className="flex justify-between gap-3 border-b border-gray-100 py-1.5">
+                                <span className="text-gray-600">{label}</span>
+                                <span className="text-right font-medium text-gray-900">{value}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600">
+                        Freight allocated by CBM. Other common costs allocated by Weight (KG).
+                    </div>
+                    <div className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600 space-y-1.5">
+                        <div>
+                            Purchasing exchange rate:{' '}
+                            {formatMoneyInputWithCommas(
+                                String(Number(data.exchange_rate) || 0),
+                                3,
+                                exchangeRateFormatOptions,
+                            )}{' '}
+                            {localCurrencyCode} per 1 {purchasingCurrencyCode}.
+                        </div>
+                        <div>
+                            Freight exchange rate:{' '}
+                            {Number(data.freight_exchange_rate) > 0 &&
+                            String(data.freight_currency || '').trim().length === 3 ? (
+                                <>
+                                    {formatMoneyInputWithCommas(
+                                        String(Number(data.freight_exchange_rate) || 0),
+                                        3,
+                                        exchangeRateFormatOptions,
+                                    )}{' '}
+                                    {localCurrencyCode} per 1 {String(data.freight_currency).trim().toUpperCase()}.
+                                </>
+                            ) : (
+                                '—'
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="rounded-lg border border-gray-200 bg-white p-5 xl:sticky xl:top-20 xl:z-10 xl:self-start dark:border-cursor-border dark:bg-cursor-surface">
+                    <h3 className="text-sm font-semibold text-gray-900">Product Summary</h3>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                        Per-line breakdown of costs for each product.
+                    </p>
+                    <div className="mt-3 flex flex-col gap-4">
+                        {preview.items.map((row, idx) => {
+                            const name = (data.items?.[idx]?.product_name || '').trim();
+                            const lineTitle = name ? `No. ${idx + 1} · ${name}` : `No. ${idx + 1}`;
+                            const productSummaryRows = [
+                                [
+                                    'Total FCY',
+                                    formatLocalMoneyDisplay(
+                                        row.total_product_value_foreign,
+                                        purchasingCurrencyCode,
+                                        company,
+                                    ),
+                                ],
+                                [
+                                    'Value (LKR)',
+                                    formatLocalMoneyDisplay(row.product_value_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Statistical',
+                                    formatLocalMoneyDisplay(row.statistical_value_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    `${dutyBasePercentDisplay}% Base`,
+                                    formatLocalMoneyDisplay(row.customs_base_110_lkr, localCurrencyCode, company),
+                                ],
+                                ['CID', formatLocalMoneyDisplay(row.cid_lkr, localCurrencyCode, company)],
+                                ['VAT', formatLocalMoneyDisplay(row.vat_lkr, localCurrencyCode, company)],
+                                ['SSCL', formatLocalMoneyDisplay(row.sscl_lkr, localCurrencyCode, company)],
+                                ['Duty', formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company)],
+                                [
+                                    'Alloc. Freight',
+                                    formatLocalMoneyDisplay(row.allocated_freight_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Alloc. Other',
+                                    formatLocalMoneyDisplay(row.allocated_other_costs_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Total Landed',
+                                    formatLocalMoneyDisplay(row.total_landed_cost_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Landed / Unit',
+                                    formatLocalMoneyDisplay(row.landed_cost_per_unit_lkr, localCurrencyCode, company),
+                                ],
+                            ];
+
+                            return (
+                                <div
+                                    key={idx}
+                                    className="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface"
+                                >
+                                    <div className="border-b border-gray-200 bg-slate-50 px-3 py-2 dark:border-cursor-border dark:bg-cursor-raised/50">
+                                        <span className="text-sm font-semibold text-gray-600">{lineTitle}</span>
+                                    </div>
+                                    <div className="space-y-2 p-3 text-sm">
+                                        {productSummaryRows.map(([label, value]) => (
+                                            <div
+                                                key={`${idx}-${label}`}
+                                                className="flex justify-between gap-3 border-b border-gray-100 py-1.5 last:border-b-0"
+                                            >
+                                                <span className="text-gray-600">{label}</span>
+                                                <span className="text-right font-medium text-gray-900">{value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            </div>
+
             <section className="rounded-lg border border-gray-200 bg-white p-5">
-                <InputLabel value="Notes" />
-                <textarea
-                    rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm"
-                    value={data.notes || ''}
-                    onChange={(e) => updateField('notes', e.target.value)}
-                />
+                <h3 className="text-sm font-semibold text-gray-900">Notes</h3>
+                <div className="mt-4">
+                    <textarea
+                        id="notes"
+                        rows={3}
+                        className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value={data.notes || ''}
+                        onChange={(e) => updateField('notes', e.target.value)}
+                        aria-label="Notes"
+                    />
+                    <InputError className="mt-2" message={errors.notes} />
+                </div>
             </section>
 
             <div className="flex items-center justify-end gap-3">

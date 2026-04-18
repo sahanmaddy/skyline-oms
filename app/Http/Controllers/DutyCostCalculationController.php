@@ -108,6 +108,10 @@ class DutyCostCalculationController extends Controller
                 'delivery_order_charges_lkr' => $payload['delivery_order_charges_lkr'] ?? 0,
                 'clearing_charges_lkr' => $payload['clearing_charges_lkr'] ?? 0,
                 'demurrage_cost_lkr' => $payload['demurrage_cost_lkr'] ?? 0,
+                'cid_rate_per_kg_lkr' => $payload['cid_rate_per_kg_lkr'] ?? 30,
+                'duty_base_percent' => $payload['duty_base_percent'] ?? 110,
+                'vat_rate_percent' => $payload['vat_rate_percent'] ?? 18,
+                'sscl_rate_percent' => $payload['sscl_rate_percent'] ?? 2.5,
                 'other_costs_lkr_total' => $computed['summary']['other_costs_lkr_total'],
                 'notes' => $payload['notes'] ?? null,
                 'calculation_status' => $payload['calculation_status'] ?? 'draft',
@@ -181,6 +185,10 @@ class DutyCostCalculationController extends Controller
                 'delivery_order_charges_lkr' => $payload['delivery_order_charges_lkr'] ?? 0,
                 'clearing_charges_lkr' => $payload['clearing_charges_lkr'] ?? 0,
                 'demurrage_cost_lkr' => $payload['demurrage_cost_lkr'] ?? 0,
+                'cid_rate_per_kg_lkr' => $payload['cid_rate_per_kg_lkr'] ?? 30,
+                'duty_base_percent' => $payload['duty_base_percent'] ?? 110,
+                'vat_rate_percent' => $payload['vat_rate_percent'] ?? 18,
+                'sscl_rate_percent' => $payload['sscl_rate_percent'] ?? 2.5,
                 'other_costs_lkr_total' => $computed['summary']['other_costs_lkr_total'],
                 'notes' => $payload['notes'] ?? null,
                 'calculation_status' => $payload['calculation_status'] ?? 'draft',
@@ -268,4 +276,3 @@ class DutyCostCalculationController extends Controller
         ];
     }
 }
-

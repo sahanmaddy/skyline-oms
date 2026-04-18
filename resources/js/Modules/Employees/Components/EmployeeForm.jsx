@@ -48,6 +48,7 @@ export default function EmployeeForm({
     users,
     submitLabel,
     onSubmit,
+    onCancel,
     onClientValidationError,
     profilePhotoUrl,
     mode = 'create',
@@ -1129,6 +1130,11 @@ export default function EmployeeForm({
             </section>
 
             <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

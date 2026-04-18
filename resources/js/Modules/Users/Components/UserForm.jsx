@@ -3,6 +3,7 @@ import LinkedEmployeeCombobox from '@/Components/LinkedEmployeeCombobox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { useEffect, useMemo, useState } from 'react';
@@ -25,6 +26,7 @@ export default function UserForm({
     showPasswordFields,
     requirePassword = false,
     onSubmit,
+    onCancel,
     onClientValidationError,
 }) {
     const [clientErrors, setClientErrors] = useState({});
@@ -461,6 +463,11 @@ export default function UserForm({
             )}
 
             <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

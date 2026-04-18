@@ -7,7 +7,7 @@ import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ employee, statusOptions, users, activeBranches }) {
     const toast = useToast();
@@ -103,7 +103,8 @@ export default function Edit({ employee, statusOptions, users, activeBranches })
                             ? route('hr.employees.profilePhoto.view', employee.id)
                             : null
                     }
-                    submitLabel="Save"
+                    submitLabel="Update employee"
+                    onCancel={() => router.get(route('hr.employees.show', employee.id))}
                     onClientValidationError={() =>
                         toast.error('Please fix the highlighted fields and try again.')
                     }
