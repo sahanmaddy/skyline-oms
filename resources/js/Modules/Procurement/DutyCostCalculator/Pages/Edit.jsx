@@ -16,18 +16,10 @@ export default function Edit({ calculation, statusOptions }) {
         shipment_currency_basis_notes: calculation.shipment_currency_basis_notes || '',
         exchange_rate: calculation.exchange_rate || '',
         freight_currency: calculation.freight_currency || '',
-        freight_exchange_rate: calculation.freight_exchange_rate ?? '',
+        freight_exchange_rate: calculation.freight_exchange_rate || '',
         freight_cost_total: calculation.freight_cost_total ?? '',
-        total_shipment_cbm: (() => {
-            const raw = calculation.total_shipment_cbm ?? calculation.container_cbm_capacity;
-            if (raw === null || raw === undefined || raw === '') {
-                return '';
-            }
-            const n = Number(raw);
-            return Number.isFinite(n) ? n.toFixed(2) : String(raw);
-        })(),
-        loading_cost_lkr: calculation.loading_cost_lkr || '',
-        unloading_cost_lkr: calculation.unloading_cost_lkr || '',
+        loading_unloading_cost_lkr: calculation.loading_unloading_cost_lkr || '',
+        additional_entry_cost_lkr: calculation.additional_entry_cost_lkr || '',
         transport_cost_lkr: calculation.transport_cost_lkr || '',
         delivery_order_charges_lkr: calculation.delivery_order_charges_lkr || '',
         clearing_charges_lkr: calculation.clearing_charges_lkr || '',
@@ -39,6 +31,8 @@ export default function Edit({ calculation, statusOptions }) {
         duty_base_percent: calculation.duty_base_percent ?? '110',
         vat_rate_percent: calculation.vat_rate_percent ?? '18',
         sscl_rate_percent: calculation.sscl_rate_percent ?? '2.5',
+        bank_interest_rate_pa: calculation.bank_interest_rate_pa ?? '',
+        bank_interest_months: calculation.bank_interest_months ?? '',
         notes: calculation.notes || '',
         calculation_status: calculation.calculation_status || 'draft',
         items: (calculation.items || []).map((row) => ({
@@ -91,7 +85,6 @@ export default function Edit({ calculation, statusOptions }) {
                             }
                             onSubmit={() =>
                                 form.put(route('procurement.duty-cost-calculations.update', calculation.id), {
-                                    onSuccess: () => toast.success('Calculation updated.'),
                                     onError: () =>
                                         toast.error('Please fix the highlighted fields and try again.'),
                                 })

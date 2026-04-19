@@ -8,12 +8,13 @@ import { usePage } from '@inertiajs/react';
 const PROCUREMENT_TITLE = 'Procurement';
 
 export default function ProcurementModuleLayout({ children, breadcrumbs = [] }) {
-    const permissions = usePage().props.auth.permissions ?? [];
+    const rawPermissions = usePage().props.auth?.permissions;
+    const permissions = Array.isArray(rawPermissions) ? rawPermissions : [];
     const navItems = procurementSectionNavItems(permissions);
 
     return (
         <ModulePageShell>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm print:hidden">
                 <ModuleHeader title={PROCUREMENT_TITLE} />
                 {navItems.length > 0 ? (
                     <ModuleSubnav items={navItems} ariaLabel="Procurement sections" />
@@ -21,7 +22,7 @@ export default function ProcurementModuleLayout({ children, breadcrumbs = [] }) 
             </div>
 
             {breadcrumbs.length > 0 ? (
-                <div className="pt-1">
+                <div className="pt-1 print:hidden">
                     <ModuleBreadcrumbs items={breadcrumbs} />
                 </div>
             ) : null}

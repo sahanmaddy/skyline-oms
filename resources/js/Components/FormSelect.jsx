@@ -30,7 +30,7 @@ export default function FormSelect({
     form,
     value,
     onChange,
-    options,
+    options = [],
     disabled = false,
     className = '',
     triggerClassName = formNativeSelectClass,
@@ -38,7 +38,8 @@ export default function FormSelect({
     placeholder = 'Select…',
     'aria-label': ariaLabel,
 }) {
-    const selected = options.find((o) => Object.is(o.value, value));
+    const opts = Array.isArray(options) ? options : [];
+    const selected = opts.find((o) => Object.is(o.value, value));
     const displayLabel = selected?.label ?? placeholder;
 
     const openRingClass =
@@ -83,7 +84,7 @@ export default function FormSelect({
                                 dropdownMenuPanelRingClass
                             }
                         >
-                            {options.map((opt, index) => (
+                            {opts.map((opt, index) => (
                                 <ListboxOption
                                     key={`${String(opt.value)}-${index}`}
                                     value={opt.value}

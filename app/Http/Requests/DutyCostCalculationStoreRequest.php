@@ -21,6 +21,13 @@ class DutyCostCalculationStoreRequest extends FormRequest
                 $this->merge([$key => strtoupper($code)]);
             }
         }
+
+        foreach (['bank_interest_rate_pa', 'bank_interest_months'] as $key) {
+            $v = $this->input($key);
+            if ($v === '' || $v === null) {
+                $this->merge([$key => null]);
+            }
+        }
     }
 
     public function rules(): array
@@ -34,18 +41,19 @@ class DutyCostCalculationStoreRequest extends FormRequest
             'exchange_rate' => ['required', 'numeric', 'gt:0'],
             'freight_currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'freight_exchange_rate' => ['nullable', 'numeric', 'gt:0'],
-            'total_shipment_cbm' => ['nullable', 'numeric', 'gt:0'],
             'freight_cost_total' => ['nullable', 'numeric', 'min:0'],
-            'loading_cost_lkr' => ['nullable', 'numeric', 'min:0'],
-            'unloading_cost_lkr' => ['nullable', 'numeric', 'min:0'],
+            'loading_unloading_cost_lkr' => ['nullable', 'numeric', 'min:0'],
             'transport_cost_lkr' => ['nullable', 'numeric', 'min:0'],
             'delivery_order_charges_lkr' => ['nullable', 'numeric', 'min:0'],
             'clearing_charges_lkr' => ['nullable', 'numeric', 'min:0'],
             'demurrage_cost_lkr' => ['nullable', 'numeric', 'min:0'],
+            'additional_entry_cost_lkr' => ['nullable', 'numeric', 'min:0'],
             'cid_rate_per_kg_lkr' => ['nullable', 'numeric', 'min:0'],
             'duty_base_percent' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'vat_rate_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'sscl_rate_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'bank_interest_rate_pa' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'bank_interest_months' => ['nullable', 'numeric', 'min:0', 'max:600'],
             'notes' => ['nullable', 'string'],
             'calculation_status' => ['nullable', Rule::in(['draft', 'finalized'])],
             'other_costs' => ['nullable', 'array'],
@@ -71,11 +79,15 @@ class DutyCostCalculationStoreRequest extends FormRequest
     {
         $validator->after(function ($validator): void {
             $freightCost = (float) $this->input('freight_cost_total', 0);
-            $capacity = (float) $this->input('total_shipment_cbm', 0);
-            if ($freightCost > 0 && $capacity <= 0) {
+            $items = $this->input('items', []);
+            $sumCbm = array_sum(array_map(
+                static fn ($row) => (float) ($row['cbm'] ?? 0),
+                is_array($items) ? $items : [],
+            ));
+            if ($freightCost > 0 && $sumCbm <= 0) {
                 $validator->errors()->add(
-                    'total_shipment_cbm',
-                    'Total CBM is required when freight cost is entered.',
+                    'items',
+                    'Enter CBM on each product (total must be greater than zero) when freight cost is entered.',
                 );
             }
             if ($freightCost > 0) {
@@ -88,18 +100,17 @@ class DutyCostCalculationStoreRequest extends FormRequest
                 }
             }
 
-            $items = $this->input('items', []);
             $totalWeight = array_sum(array_map(
                 static fn ($row) => (float) ($row['weight_kg'] ?? 0),
                 is_array($items) ? $items : [],
             ));
 
-            $otherPool = (float) $this->input('loading_cost_lkr', 0)
-                + (float) $this->input('unloading_cost_lkr', 0)
+            $otherPool = (float) $this->input('loading_unloading_cost_lkr', 0)
                 + (float) $this->input('transport_cost_lkr', 0)
                 + (float) $this->input('delivery_order_charges_lkr', 0)
                 + (float) $this->input('clearing_charges_lkr', 0)
-                + (float) $this->input('demurrage_cost_lkr', 0);
+                + (float) $this->input('demurrage_cost_lkr', 0)
+                + (float) $this->input('additional_entry_cost_lkr', 0);
 
             foreach ($this->input('other_costs', []) as $row) {
                 $otherPool += (float) ($row['amount_lkr'] ?? 0);
@@ -108,7 +119,7 @@ class DutyCostCalculationStoreRequest extends FormRequest
             if ($otherPool > 0 && $totalWeight <= 0) {
                 $validator->errors()->add(
                     'items',
-                    'Total weight must be greater than zero to allocate other common costs.',
+                    'Total weight across products must be greater than zero to allocate other common costs.',
                 );
             }
         });
@@ -120,10 +131,14 @@ class DutyCostCalculationStoreRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'total_shipment_cbm' => 'Total CBM',
             'freight_cost_total' => 'Freight cost',
+            'loading_unloading_cost_lkr' => 'Loading / unloading cost',
+            'additional_entry_cost_lkr' => 'Additional entry',
             'freight_currency' => 'Freight currency',
             'freight_exchange_rate' => 'Freight exchange rate',
+            'bank_interest_rate_pa' => 'Bank Interest Rate (Per Annum)',
+            'bank_interest_months' => 'Number of Months',
+            'duty_base_percent' => 'Customs Base Value (%)',
         ];
     }
 }

@@ -23,8 +23,7 @@ return new class extends Migration
             $table->string('exchange_rate_currency_label')->nullable();
             $table->decimal('container_cbm_capacity', 14, 4)->nullable();
             $table->decimal('shipping_cost_total_lkr', 15, 2)->default(0);
-            $table->decimal('loading_cost_lkr', 15, 2)->default(0);
-            $table->decimal('unloading_cost_lkr', 15, 2)->default(0);
+            $table->decimal('loading_unloading_cost_lkr', 15, 2)->default(0);
             $table->decimal('transport_cost_lkr', 15, 2)->default(0);
             $table->decimal('delivery_order_charges_lkr', 15, 2)->default(0);
             $table->decimal('clearing_charges_lkr', 15, 2)->default(0);
@@ -57,4 +56,3 @@ return new class extends Migration
         Schema::dropIfExists('duty_cost_calculations');
     }
 };
-

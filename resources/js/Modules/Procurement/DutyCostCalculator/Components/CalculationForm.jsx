@@ -3,8 +3,9 @@ import AtmMoneyInput, {
     atmMoneyInputAddonRightDefaultClass,
     atmMoneyInputInputLeftOfRightAddonClass,
     atmMoneyInputInputRightOfLeftAddonClass,
-    atmMoneyInputShellWithLabelClass,
+    atmMoneyInputShellNoLabelClass,
 } from '@/Components/AtmMoneyInput';
+import CommaDecimalInput from '@/Components/CommaDecimalInput';
 import CurrencyCodeCombobox from '@/Components/CurrencyCodeCombobox';
 import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
@@ -15,6 +16,7 @@ import TextInput from '@/Components/TextInput';
 import { currencyCodes } from '@/data/currencyCodes';
 import { calculateDutyCostPreview } from '@/Modules/Procurement/DutyCostCalculator/lib/calculateDutyCost';
 import { formatCalculationStatusLabel } from '@/Modules/Procurement/DutyCostCalculator/lib/formatCalculationStatusLabel';
+import { formatMeasuredNumberForDisplay } from '@/Modules/Procurement/DutyCostCalculator/lib/formatDutyNumbers';
 import {
     currencyAddonLabelForIso,
     formatLocalMoneyDisplay,
@@ -33,32 +35,6 @@ const uomOptions = [
 
 const exchangeRateFormatOptions = { locale: 'en-US', minimumFractionDigits: 3 };
 
-/** Digits and at most one `.` for decimal CBM entry (plain text field, not type="number"). */
-function sanitizeDecimalNumericInput(raw) {
-    const cleaned = String(raw ?? '').replace(/[^\d.]/g, '');
-    if (!cleaned) {
-        return '';
-    }
-    const firstDot = cleaned.indexOf('.');
-    if (firstDot === -1) {
-        return cleaned;
-    }
-    return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
-}
-
-function sanitizeDecimalNumericInputMaxFractionDigits(raw, maxFractionDigits) {
-    const s = sanitizeDecimalNumericInput(raw);
-    if (maxFractionDigits <= 0) {
-        const i = s.indexOf('.');
-        return i === -1 ? s : s.slice(0, i);
-    }
-    const i = s.indexOf('.');
-    if (i === -1) {
-        return s;
-    }
-    return s.slice(0, i + 1 + maxFractionDigits);
-}
-
 export default function CalculationForm({
     nextCode = '',
     showCodeAsReadOnly = false,
@@ -71,6 +47,7 @@ export default function CalculationForm({
     onCancel,
     statusOptions = ['draft', 'finalized'],
 }) {
+    const safeStatusOptions = Array.isArray(statusOptions) ? statusOptions : ['draft', 'finalized'];
     const company = usePage().props.company ?? {};
     const preview = useMemo(() => calculateDutyCostPreview(data), [data]);
     const currencyCodeOptions = useMemo(() => currencyCodes, []);
@@ -101,11 +78,15 @@ export default function CalculationForm({
         const ssclPct = String(Number(data.sscl_rate_percent) || 2.5);
         return [
             'Statistical Value = Preset Value × Weight × Exchange Rate',
-            `${basePct}% Base = Statistical Value × ${basePct}%`,
-            'CID = Weight × CID / kg',
-            `VAT = (${basePct}% Base + CID) × ${vatPct}%`,
-            `SSCL = (${basePct}% Base + CID) × ${ssclPct}%`,
+            `${basePct}% Customs Base Value = Statistical Value × ${basePct}%`,
+            'CID = Weight × CID / KG',
+            `VAT = (${basePct}% Customs Base Value + CID) × ${vatPct}%`,
+            `SSCL = (${basePct}% Customs Base Value + CID) × ${ssclPct}%`,
             'Duty = CID + VAT + SSCL',
+            'Bank Transfer = 1% of (Shipment Purchase + Freight) in LKR',
+            'Bank Interest = (Purchase + Freight) (LKR) × (Interest % p.a. / 100) × (Months / 12)',
+            'Bank Charges are split by each product’s share of (Purchase LKR + Allocated Freight LKR)',
+            'Freight per CBM = Total Freight (LKR) ÷ Σ Product CBM; Each product receives CBM × that rate',
         ];
     }, [data.duty_base_percent, data.vat_rate_percent, data.sscl_rate_percent]);
 
@@ -179,6 +160,14 @@ export default function CalculationForm({
                 ),
             ],
             [
+                `Customs Base Value (${dutyBasePercentDisplay}%)`,
+                formatLocalMoneyDisplay(
+                    preview.summary.total_customs_base_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            [
                 'Total CID',
                 formatLocalMoneyDisplay(preview.summary.total_cid_lkr, localCurrencyCode, company),
             ],
@@ -191,13 +180,37 @@ export default function CalculationForm({
                 formatLocalMoneyDisplay(preview.summary.total_sscl_lkr, localCurrencyCode, company),
             ],
             [
-                'Total Duty',
-                formatLocalMoneyDisplay(preview.summary.total_duty_lkr, localCurrencyCode, company),
-            ],
-            [
                 'Total Allocated Freight',
                 formatLocalMoneyDisplay(
                     preview.summary.total_allocated_freight_lkr,
+                    localCurrencyCode,
+                    company,
+                ),
+            ],
+            [
+                'Bank Transfer (1%)',
+                formatLocalMoneyDisplay(preview.summary.bank_transfer_charges_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Bank Interest',
+                formatLocalMoneyDisplay(preview.summary.bank_interest_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Total Bank Charges (Allocated)',
+                formatLocalMoneyDisplay(preview.summary.total_bank_charges_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Weight (KG)',
+                formatMeasuredNumberForDisplay(preview.summary.total_weight_kg, 3) ?? '—',
+            ],
+            [
+                `Total CBM (${String(preview.summary.item_count ?? 0)} Products)`,
+                formatMeasuredNumberForDisplay(preview.summary.total_cbm, 3) ?? '—',
+            ],
+            [
+                'Freight Per CBM',
+                formatLocalMoneyDisplay(
+                    preview.summary.freight_cost_per_cbm_lkr,
                     localCurrencyCode,
                     company,
                 ),
@@ -211,25 +224,23 @@ export default function CalculationForm({
                 ),
             ],
             [
-                'Grand Total Landed Cost',
+                'Total Duty',
+                formatLocalMoneyDisplay(preview.summary.total_duty_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Remittance',
+                formatLocalMoneyDisplay(preview.summary.remittance_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Grand Total',
                 formatLocalMoneyDisplay(
                     preview.summary.grand_total_landed_cost_lkr,
                     localCurrencyCode,
                     company,
                 ),
             ],
-            ['Total Weight (KG)', preview.summary.total_weight_kg],
-            ['Sum of line CBM', preview.summary.total_cbm],
-            [
-                'Freight per CBM',
-                formatLocalMoneyDisplay(
-                    preview.summary.freight_cost_per_cbm_lkr,
-                    localCurrencyCode,
-                    company,
-                ),
-            ],
         ],
-        [preview, localCurrencyCode, company],
+        [preview, localCurrencyCode, company, dutyBasePercentDisplay],
     );
 
     return (
@@ -249,7 +260,7 @@ export default function CalculationForm({
             <section className="rounded-lg border border-gray-200 bg-white p-5">
                     <h3 className="text-sm font-semibold text-gray-900">Shipment Information</h3>
                     <p className="mt-1 text-xs text-gray-500">
-                        Basic shipment details, currencies, rates, and related costs.
+                        Basic shipment details, currencies, and freight.
                     </p>
                     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {showCodeAsReadOnly ? (
@@ -353,49 +364,12 @@ export default function CalculationForm({
                             placeholder="0.000"
                         />
                         <div>
-                            <InputLabel value="Total CBM" />
-                            <TextInput
-                                type="text"
-                                inputMode="decimal"
-                                autoComplete="off"
-                                spellCheck={false}
-                                className="mt-1 block w-full text-right"
-                                value={data.total_shipment_cbm ?? ''}
-                                onChange={(e) =>
-                                    updateField(
-                                        'total_shipment_cbm',
-                                        sanitizeDecimalNumericInputMaxFractionDigits(e.target.value, 2),
-                                    )
-                                }
-                            />
-                            <InputError className="mt-2" message={errors.total_shipment_cbm} />
-                        </div>
-                        {[
-                            ['loading_cost_lkr', 'Loading'],
-                            ['unloading_cost_lkr', 'Unloading'],
-                            ['transport_cost_lkr', 'Transport'],
-                            ['delivery_order_charges_lkr', 'Delivery Order Charges'],
-                            ['clearing_charges_lkr', 'Clearing Charges'],
-                            ['demurrage_cost_lkr', 'Demurrage'],
-                        ].map(([key, name]) => (
-                            <AtmMoneyInput
-                                key={key}
-                                id={key}
-                                label={name}
-                                addon={localCurrencyAddon}
-                                value={data[key]}
-                                onChange={(v) => updateField(key, v)}
-                                error={errors[key]}
-                                fractionDigits={2}
-                            />
-                        ))}
-                        <div className="sm:col-span-2">
                             <InputLabel value="Calculation Status" />
                             <FormSelect
                                 className="mt-1"
                                 value={data.calculation_status || 'draft'}
                                 onChange={(v) => updateField('calculation_status', v)}
-                                options={statusOptions.map((s) => ({
+                                options={safeStatusOptions.map((s) => ({
                                     value: s,
                                     label: formatCalculationStatusLabel(s),
                                 }))}
@@ -408,98 +382,98 @@ export default function CalculationForm({
                 <h3 className="text-sm font-semibold text-gray-900">Duty Rates</h3>
                 <p className="mt-1 text-xs text-gray-500">Customs duty assumptions for this calculation.</p>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <InputLabel htmlFor="cid_rate_per_kg_lkr" value="CID / Kg" />
-                        <div className={atmMoneyInputShellWithLabelClass}>
-                            <div className={atmMoneyInputAddonLeftDefaultClass}>{localCurrencyAddon}</div>
-                            <input
-                                id="cid_rate_per_kg_lkr"
-                                type="text"
-                                inputMode="decimal"
-                                autoComplete="off"
-                                spellCheck={false}
-                                dir="ltr"
-                                className={atmMoneyInputInputRightOfLeftAddonClass}
-                                value={data.cid_rate_per_kg_lkr ?? ''}
-                                onChange={(e) =>
-                                    updateField(
-                                        'cid_rate_per_kg_lkr',
-                                        sanitizeDecimalNumericInput(e.target.value),
-                                    )
-                                }
-                            />
-                        </div>
-                        <InputError className="mt-2" message={errors.cid_rate_per_kg_lkr} />
-                    </div>
-                    <div>
-                        <InputLabel htmlFor="duty_base_percent" value="Base Value (%)" />
-                        <div className={atmMoneyInputShellWithLabelClass}>
-                            <input
-                                id="duty_base_percent"
-                                type="text"
-                                inputMode="decimal"
-                                autoComplete="off"
-                                spellCheck={false}
-                                dir="ltr"
-                                className={atmMoneyInputInputLeftOfRightAddonClass}
-                                value={data.duty_base_percent ?? ''}
-                                onChange={(e) =>
-                                    updateField(
-                                        'duty_base_percent',
-                                        sanitizeDecimalNumericInput(e.target.value),
-                                    )
-                                }
-                            />
-                            <div className={atmMoneyInputAddonRightDefaultClass}>%</div>
-                        </div>
-                        <InputError className="mt-2" message={errors.duty_base_percent} />
-                    </div>
-                    <div>
-                        <InputLabel htmlFor="vat_rate_percent" value="VAT Rate (%)" />
-                        <div className={atmMoneyInputShellWithLabelClass}>
-                            <input
-                                id="vat_rate_percent"
-                                type="text"
-                                inputMode="decimal"
-                                autoComplete="off"
-                                spellCheck={false}
-                                dir="ltr"
-                                className={atmMoneyInputInputLeftOfRightAddonClass}
-                                value={data.vat_rate_percent ?? ''}
-                                onChange={(e) =>
-                                    updateField(
-                                        'vat_rate_percent',
-                                        sanitizeDecimalNumericInput(e.target.value),
-                                    )
-                                }
-                            />
-                            <div className={atmMoneyInputAddonRightDefaultClass}>%</div>
-                        </div>
-                        <InputError className="mt-2" message={errors.vat_rate_percent} />
-                    </div>
-                    <div>
-                        <InputLabel htmlFor="sscl_rate_percent" value="SSCL Rate (%)" />
-                        <div className={atmMoneyInputShellWithLabelClass}>
-                            <input
-                                id="sscl_rate_percent"
-                                type="text"
-                                inputMode="decimal"
-                                autoComplete="off"
-                                spellCheck={false}
-                                dir="ltr"
-                                className={atmMoneyInputInputLeftOfRightAddonClass}
-                                value={data.sscl_rate_percent ?? ''}
-                                onChange={(e) =>
-                                    updateField(
-                                        'sscl_rate_percent',
-                                        sanitizeDecimalNumericInput(e.target.value),
-                                    )
-                                }
-                            />
-                            <div className={atmMoneyInputAddonRightDefaultClass}>%</div>
-                        </div>
-                        <InputError className="mt-2" message={errors.sscl_rate_percent} />
-                    </div>
+                    <AtmMoneyInput
+                        id="cid_rate_per_kg_lkr"
+                        label="CID / Kg"
+                        addon={localCurrencyAddon}
+                        value={data.cid_rate_per_kg_lkr ?? ''}
+                        onChange={(v) => updateField('cid_rate_per_kg_lkr', v)}
+                        error={errors.cid_rate_per_kg_lkr}
+                        fractionDigits={2}
+                    />
+                    <AtmMoneyInput
+                        id="duty_base_percent"
+                        label="Customs Base Value (%)"
+                        addonRight="%"
+                        value={data.duty_base_percent ?? ''}
+                        onChange={(v) => updateField('duty_base_percent', v)}
+                        error={errors.duty_base_percent}
+                        fractionDigits={2}
+                    />
+                    <AtmMoneyInput
+                        id="vat_rate_percent"
+                        label="VAT Rate (%)"
+                        addonRight="%"
+                        value={data.vat_rate_percent ?? ''}
+                        onChange={(v) => updateField('vat_rate_percent', v)}
+                        error={errors.vat_rate_percent}
+                        fractionDigits={2}
+                    />
+                    <AtmMoneyInput
+                        id="sscl_rate_percent"
+                        label="SSCL Rate (%)"
+                        addonRight="%"
+                        value={data.sscl_rate_percent ?? ''}
+                        onChange={(v) => updateField('sscl_rate_percent', v)}
+                        error={errors.sscl_rate_percent}
+                        fractionDigits={2}
+                    />
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900">Bank Charges</h3>
+                <p className="mt-1 text-xs text-gray-500">
+                    Bank charges split across products by each product’s share of purchase value.
+                </p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <AtmMoneyInput
+                        id="bank_interest_rate_pa"
+                        label="Bank Interest Rate (Per Annum)"
+                        addonRight="%"
+                        value={data.bank_interest_rate_pa ?? ''}
+                        onChange={(v) => updateField('bank_interest_rate_pa', v)}
+                        error={errors.bank_interest_rate_pa}
+                        fractionDigits={2}
+                    />
+                    <AtmMoneyInput
+                        id="bank_interest_months"
+                        label="Number of Months"
+                        value={data.bank_interest_months ?? ''}
+                        onChange={(v) => updateField('bank_interest_months', v)}
+                        error={errors.bank_interest_months}
+                        fractionDigits={2}
+                        useThousandSeparator={false}
+                        placeholder="0"
+                    />
+                </div>
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-5">
+                <h3 className="text-sm font-semibold text-gray-900">Local Charges</h3>
+                <p className="mt-1 text-xs text-gray-500">
+                    Local charges are pooled with other common costs and allocated to each product by weight.
+                </p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {[
+                        ['loading_unloading_cost_lkr', 'Loading / Unloading'],
+                        ['additional_entry_cost_lkr', 'Additional Entry'],
+                        ['transport_cost_lkr', 'Transport'],
+                        ['delivery_order_charges_lkr', 'Delivery Order Charges'],
+                        ['clearing_charges_lkr', 'Clearing Charges'],
+                        ['demurrage_cost_lkr', 'Demurrage'],
+                    ].map(([key, name]) => (
+                        <AtmMoneyInput
+                            key={key}
+                            id={key}
+                            label={name}
+                            addon={localCurrencyAddon}
+                            value={data[key]}
+                            onChange={(v) => updateField(key, v)}
+                            error={errors[key]}
+                            fractionDigits={2}
+                        />
+                    ))}
                 </div>
             </section>
 
@@ -507,7 +481,9 @@ export default function CalculationForm({
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <h3 className="text-sm font-semibold text-gray-900">Extra Costs</h3>
-                        <p className="mt-1 text-xs text-gray-500">Optional additional charges to include in the estimate.</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                            Optional additional charges to include in the estimate.
+                        </p>
                     </div>
                     <PrimaryButton type="button" onClick={addOtherCost}>
                         Add Cost
@@ -515,38 +491,43 @@ export default function CalculationForm({
                 </div>
                 <div className="mt-4 space-y-3">
                     {(data.other_costs || []).map((row, idx) => (
-                        <div key={idx} className="grid grid-cols-1 gap-3 rounded-md border border-gray-200 p-3 md:grid-cols-12">
-                            <div className="md:col-span-4">
-                                <InputLabel value="Cost Name" />
-                                <TextInput
-                                    className="mt-1 block w-full"
-                                    value={row.cost_name || ''}
-                                    onChange={(e) => updateOtherCost(idx, 'cost_name', e.target.value)}
-                                />
-                            </div>
-                            <div className="md:col-span-3">
-                                <AtmMoneyInput
-                                    id={`other-cost-amount-${idx}`}
-                                    label="Amount"
-                                    addon={localCurrencyAddon}
-                                    value={row.amount_lkr}
-                                    onChange={(v) => updateOtherCost(idx, 'amount_lkr', v)}
-                                    error={errors[`other_costs.${idx}.amount_lkr`]}
-                                    fractionDigits={2}
-                                />
-                            </div>
-                            <div className="md:col-span-4">
-                                <InputLabel value="Remarks" />
-                                <TextInput
-                                    className="mt-1 block w-full"
-                                    value={row.remarks || ''}
-                                    onChange={(e) => updateOtherCost(idx, 'remarks', e.target.value)}
-                                />
-                            </div>
-                            <div className="md:col-span-1 flex items-end justify-end">
-                                <SecondaryButton type="button" onClick={() => removeOtherCost(idx)}>
-                                    Remove
-                                </SecondaryButton>
+                        <div
+                            key={idx}
+                            className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
+                        >
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div className="md:col-span-4">
+                                    <InputLabel value="Cost Name" />
+                                    <TextInput
+                                        className="mt-1 block w-full"
+                                        value={row.cost_name || ''}
+                                        onChange={(e) => updateOtherCost(idx, 'cost_name', e.target.value)}
+                                    />
+                                </div>
+                                <div className="md:col-span-3">
+                                    <AtmMoneyInput
+                                        id={`other-cost-amount-${idx}`}
+                                        label="Amount"
+                                        addon={localCurrencyAddon}
+                                        value={row.amount_lkr}
+                                        onChange={(v) => updateOtherCost(idx, 'amount_lkr', v)}
+                                        error={errors[`other_costs.${idx}.amount_lkr`]}
+                                        fractionDigits={2}
+                                    />
+                                </div>
+                                <div className="md:col-span-5">
+                                    <InputLabel value="Remarks" />
+                                    <TextInput
+                                        className="mt-1 block w-full"
+                                        value={row.remarks || ''}
+                                        onChange={(e) => updateOtherCost(idx, 'remarks', e.target.value)}
+                                    />
+                                </div>
+                                <div className="md:col-span-12 flex justify-end">
+                                    <SecondaryButton type="button" onClick={() => removeOtherCost(idx)}>
+                                        Remove
+                                    </SecondaryButton>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -558,7 +539,7 @@ export default function CalculationForm({
                     <div>
                         <h3 className="text-sm font-semibold text-gray-900">Products</h3>
                         <p className="mt-1 text-xs text-gray-500">
-                            Line items for this shipment, including quantities, prices, and customs values.
+                            Products on this shipment, including quantities, prices, and customs values.
                         </p>
                     </div>
                     <PrimaryButton type="button" onClick={addItem}>
@@ -573,7 +554,7 @@ export default function CalculationForm({
                 <InputError className="mt-2" message={errors.items} />
 
                 <div className="mt-4 overflow-x-auto">
-                    <table className="min-w-[900px] divide-y divide-gray-200 text-sm">
+                    <table className="min-w-[842px] divide-y divide-gray-200 text-sm">
                         <thead className="bg-gray-50">
                             <tr>
                                 {[
@@ -587,7 +568,15 @@ export default function CalculationForm({
                                     'Preset',
                                     'Actions',
                                 ].map((h) => (
-                                    <th key={h} className="whitespace-nowrap px-2 py-2 text-left text-xs font-semibold text-gray-600">
+                                    <th
+                                        key={h}
+                                        className={[
+                                            'whitespace-nowrap px-2 py-2 text-left text-xs font-semibold text-gray-600',
+                                            h === 'Product' ? 'min-w-[162px]' : '',
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' ')}
+                                    >
                                         {h}
                                     </th>
                                 ))}
@@ -597,7 +586,7 @@ export default function CalculationForm({
                             {preview.items.map((row, idx) => (
                                 <tr key={idx}>
                                     <td className="px-2 py-2">{idx + 1}</td>
-                                    <td className="min-w-[220px] px-2 py-2">
+                                    <td className="min-w-[162px] px-2 py-2">
                                         <TextInput
                                             className="block w-full"
                                             value={data.items?.[idx]?.product_name || ''}
@@ -613,55 +602,59 @@ export default function CalculationForm({
                                         />
                                     </td>
                                     <td className="min-w-[120px] px-2 py-2">
-                                        <TextInput
-                                            type="number"
-                                            step="0.0001"
-                                            className="block w-full text-right"
+                                        <CommaDecimalInput
+                                            className="block w-full min-h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-right shadow-sm transition hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-0 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                             value={data.items?.[idx]?.quantity ?? ''}
-                                            onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
+                                            onChange={(v) => updateItem(idx, 'quantity', v)}
+                                            maxFractionDigits={2}
                                         />
                                     </td>
-                                    <td className="min-w-[120px] px-2 py-2">
-                                        <TextInput
-                                            type="number"
-                                            step="0.0001"
-                                            className="block w-full text-right"
-                                            value={data.items?.[idx]?.unit_price_foreign ?? ''}
-                                            onChange={(e) => updateItem(idx, 'unit_price_foreign', e.target.value)}
-                                        />
+                                    <td className="min-w-[148px] px-2 py-2">
+                                        <div className={atmMoneyInputShellNoLabelClass}>
+                                            <div className={atmMoneyInputAddonLeftDefaultClass}>
+                                                {purchasingCurrencyAddon}
+                                            </div>
+                                            <CommaDecimalInput
+                                                className={atmMoneyInputInputRightOfLeftAddonClass}
+                                                value={data.items?.[idx]?.unit_price_foreign ?? ''}
+                                                onChange={(v) => updateItem(idx, 'unit_price_foreign', v)}
+                                                maxFractionDigits={2}
+                                            />
+                                        </div>
                                     </td>
                                     <td className="min-w-[120px] px-2 py-2">
-                                        <TextInput
-                                            type="number"
-                                            step="0.0001"
-                                            className="block w-full text-right"
+                                        <CommaDecimalInput
+                                            className="block w-full min-h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-right shadow-sm transition hover:bg-gray-50 focus:border-indigo-500 focus:outline-none focus:ring-0 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
                                             value={data.items?.[idx]?.cbm ?? ''}
-                                            onChange={(e) => updateItem(idx, 'cbm', e.target.value)}
+                                            onChange={(v) => updateItem(idx, 'cbm', v)}
+                                            maxFractionDigits={3}
                                         />
                                     </td>
-                                    <td className="min-w-[120px] px-2 py-2">
-                                        <TextInput
-                                            type="number"
-                                            step="0.0001"
-                                            className="block w-full text-right"
-                                            value={data.items?.[idx]?.weight_kg ?? ''}
-                                            onChange={(e) => updateItem(idx, 'weight_kg', e.target.value)}
-                                        />
+                                    <td className="min-w-[148px] px-2 py-2">
+                                        <div className={atmMoneyInputShellNoLabelClass}>
+                                            <CommaDecimalInput
+                                                className={atmMoneyInputInputLeftOfRightAddonClass}
+                                                value={data.items?.[idx]?.weight_kg ?? ''}
+                                                onChange={(v) => updateItem(idx, 'weight_kg', v)}
+                                                maxFractionDigits={3}
+                                            />
+                                            <div className={atmMoneyInputAddonRightDefaultClass}>KG</div>
+                                        </div>
                                     </td>
-                                    <td className="min-w-[120px] px-2 py-2">
-                                        <TextInput
-                                            type="number"
-                                            step="0.0001"
-                                            className="block w-full text-right"
-                                            value={data.items?.[idx]?.customs_preset_value_foreign_or_base ?? ''}
-                                            onChange={(e) =>
-                                                updateItem(
-                                                    idx,
-                                                    'customs_preset_value_foreign_or_base',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
+                                    <td className="min-w-[148px] px-2 py-2">
+                                        <div className={atmMoneyInputShellNoLabelClass}>
+                                            <div className={atmMoneyInputAddonLeftDefaultClass}>
+                                                {purchasingCurrencyAddon}
+                                            </div>
+                                            <CommaDecimalInput
+                                                className={atmMoneyInputInputRightOfLeftAddonClass}
+                                                value={data.items?.[idx]?.customs_preset_value_foreign_or_base ?? ''}
+                                                onChange={(v) =>
+                                                    updateItem(idx, 'customs_preset_value_foreign_or_base', v)
+                                                }
+                                                maxFractionDigits={2}
+                                            />
+                                        </div>
                                     </td>
                                     <td className="px-2 py-2">
                                         <SecondaryButton type="button" onClick={() => removeItem(idx)}>
@@ -682,12 +675,35 @@ export default function CalculationForm({
                         Totals for the shipment based on your entries.
                     </p>
                     <div className="mt-3 space-y-2 text-sm">
-                        {shipmentSummaryRows.map(([label, value]) => (
-                            <div key={label} className="flex justify-between gap-3 border-b border-gray-100 py-1.5">
-                                <span className="text-gray-600">{label}</span>
-                                <span className="text-right font-medium text-gray-900">{value}</span>
-                            </div>
-                        ))}
+                        {shipmentSummaryRows.map(([label, value]) => {
+                            const redRow =
+                                label === 'Total Allocated Other Costs' ||
+                                label === 'Total Duty' ||
+                                label === 'Remittance' ||
+                                label === 'Grand Total';
+                            return (
+                                <div key={label} className="flex justify-between gap-3 border-b border-gray-100 py-1.5">
+                                    <span
+                                        className={
+                                            redRow
+                                                ? 'font-semibold text-red-600 dark:text-red-400'
+                                                : 'text-gray-600'
+                                        }
+                                    >
+                                        {label}
+                                    </span>
+                                    <span
+                                        className={
+                                            redRow
+                                                ? 'text-right font-semibold text-red-600 dark:text-red-400'
+                                                : 'text-right font-medium text-gray-900'
+                                        }
+                                    >
+                                        {value}
+                                    </span>
+                                </div>
+                            );
+                        })}
                     </div>
                     <div className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600">
                         Freight allocated by CBM. Other common costs allocated by Weight (KG).
@@ -704,19 +720,16 @@ export default function CalculationForm({
                         </div>
                         <div>
                             Freight exchange rate:{' '}
-                            {Number(data.freight_exchange_rate) > 0 &&
-                            String(data.freight_currency || '').trim().length === 3 ? (
-                                <>
-                                    {formatMoneyInputWithCommas(
-                                        String(Number(data.freight_exchange_rate) || 0),
-                                        3,
-                                        exchangeRateFormatOptions,
-                                    )}{' '}
-                                    {localCurrencyCode} per 1 {String(data.freight_currency).trim().toUpperCase()}.
-                                </>
-                            ) : (
-                                '—'
-                            )}
+                            {formatMoneyInputWithCommas(
+                                String(Number(data.freight_exchange_rate) || 0),
+                                3,
+                                exchangeRateFormatOptions,
+                            )}{' '}
+                            {localCurrencyCode} per 1{' '}
+                            {freightCurrencyCode.trim().length === 3
+                                ? freightCurrencyCode.trim().toUpperCase()
+                                : '—'}
+                            .
                         </div>
                     </div>
                 </section>
@@ -724,15 +737,27 @@ export default function CalculationForm({
                 <section className="rounded-lg border border-gray-200 bg-white p-5 xl:sticky xl:top-20 xl:z-10 xl:self-start dark:border-cursor-border dark:bg-cursor-surface">
                     <h3 className="text-sm font-semibold text-gray-900">Product Summary</h3>
                     <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                        Per-line breakdown of costs for each product.
+                        Per-product cost breakdown.
                     </p>
                     <div className="mt-3 flex flex-col gap-4">
                         {preview.items.map((row, idx) => {
                             const name = (data.items?.[idx]?.product_name || '').trim();
-                            const lineTitle = name ? `No. ${idx + 1} · ${name}` : `No. ${idx + 1}`;
+                            const productHeading = name ? `No. ${idx + 1} · ${name}` : `No. ${idx + 1}`;
+                            const bankTransferShipment = Number(preview.summary.bank_transfer_charges_lkr) || 0;
+                            const bankInterestShipment = Number(preview.summary.bank_interest_lkr) || 0;
+                            const bankPool = bankTransferShipment + bankInterestShipment;
+                            const allocBank = Number(row.allocated_bank_charges_lkr) || 0;
+                            let lineBankTransfer = 0;
+                            let lineBankInterest = 0;
+                            if (bankPool > 0) {
+                                lineBankTransfer =
+                                    Math.round(((allocBank * bankTransferShipment) / bankPool) * 100) / 100;
+                                lineBankInterest =
+                                    Math.round((allocBank - lineBankTransfer) * 100) / 100;
+                            }
                             const productSummaryRows = [
                                 [
-                                    'Total FCY',
+                                    'Total Product Value (Foreign)',
                                     formatLocalMoneyDisplay(
                                         row.total_product_value_foreign,
                                         purchasingCurrencyCode,
@@ -740,35 +765,64 @@ export default function CalculationForm({
                                     ),
                                 ],
                                 [
-                                    'Value (LKR)',
+                                    'Total Product Value',
                                     formatLocalMoneyDisplay(row.product_value_lkr, localCurrencyCode, company),
                                 ],
                                 [
-                                    'Statistical',
+                                    'Total Statistical Value',
                                     formatLocalMoneyDisplay(row.statistical_value_lkr, localCurrencyCode, company),
                                 ],
                                 [
-                                    `${dutyBasePercentDisplay}% Base`,
+                                    `Customs Base Value (${dutyBasePercentDisplay}%)`,
                                     formatLocalMoneyDisplay(row.customs_base_110_lkr, localCurrencyCode, company),
                                 ],
-                                ['CID', formatLocalMoneyDisplay(row.cid_lkr, localCurrencyCode, company)],
-                                ['VAT', formatLocalMoneyDisplay(row.vat_lkr, localCurrencyCode, company)],
-                                ['SSCL', formatLocalMoneyDisplay(row.sscl_lkr, localCurrencyCode, company)],
-                                ['Duty', formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company)],
+                                ['Total CID', formatLocalMoneyDisplay(row.cid_lkr, localCurrencyCode, company)],
+                                ['Total VAT', formatLocalMoneyDisplay(row.vat_lkr, localCurrencyCode, company)],
+                                ['Total SSCL', formatLocalMoneyDisplay(row.sscl_lkr, localCurrencyCode, company)],
                                 [
-                                    'Alloc. Freight',
+                                    'Total Allocated Freight',
                                     formatLocalMoneyDisplay(row.allocated_freight_lkr, localCurrencyCode, company),
                                 ],
                                 [
-                                    'Alloc. Other',
+                                    'Bank Transfer (1%)',
+                                    formatLocalMoneyDisplay(lineBankTransfer, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Bank Interest',
+                                    formatLocalMoneyDisplay(lineBankInterest, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Total Bank Charges (Allocated)',
+                                    formatLocalMoneyDisplay(row.allocated_bank_charges_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    `Quantity (${(data.items?.[idx]?.unit_of_measure || '').trim() || '—'})`,
+                                    (() => {
+                                        const raw = data.items?.[idx]?.quantity;
+                                        if (raw === null || raw === undefined || raw === '') {
+                                            return '—';
+                                        }
+                                        return formatMeasuredNumberForDisplay(raw, 2) ?? '—';
+                                    })(),
+                                ],
+                                [
+                                    'Total Allocated Other Costs',
                                     formatLocalMoneyDisplay(row.allocated_other_costs_lkr, localCurrencyCode, company),
                                 ],
                                 [
-                                    'Total Landed',
+                                    'Total Duty',
+                                    formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Remittance',
+                                    formatLocalMoneyDisplay(row.remittance_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Grand Total',
                                     formatLocalMoneyDisplay(row.total_landed_cost_lkr, localCurrencyCode, company),
                                 ],
                                 [
-                                    'Landed / Unit',
+                                    'Landed Cost Per Unit',
                                     formatLocalMoneyDisplay(row.landed_cost_per_unit_lkr, localCurrencyCode, company),
                                 ],
                             ];
@@ -779,18 +833,43 @@ export default function CalculationForm({
                                     className="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface"
                                 >
                                     <div className="border-b border-gray-200 bg-slate-50 px-3 py-2 dark:border-cursor-border dark:bg-cursor-raised/50">
-                                        <span className="text-sm font-semibold text-gray-600">{lineTitle}</span>
+                                        <span className="text-sm font-semibold text-gray-600">{productHeading}</span>
                                     </div>
                                     <div className="space-y-2 p-3 text-sm">
-                                        {productSummaryRows.map(([label, value]) => (
-                                            <div
-                                                key={`${idx}-${label}`}
-                                                className="flex justify-between gap-3 border-b border-gray-100 py-1.5 last:border-b-0"
-                                            >
-                                                <span className="text-gray-600">{label}</span>
-                                                <span className="text-right font-medium text-gray-900">{value}</span>
-                                            </div>
-                                        ))}
+                                        {productSummaryRows.map(([label, value]) => {
+                                            const redRow =
+                                                label === 'Total Allocated Other Costs' ||
+                                                label === 'Total Duty' ||
+                                                label === 'Remittance' ||
+                                                label === 'Grand Total' ||
+                                                label === 'Landed Cost Per Unit';
+                                            const valueHighlight = redRow;
+                                            return (
+                                                <div
+                                                    key={`${idx}-${label}`}
+                                                    className="flex justify-between gap-3 border-b border-gray-100 py-1.5 last:border-b-0"
+                                                >
+                                                    <span
+                                                        className={
+                                                            redRow
+                                                                ? 'font-semibold text-red-600 dark:text-red-400'
+                                                                : 'text-gray-600'
+                                                        }
+                                                    >
+                                                        {label}
+                                                    </span>
+                                                    <span
+                                                        className={
+                                                            valueHighlight
+                                                                ? 'text-right font-semibold text-red-600 dark:text-red-400'
+                                                                : 'text-right font-medium text-gray-900'
+                                                        }
+                                                    >
+                                                        {value}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );

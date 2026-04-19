@@ -126,16 +126,12 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                 <tr key={b.id} className="hover:bg-gray-50">
                                     <td className="min-w-0 px-4 py-3">
                                         <div className="text-sm font-semibold text-gray-900">{b.name}</div>
-                                        <div className="mt-1 text-xs text-gray-500">
-                                            <span className="font-mono font-medium text-gray-700">{b.code}</span>
-                                        </div>
+                                        <div className="mt-1 text-xs text-gray-500">{b.code}</div>
                                     </td>
                                     <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
                                         {b.city || b.country ? (
                                             <>
-                                                <div className="font-medium text-gray-900">
-                                                    {b.city || '—'}
-                                                </div>
+                                                <div className="text-xs text-gray-500">{b.city || '—'}</div>
                                                 <div className="mt-0.5 text-xs text-gray-500">
                                                     {b.country || '—'}
                                                 </div>

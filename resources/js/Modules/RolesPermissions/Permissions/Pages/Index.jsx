@@ -95,17 +95,17 @@ export default function Index({ permissions, filters, moduleOptions, canCreate }
                                         </div>
                                         <div className="break-words text-xs text-gray-500">{permission.name}</div>
                                     </td>
-                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
+                                    <td className="min-w-0 px-4 py-3">
                                         {permission.description ? (
-                                            <span className="line-clamp-2">{permission.description}</span>
+                                            <span className="line-clamp-2 text-xs text-gray-500">{permission.description}</span>
                                         ) : (
                                             <span className="text-xs text-gray-400">No description</span>
                                         )}
                                     </td>
-                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
+                                    <td className="min-w-0 px-4 py-3 text-xs text-gray-500">
                                         {permission.module || 'General'}
                                     </td>
-                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
+                                    <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">
                                         {permission.roles_count}
                                     </td>
                                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">

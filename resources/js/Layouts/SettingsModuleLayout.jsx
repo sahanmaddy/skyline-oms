@@ -20,13 +20,13 @@ export default function SettingsModuleLayout({ children, breadcrumbs = [] }) {
 
     return (
         <ModulePageShell>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm print:hidden dark:border-cursor-border dark:bg-cursor-surface">
                 <ModuleHeader title={SETTINGS_TITLE} />
                 <ModuleSubnav items={items} ariaLabel="Settings sections" />
             </div>
 
             {breadcrumbs.length > 0 ? (
-                <div className="pt-1">
+                <div className="pt-1 print:hidden">
                     <ModuleBreadcrumbs items={breadcrumbs} />
                 </div>
             ) : null}

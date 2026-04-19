@@ -1,3 +1,4 @@
+import { normalizeIntlTimeZone } from '@/lib/safeIntlTimeZone';
 import { formComboboxInputSurfaceClass } from '@/lib/dropdownMenuStyles';
 import { Popover, PopoverButton, PopoverPanel, useClose } from '@headlessui/react';
 import { format, isAfter, isBefore, startOfDay } from 'date-fns';
@@ -5,6 +6,9 @@ import { useRef } from 'react';
 import { Calendar } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+
+/** React-date-range selection / today indicator; matches Tailwind `indigo-600` and form focus rings. */
+export const FORM_DATE_PICKER_ACCENT = '#4f46e5';
 
 /** Parse `YYYY-MM-DD` to a local calendar Date (no UTC shift). */
 export function parseYmdToLocalDate(value) {
@@ -25,6 +29,34 @@ export function localDateToYmd(date) {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
+}
+
+/**
+ * Format an instant as `YYYY-MM-DD` in an IANA time zone (e.g. company `time_zone`).
+ * Used so list date filters match server-side "calendar day" semantics.
+ */
+export function formatYmdInTimeZone(date, timeZone) {
+    if (!date || Number.isNaN(date.getTime())) {
+        return '';
+    }
+    const tz = normalizeIntlTimeZone(timeZone);
+    try {
+        const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: tz,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).formatToParts(date);
+        const y = parts.find((p) => p.type === 'year')?.value;
+        const m = parts.find((p) => p.type === 'month')?.value;
+        const d = parts.find((p) => p.type === 'day')?.value;
+        if (!y || !m || !d) {
+            return localDateToYmd(date);
+        }
+        return `${y}-${m}-${d}`;
+    } catch {
+        return localDateToYmd(date);
+    }
 }
 
 function ChevronDownIcon({ className }) {
@@ -83,7 +115,7 @@ function CalendarPanel({ value, onChange, minDate, maxDate, allowEmpty, triggerR
 
     return (
         <div className="overflow-hidden rounded-md bg-white p-2 dark:bg-cursor-surface">
-            <div className="form-date-picker-calendar [&_.rdrCalendarWrapper]:bg-transparent [&_.rdrMonth]:w-full">
+            <div className="form-date-picker-theme [&_.rdrCalendarWrapper]:bg-transparent [&_.rdrMonth]:w-full">
                 <Calendar
                     date={calendarDate}
                     onChange={(d) => {
@@ -94,7 +126,7 @@ function CalendarPanel({ value, onChange, minDate, maxDate, allowEmpty, triggerR
                     maxDate={maxDate}
                     showDateDisplay={false}
                     dragSelectionEnabled={false}
-                    color="#4f46e5"
+                    color={FORM_DATE_PICKER_ACCENT}
                 />
             </div>
             {showFooter ? (

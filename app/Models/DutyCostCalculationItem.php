@@ -5,6 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Product line on a duty & cost calculation (stored with per-line allocations).
+ *
+ * Display names for calculated amounts (Show table / Product Summary) match the
+ * Shipment Summary wording: Total Product Value, Total Statistical Value, Total CID,
+ * Total VAT, Total SSCL, Total Allocated Freight, bank lines, then Total Allocated Other Costs
+ * (with Total Duty, Remittance, Grand Total), Landed Cost Per Unit; foreign
+ * line total uses “Total Product Value (Foreign)”; customs intermediate uses “Customs Base Value (%)”.
+ */
 class DutyCostCalculationItem extends Model
 {
     protected $fillable = [
@@ -31,6 +40,7 @@ class DutyCostCalculationItem extends Model
         'product_value_lkr',
         'allocated_freight_lkr',
         'allocated_other_costs_lkr',
+        'allocated_bank_charges_lkr',
         'total_landed_cost_lkr',
         'landed_cost_per_unit_lkr',
         'landed_cost_per_kg_lkr',
@@ -57,6 +67,7 @@ class DutyCostCalculationItem extends Model
         'product_value_lkr' => 'decimal:2',
         'allocated_freight_lkr' => 'decimal:2',
         'allocated_other_costs_lkr' => 'decimal:2',
+        'allocated_bank_charges_lkr' => 'decimal:2',
         'total_landed_cost_lkr' => 'decimal:2',
         'landed_cost_per_unit_lkr' => 'decimal:2',
         'landed_cost_per_kg_lkr' => 'decimal:2',
@@ -71,4 +82,3 @@ class DutyCostCalculationItem extends Model
         return $this->belongsTo(DutyCostCalculation::class, 'duty_cost_calculation_id');
     }
 }
-

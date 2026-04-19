@@ -34,9 +34,8 @@ export default function Create({ nextCode, statusOptions }) {
         freight_currency: 'USD',
         freight_exchange_rate: '',
         freight_cost_total: '',
-        total_shipment_cbm: '',
-        loading_cost_lkr: '',
-        unloading_cost_lkr: '',
+        loading_unloading_cost_lkr: '',
+        additional_entry_cost_lkr: '',
         transport_cost_lkr: '',
         delivery_order_charges_lkr: '',
         clearing_charges_lkr: '',
@@ -45,6 +44,8 @@ export default function Create({ nextCode, statusOptions }) {
         duty_base_percent: '110',
         vat_rate_percent: '18',
         sscl_rate_percent: '2.5',
+        bank_interest_rate_pa: '',
+        bank_interest_months: '',
         notes: '',
         calculation_status: 'draft',
         items: [defaultItem],
@@ -78,7 +79,6 @@ export default function Create({ nextCode, statusOptions }) {
                             onCancel={() => router.get(route('procurement.duty-cost-calculations.index'))}
                             onSubmit={() =>
                                 form.post(route('procurement.duty-cost-calculations.store'), {
-                                    onSuccess: () => toast.success('Calculation saved.'),
                                     onError: () =>
                                         toast.error('Please fix the highlighted fields and try again.'),
                                 })
