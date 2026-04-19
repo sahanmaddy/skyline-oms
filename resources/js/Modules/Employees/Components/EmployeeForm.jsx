@@ -1,3 +1,4 @@
+import AtmMoneyInput from '@/Components/AtmMoneyInput';
 import FormDatePicker from '@/Components/FormDatePicker';
 import FormSelect from '@/Components/FormSelect';
 import LinkedUserCombobox from '@/Components/LinkedUserCombobox';
@@ -31,43 +32,11 @@ function userAssignableToEmployeeBranch(u, employeeBranchId) {
     return assigned.some((b) => b.is_active !== false && Number(b.id) === bid);
 }
 
-function formatMoneyWithCommas(value) {
-    const trimmed = (value ?? '').toString().trim();
-    if (!trimmed) {
-        return '';
-    }
-
-    const num = Number(trimmed);
-    if (Number.isNaN(num)) {
-        return trimmed;
-    }
-
-    return new Intl.NumberFormat(undefined, {
-        maximumFractionDigits: 2,
-    }).format(num);
-}
-
 const phoneTypeSelectOptions = [
     { value: 'Mobile', label: 'Mobile' },
     { value: 'Land Phone', label: 'Land Phone' },
     { value: 'WhatsApp', label: 'WhatsApp' },
 ];
-
-function normalizeMoneyInput(value) {
-    const raw = (value ?? '').toString();
-    const cleaned = raw.replace(/[^0-9.]/g, '');
-    if (!cleaned) {
-        return '';
-    }
-
-    // Keep only the first dot.
-    const parts = cleaned.split('.');
-    if (parts.length <= 2) {
-        return parts[1] !== undefined ? `${parts[0]}.${parts[1]}` : parts[0];
-    }
-
-    return `${parts[0]}.${parts.slice(1).join('')}`;
-}
 
 export default function EmployeeForm({
     data,
@@ -79,6 +48,7 @@ export default function EmployeeForm({
     users,
     submitLabel,
     onSubmit,
+    onCancel,
     onClientValidationError,
     profilePhotoUrl,
     mode = 'create',
@@ -724,31 +694,14 @@ export default function EmployeeForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="basic_salary" value="Basic Salary" />
-                        <div className="mt-1 flex items-stretch rounded-md transition duration-150 ease-in-out focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
-                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-cursor-border dark:bg-cursor-raised dark:text-cursor-muted">
-                                {currencyLabel}
-                            </div>
-                            <input
-                                id="basic_salary"
-                                type="text"
-                                inputMode="decimal"
-                                className="block min-h-10 w-full rounded-none rounded-r-md border border-gray-300 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-0 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
-                                value={formatMoneyWithCommas(data.basic_salary || '')}
-                                placeholder="0.00"
-                                onChange={(e) =>
-                                    setData(
-                                        'basic_salary',
-                                        normalizeMoneyInput(
-                                            e.target.value,
-                                        ),
-                                    )
-                                }
-                            />
-                        </div>
-                        <InputError
-                            className="mt-2"
-                            message={mergedErrors.basic_salary}
+                        <AtmMoneyInput
+                            id="basic_salary"
+                            label="Basic Salary"
+                            addon={currencyLabel}
+                            value={data.basic_salary}
+                            onChange={(v) => setData('basic_salary', v)}
+                            error={mergedErrors.basic_salary}
+                            fractionDigits={2}
                         />
                     </div>
 
@@ -1177,6 +1130,11 @@ export default function EmployeeForm({
             </section>
 
             <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

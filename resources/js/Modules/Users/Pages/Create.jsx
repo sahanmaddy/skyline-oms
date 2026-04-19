@@ -5,7 +5,7 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import UserForm from '@/Modules/Users/Components/UserForm';
 import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 
 export default function Create({ roles, statusOptions, employeesForLink, activeBranches, suggestedBranchId }) {
     const toast = useToast();
@@ -52,9 +52,10 @@ export default function Create({ roles, statusOptions, employeesForLink, activeB
                         statusOptions={statusOptions}
                         employeesForLink={employeesForLink}
                         activeBranches={activeBranches}
-                        submitLabel="Create"
+                        submitLabel="Create user"
                         showPasswordFields
                         requirePassword
+                        onCancel={() => router.get(route('settings.users.index'))}
                         onClientValidationError={() =>
                             toast.error('Please fix the highlighted fields and try again.')
                         }

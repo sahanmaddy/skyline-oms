@@ -171,17 +171,15 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                             {e.display_name}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            <span className="font-medium text-gray-700">{e.employee_code}</span>
+                                            {e.employee_code}
                                             {e.designation ? ` • ${e.designation}` : ''}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                    <td className="px-4 py-3">
                                         {e.branch ? (
                                             <>
-                                                <div className="font-medium text-gray-900">{e.branch.name}</div>
-                                                <div className="mt-0.5 font-mono text-xs text-gray-500">
-                                                    {e.branch.code}
-                                                </div>
+                                                <div className="text-xs text-gray-500">{e.branch.name}</div>
+                                                <div className="mt-1 text-xs text-gray-500">{e.branch.code}</div>
                                             </>
                                         ) : (
                                             <span className="text-gray-400">—</span>
@@ -196,7 +194,7 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                         </div>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="text-sm text-gray-900">
+                                        <div className="text-xs text-gray-500">
                                             {e.department || '—'}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">

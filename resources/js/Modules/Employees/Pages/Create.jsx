@@ -6,7 +6,7 @@ import EmployeeForm from '@/Modules/Employees/Components/EmployeeForm';
 import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, users, nextEmployeeCode, activeBranches, suggestedBranchId }) {
     const toast = useToast();
@@ -82,7 +82,8 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
                     activeBranches={activeBranches}
                     users={users}
                     profilePhotoUrl={null}
-                    submitLabel="Create"
+                    submitLabel="Create employee"
+                    onCancel={() => router.get(route('hr.employees.index'))}
                     onClientValidationError={() =>
                         toast.error('Please fix the highlighted fields and try again.')
                     }

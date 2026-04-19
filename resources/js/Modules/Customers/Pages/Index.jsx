@@ -158,15 +158,20 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                 >
                                     <td className="px-4 py-3">
                                         <div className="text-sm font-semibold text-gray-900">
-                                            {`${c.customer_code} - ${c.display_name || c.customer_name || '—'}`}
+                                            {c.display_name || c.customer_name || '—'}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            {c.customer_name || '—'}
-                                            {c.company_name &&
-                                            c.company_name.trim().toLowerCase() !==
-                                                (c.customer_name || '').trim().toLowerCase()
-                                                ? ` (${c.company_name})`
-                                                : ''}
+                                            {c.customer_code || '—'}
+                                            {(() => {
+                                                const name = (c.customer_name || '').trim();
+                                                const comp =
+                                                    c.company_name &&
+                                                    c.company_name.trim().toLowerCase() !== name.toLowerCase()
+                                                        ? ` (${c.company_name})`
+                                                        : '';
+                                                const sub = `${name}${comp}`.trim();
+                                                return sub ? ` • ${sub}` : '';
+                                            })()}
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
@@ -188,7 +193,7 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                             <span className="text-xs text-gray-500">—</span>
                                         ) : (
                                             <>
-                                                <div className="text-sm text-gray-900">{c.city || '—'}</div>
+                                                <div className="text-xs text-gray-500">{c.city || '—'}</div>
                                                 <div className="mt-1 text-xs text-gray-500">{c.country || '—'}</div>
                                             </>
                                         )}

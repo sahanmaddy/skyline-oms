@@ -162,7 +162,7 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                         </div>
                     </section>
 
-                    <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4">
+                    <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4 lg:sticky lg:top-20 self-start">
                         <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
                         <div className="mt-4">
                             <Info label="Email" value={customer.email || '—'} />
@@ -195,6 +195,9 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                         </div>
                     </section>
 
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Commercial Information</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

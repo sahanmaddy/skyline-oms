@@ -17,7 +17,8 @@ export default function AuthenticatedLayout({ header, children }) {
     const page = usePage();
     const user = page.props.auth.user;
     const roles = page.props.auth.roles ?? [];
-    const permissions = page.props.auth.permissions ?? [];
+    const rawPermissions = page.props.auth?.permissions;
+    const permissions = Array.isArray(rawPermissions) ? rawPermissions : [];
     const contextBranch = page.props.auth.context_branch;
     const branchesForContext = page.props.auth.branches_for_context ?? [];
     const companyName = page.props.company?.name || 'Skyline OMS';
@@ -38,7 +39,7 @@ export default function AuthenticatedLayout({ header, children }) {
         <div className="min-h-screen bg-gray-50 dark:bg-cursor-bg">
             <BrandingHead />
             <div className="flex min-h-screen">
-                <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface lg:flex">
+                <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white print:hidden dark:border-cursor-border dark:bg-cursor-surface lg:flex">
                     <div className="flex h-16 items-center justify-between px-4">
                         <Link href={route('dashboard')} className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                             {companyName}
@@ -87,7 +88,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </aside>
 
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="sticky top-0 z-20 border-b border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface">
+                    <div className="sticky top-0 z-20 border-b border-gray-200 bg-white print:hidden dark:border-cursor-border dark:bg-cursor-surface">
                         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                             <div className="flex items-center gap-3">
                                 <button

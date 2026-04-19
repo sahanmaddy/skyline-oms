@@ -13,7 +13,7 @@ export default function HrModuleLayout({ children, breadcrumbs = [] }) {
 
     return (
         <ModulePageShell>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm print:hidden">
                 <ModuleHeader title={HUMAN_RESOURCE_TITLE} />
                 {hrNavItems.length > 0 ? (
                     <ModuleSubnav items={hrNavItems} ariaLabel="Human Resource sections" />
@@ -21,7 +21,7 @@ export default function HrModuleLayout({ children, breadcrumbs = [] }) {
             </div>
 
             {breadcrumbs.length > 0 ? (
-                <div className="pt-1">
+                <div className="pt-1 print:hidden">
                     <ModuleBreadcrumbs items={breadcrumbs} />
                 </div>
             ) : null}

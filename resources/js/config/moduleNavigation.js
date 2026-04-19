@@ -164,3 +164,22 @@ export function salesSectionNavItems(permissions = []) {
         },
     ];
 }
+
+/**
+ * Procurement module sub-navigation. Current scope is duty/landed cost estimation only.
+ */
+export function procurementSectionNavItems(permissions = []) {
+    const p = permissions ?? [];
+    if (!p.includes('calculator.view')) {
+        return [];
+    }
+
+    return [
+        {
+            key: 'duty-cost-calculator',
+            label: 'Duty & Cost Calculator',
+            href: route('procurement.duty-cost-calculations.index'),
+            activePattern: 'procurement.duty-cost-calculations.*',
+        },
+    ];
+}

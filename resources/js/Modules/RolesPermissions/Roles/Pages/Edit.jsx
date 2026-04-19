@@ -5,7 +5,7 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import RoleForm from '@/Modules/RolesPermissions/Roles/Components/RoleForm';
 import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 
 export default function Edit({ role, permissionGroups, assignedPermissionIds }) {
     const toast = useToast();
@@ -29,7 +29,8 @@ export default function Edit({ role, permissionGroups, assignedPermissionIds }) 
                             errors={errors}
                             processing={processing}
                             permissionGroups={permissionGroups}
-                            submitLabel="Save changes"
+                            submitLabel="Update role"
+                            onCancel={() => router.get(route('settings.roles.show', role.id))}
                             onClientValidationError={() =>
                                 toast.error('Please fix the highlighted fields and try again.')
                             }

@@ -6,7 +6,7 @@ import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
 import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 export default function Create({ statusOptions, nextCustomerCode }) {
     const toast = useToast();
@@ -67,7 +67,8 @@ export default function Create({ statusOptions, nextCustomerCode }) {
                     errors={errors}
                     processing={processing}
                     statusOptions={statusOptions}
-                    submitLabel="Create"
+                    submitLabel="Create customer"
+                    onCancel={() => router.get(route('sales.customers.index'))}
                     onSubmit={() =>
                         post(route('sales.customers.store'), {
                             preserveScroll: true,

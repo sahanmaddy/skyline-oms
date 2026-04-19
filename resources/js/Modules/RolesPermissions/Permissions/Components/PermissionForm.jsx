@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { formTextareaClass } from '@/lib/dropdownMenuStyles';
 
@@ -11,6 +12,7 @@ export default function PermissionForm({
     processing,
     submitLabel,
     onSubmit,
+    onCancel,
     isSystemPermission = false,
 }) {
     return (
@@ -75,7 +77,12 @@ export default function PermissionForm({
                 </div>
             </section>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

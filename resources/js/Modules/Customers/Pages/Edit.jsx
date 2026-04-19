@@ -6,7 +6,7 @@ import CustomerForm from '@/Modules/Customers/Components/CustomerForm';
 import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ customer, statusOptions }) {
     const toast = useToast();
@@ -87,7 +87,8 @@ export default function Edit({ customer, statusOptions }) {
                     errors={errors}
                     processing={processing}
                     statusOptions={statusOptions}
-                    submitLabel="Save"
+                    submitLabel="Update customer"
+                    onCancel={() => router.get(route('sales.customers.show', customer.id))}
                     onSubmit={() =>
                         put(route('sales.customers.update', customer.id), {
                             preserveScroll: true,

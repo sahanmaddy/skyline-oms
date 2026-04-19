@@ -5,6 +5,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerDocumentController;
+use App\Http\Controllers\DutyCostCalculationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\PermissionController;
@@ -69,16 +70,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('inventory.index');
 
-    Route::get('/procurement', function () {
-        return Inertia::render('Modules/Shared/ModulePlaceholder', [
-            'area' => 'standalone',
-            'moduleTitle' => 'Procurement',
-            'headTitle' => 'Procurement',
-            'breadcrumbs' => [],
-            'title' => 'Procurement',
-            'description' => 'Purchase orders and supplier workflows will appear here.',
-        ]);
-    })->name('procurement.index');
+    Route::prefix('procurement')->name('procurement.')->group(function () {
+        Route::get('/', function () {
+            if (request()->user()?->can('calculator.view')) {
+                return redirect()->route('procurement.duty-cost-calculations.index');
+            }
+
+            return Inertia::render('Modules/Shared/ModulePlaceholder', [
+                'area' => 'standalone',
+                'moduleTitle' => 'Procurement',
+                'headTitle' => 'Procurement',
+                'breadcrumbs' => [],
+                'title' => 'Procurement',
+                'description' => 'Purchase orders, supplier workflows, and duty/cost tools are available based on your permissions.',
+            ]);
+        })->name('index');
+        Route::post(
+            'duty-cost-calculations/{duty_cost_calculation}/duplicate',
+            [DutyCostCalculationController::class, 'duplicate'],
+        )->name('duty-cost-calculations.duplicate');
+        Route::resource('duty-cost-calculations', DutyCostCalculationController::class);
+    });
 
     Route::get('/finance', function () {
         return Inertia::render('Modules/Shared/ModulePlaceholder', [

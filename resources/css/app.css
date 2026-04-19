@@ -121,3 +121,134 @@ html.dark .p-toast .p-toast-detail,
 html.dark .p-toast .p-toast-icon-close {
     color: #cccccc;
 }
+
+/*
+ * react-date-range: match FormDatePicker / form indigo accent (override theme default #3d91ff blue).
+ * Used by .form-date-picker-theme wrapper in FormDatePicker + FormDateRangeFilter.
+ */
+.form-date-picker-theme {
+    --rdp-accent: #4f46e5;
+    --rdp-accent-muted: rgba(79, 70, 229, 0.12);
+}
+
+.form-date-picker-theme .rdrDayToday .rdrDayNumber span::after {
+    background: var(--rdp-accent) !important;
+}
+
+.form-date-picker-theme .rdrCalendarWrapper:not(.rdrDateRangeWrapper) .rdrDayHovered .rdrDayNumber::after {
+    border-color: var(--rdp-accent);
+}
+
+.form-date-picker-theme .rdrNextPrevButton {
+    background: #f3f4f6;
+}
+
+.form-date-picker-theme .rdrNextPrevButton:hover {
+    background: #e5e7eb;
+}
+
+.form-date-picker-theme .rdrPprevButton i {
+    border-color: transparent #4f46e5 transparent transparent;
+}
+
+.form-date-picker-theme .rdrNextButton i {
+    border-color: transparent transparent transparent #4f46e5;
+}
+
+.form-date-picker-theme .rdrMonthAndYearPickers select {
+    color: #374151;
+}
+
+.form-date-picker-theme .rdrDefinedRangesWrapper {
+    border-right-color: #e5e7eb;
+    background: #ffffff;
+}
+
+.form-date-picker-theme .rdrStaticRange {
+    background: #ffffff;
+    border-bottom-color: #e5e7eb;
+}
+
+.form-date-picker-theme .rdrStaticRange:hover .rdrStaticRangeLabel,
+.form-date-picker-theme .rdrStaticRange:focus .rdrStaticRangeLabel {
+    background: #f3f4f6;
+}
+
+.form-date-picker-theme .rdrMonthName {
+    color: #6b7280;
+}
+
+.form-date-picker-theme .rdrWeekDay {
+    color: #6b7280;
+}
+
+/* Dark mode: align with html.dark surfaces + indigo-400 footer actions */
+html.dark .form-date-picker-theme {
+    --rdp-accent: #818cf8;
+    --rdp-accent-muted: rgba(129, 140, 248, 0.2);
+}
+
+html.dark .form-date-picker-theme .rdrCalendarWrapper {
+    color: #cccccc;
+    background: transparent;
+}
+
+html.dark .form-date-picker-theme .rdrMonthName,
+html.dark .form-date-picker-theme .rdrWeekDay {
+    color: #858585;
+}
+
+html.dark .form-date-picker-theme .rdrDay {
+    color: #cccccc;
+}
+
+html.dark .form-date-picker-theme .rdrDayPassive .rdrDayNumber span {
+    color: #858585;
+}
+
+html.dark .form-date-picker-theme .rdrDayDisabled {
+    background-color: #2d2d30;
+}
+
+html.dark .form-date-picker-theme .rdrDayDisabled .rdrDayNumber span {
+    color: #858585;
+}
+
+html.dark .form-date-picker-theme .rdrNextPrevButton {
+    background: #2d2d30;
+}
+
+html.dark .form-date-picker-theme .rdrNextPrevButton:hover {
+    background: #3c3c3c;
+}
+
+html.dark .form-date-picker-theme .rdrPprevButton i {
+    border-color: transparent #818cf8 transparent transparent;
+}
+
+html.dark .form-date-picker-theme .rdrNextButton i {
+    border-color: transparent transparent transparent #818cf8;
+}
+
+html.dark .form-date-picker-theme .rdrMonthAndYearPickers select {
+    color: #e6e6e6;
+}
+
+html.dark .form-date-picker-theme .rdrMonthAndYearPickers select:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+html.dark .form-date-picker-theme .rdrDefinedRangesWrapper {
+    border-right-color: #3c3c3c;
+    background: #252526;
+}
+
+html.dark .form-date-picker-theme .rdrStaticRange {
+    background: #252526;
+    border-bottom-color: #3c3c3c;
+}
+
+html.dark .form-date-picker-theme .rdrStaticRange:hover .rdrStaticRangeLabel,
+html.dark .form-date-picker-theme .rdrStaticRange:focus .rdrStaticRangeLabel {
+    background: #2d2d30;
+}

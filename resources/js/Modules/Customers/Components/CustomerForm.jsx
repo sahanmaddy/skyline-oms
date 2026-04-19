@@ -1,3 +1,4 @@
+import AtmMoneyInput from '@/Components/AtmMoneyInput';
 import CountryCombobox from '@/Components/CountryCombobox';
 import FormSelect from '@/Components/FormSelect';
 import InputError from '@/Components/InputError';
@@ -22,42 +23,11 @@ function initialDisplayFollowsCustomer(formData) {
     return disp === cust;
 }
 
-function formatMoneyWithCommas(value) {
-    const trimmed = (value ?? '').toString().trim();
-    if (!trimmed) {
-        return '';
-    }
-
-    const num = Number(trimmed);
-    if (Number.isNaN(num)) {
-        return trimmed;
-    }
-
-    return new Intl.NumberFormat(undefined, {
-        maximumFractionDigits: 2,
-    }).format(num);
-}
-
 const phoneTypeSelectOptions = [
     { value: 'Mobile', label: 'Mobile' },
     { value: 'Land Phone', label: 'Land Phone' },
     { value: 'WhatsApp', label: 'WhatsApp' },
 ];
-
-function normalizeMoneyInput(value) {
-    const raw = (value ?? '').toString();
-    const cleaned = raw.replace(/[^0-9.]/g, '');
-    if (!cleaned) {
-        return '';
-    }
-
-    const parts = cleaned.split('.');
-    if (parts.length <= 2) {
-        return parts[1] !== undefined ? `${parts[0]}.${parts[1]}` : parts[0];
-    }
-
-    return `${parts[0]}.${parts.slice(1).join('')}`;
-}
 
 export default function CustomerForm({
     data,
@@ -67,6 +37,7 @@ export default function CustomerForm({
     statusOptions,
     submitLabel,
     onSubmit,
+    onCancel,
 }) {
     const company = usePage().props.company ?? {};
     const currencyLabel = (company.currency_symbol || company.currency_code || '').trim() || '—';
@@ -468,24 +439,15 @@ export default function CustomerForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="credit_limit" value="Credit Limit" />
-                        <div className="mt-1 flex items-stretch rounded-md transition duration-150 ease-in-out focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 focus-within:ring-offset-white dark:focus-within:ring-cursor-accent-soft dark:focus-within:ring-offset-cursor-bg">
-                            <div className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-cursor-border dark:bg-cursor-raised dark:text-cursor-muted">
-                                {currencyLabel}
-                            </div>
-                            <input
-                                id="credit_limit"
-                                type="text"
-                                inputMode="decimal"
-                                className="block min-h-10 w-full rounded-none rounded-r-md border border-gray-300 bg-white px-3 py-2 text-sm leading-5 text-gray-900 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-0 dark:border-cursor-border dark:bg-cursor-surface dark:text-cursor-fg dark:hover:bg-cursor-raised"
-                                value={formatMoneyWithCommas(data.credit_limit || '')}
-                                placeholder="0.00"
-                                onChange={(e) =>
-                                    setData('credit_limit', normalizeMoneyInput(e.target.value))
-                                }
-                            />
-                        </div>
-                        <InputError className="mt-2" message={errors.credit_limit} />
+                        <AtmMoneyInput
+                            id="credit_limit"
+                            label="Credit Limit"
+                            addon={currencyLabel}
+                            value={data.credit_limit}
+                            onChange={(v) => setData('credit_limit', v)}
+                            error={errors.credit_limit}
+                            fractionDigits={2}
+                        />
                     </div>
 
                     <div>
@@ -516,6 +478,11 @@ export default function CustomerForm({
             </section>
 
             <div className="flex items-center justify-end gap-3">
+                {typeof onCancel === 'function' ? (
+                    <SecondaryButton type="button" onClick={onCancel}>
+                        Back
+                    </SecondaryButton>
+                ) : null}
                 <PrimaryButton disabled={processing}>{submitLabel}</PrimaryButton>
             </div>
         </form>

@@ -5,7 +5,7 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import RoleForm from '@/Modules/RolesPermissions/Roles/Components/RoleForm';
 import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 
 export default function Create({ permissionGroups }) {
     const toast = useToast();
@@ -30,6 +30,7 @@ export default function Create({ permissionGroups }) {
                             processing={processing}
                             permissionGroups={permissionGroups}
                             submitLabel="Create role"
+                            onCancel={() => router.get(route('settings.roles.index'))}
                             onClientValidationError={() =>
                                 toast.error('Please fix the highlighted fields and try again.')
                             }

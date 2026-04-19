@@ -95,10 +95,10 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
                                             {role.description || '—'}
                                         </div>
                                     </td>
-                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
+                                    <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">
                                         {role.permissions_count}
                                     </td>
-                                    <td className="min-w-0 px-4 py-3 text-sm text-gray-700">{role.users_count}</td>
+                                    <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">{role.users_count}</td>
                                     <td className="whitespace-nowrap px-4 py-3">
                                         <span
                                             className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${role.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}

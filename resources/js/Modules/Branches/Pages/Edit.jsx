@@ -6,7 +6,7 @@ import BranchForm from '@/Modules/Branches/Components/BranchForm';
 import useToast from '@/feedback/useToast';
 import { getCompanyDefaultCountry } from '@/lib/companyLocationDefaults';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ branch }) {
     const toast = useToast();
@@ -55,7 +55,8 @@ export default function Edit({ branch }) {
                             processing={processing}
                             mode="edit"
                             branchCode={branch.code}
-                            submitLabel="Save changes"
+                            submitLabel="Update branch"
+                            onCancel={() => router.get(route('settings.branches.show', branch.id))}
                             onClientValidationError={() =>
                                 toast.error('Please fix the highlighted fields and try again.')
                             }
