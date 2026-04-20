@@ -76,6 +76,7 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                     id="dcc-updated-range"
                                     label="Updated"
                                     timeZone={company?.time_zone}
+                                    disableFutureDates
                                     dateFrom={filters?.date_from || ''}
                                     dateTo={filters?.date_to || ''}
                                     placeholder="All dates"
@@ -127,7 +128,7 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                 <th className="align-middle w-[10%] whitespace-normal py-3 pl-1 pr-0 text-left text-[10px] font-medium uppercase leading-tight tracking-wide text-gray-500 sm:text-xs">
                                     Date
                                 </th>
-                                <th className="align-middle w-[7%] whitespace-normal py-3 pl-0 pr-1 text-right text-[10px] font-medium uppercase leading-tight tracking-wide text-gray-500 sm:text-xs sm:pr-2">
+                                <th className="w-16 whitespace-nowrap px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Actions
                                 </th>
                             </tr>
@@ -196,7 +197,7 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                               })
                                             : '—'}
                                     </td>
-                                    <td className="align-middle whitespace-nowrap py-3 pl-0 pr-1 text-right text-sm sm:pr-2">
+                                    <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                                         {row.can_view || row.can_edit || row.can_delete || canCreate ? (
                                             <div className="relative z-50 flex items-center justify-end">
                                                 <Dropdown>
