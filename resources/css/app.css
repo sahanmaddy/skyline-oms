@@ -135,7 +135,60 @@ html.dark .p-toast .p-toast-icon-close {
     background: var(--rdp-accent) !important;
 }
 
-.form-date-picker-theme .rdrCalendarWrapper:not(.rdrDateRangeWrapper) .rdrDayHovered .rdrDayNumber::after {
+/* Single-date picker: today underline follows selection state. */
+.form-date-picker-theme
+    .rdrCalendarWrapper:not(.rdrDateRangeWrapper)
+    .rdrDayToday:has(.rdrSelected)
+    .rdrDayNumber
+    span::after {
+    background: #ffffff !important;
+}
+
+.form-date-picker-theme
+    .rdrCalendarWrapper:not(.rdrDateRangeWrapper)
+    .rdrDayToday:not(.rdrDayPassive):not(:has(.rdrSelected))
+    .rdrDayNumber
+    span::after {
+    background: var(--rdp-accent) !important;
+}
+
+/* Date-range colors: keep From/To strong, make middle dates lighter. */
+.form-date-picker-theme .rdrStartEdge,
+.form-date-picker-theme .rdrEndEdge {
+    color: var(--rdp-accent) !important;
+}
+
+.form-date-picker-theme .rdrInRange {
+    color: var(--rdp-accent-muted) !important;
+}
+
+.form-date-picker-theme .rdrInRange ~ .rdrDayNumber span {
+    color: #374151 !important;
+}
+
+/* If today is inside a selected range, use edge/accent hue for the underline. */
+.form-date-picker-theme .rdrDayToday .rdrInRange ~ .rdrDayNumber span::after {
+    background: var(--rdp-accent) !important;
+}
+
+/* If today is a range edge (from/to), keep underline white for contrast. */
+.form-date-picker-theme .rdrDayToday .rdrStartEdge ~ .rdrDayNumber span::after,
+.form-date-picker-theme .rdrDayToday .rdrEndEdge ~ .rdrDayNumber span::after {
+    background: #ffffff !important;
+}
+
+.form-date-picker-theme
+    .rdrCalendarWrapper:not(.rdrDateRangeWrapper)
+    .rdrDay
+    .rdrDayNumber::after {
+    display: none !important;
+}
+
+.form-date-picker-theme
+    .rdrCalendarWrapper:not(.rdrDateRangeWrapper)
+    .rdrDay:hover
+    .rdrDayNumber::after {
+    display: block !important;
     border-color: var(--rdp-accent);
 }
 
@@ -251,4 +304,39 @@ html.dark .form-date-picker-theme .rdrStaticRange {
 html.dark .form-date-picker-theme .rdrStaticRange:hover .rdrStaticRangeLabel,
 html.dark .form-date-picker-theme .rdrStaticRange:focus .rdrStaticRangeLabel {
     background: #2d2d30;
+}
+
+html.dark .form-date-picker-theme .rdrDayToday .rdrDayNumber span::after {
+    background: var(--rdp-accent) !important;
+}
+
+html.dark
+    .form-date-picker-theme
+    .rdrCalendarWrapper:not(.rdrDateRangeWrapper)
+    .rdrDayToday:has(.rdrSelected)
+    .rdrDayNumber
+    span::after {
+    background: #ffffff !important;
+}
+
+html.dark
+    .form-date-picker-theme
+    .rdrCalendarWrapper:not(.rdrDateRangeWrapper)
+    .rdrDayToday:not(.rdrDayPassive):not(:has(.rdrSelected))
+    .rdrDayNumber
+    span::after {
+    background: var(--rdp-accent) !important;
+}
+
+html.dark .form-date-picker-theme .rdrDayToday .rdrInRange ~ .rdrDayNumber span::after {
+    background: var(--rdp-accent) !important;
+}
+
+html.dark .form-date-picker-theme .rdrDayToday .rdrStartEdge ~ .rdrDayNumber span::after,
+html.dark .form-date-picker-theme .rdrDayToday .rdrEndEdge ~ .rdrDayNumber span::after {
+    background: #ffffff !important;
+}
+
+html.dark .form-date-picker-theme .rdrInRange ~ .rdrDayNumber span {
+    color: #e6e6e6 !important;
 }

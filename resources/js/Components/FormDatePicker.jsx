@@ -125,6 +125,7 @@ function CalendarPanel({ value, onChange, minDate, maxDate, allowEmpty, triggerR
                     minDate={minDate}
                     maxDate={maxDate}
                     showDateDisplay={false}
+                    showPreview={false}
                     dragSelectionEnabled={false}
                     color={FORM_DATE_PICKER_ACCENT}
                 />

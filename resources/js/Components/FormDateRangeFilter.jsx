@@ -1,8 +1,13 @@
 import { FORM_DATE_PICKER_ACCENT, formatYmdInTimeZone, parseYmdToLocalDate } from '@/Components/FormDatePicker';
 import { formComboboxInputSurfaceClass } from '@/lib/dropdownMenuStyles';
-import { buildZonedDateFilterStaticRanges, companyTimeZoneOrDefault } from '@/lib/zonedDateFilterRanges';
+import {
+    buildZonedDateFilterStaticRanges,
+    companyTimeZoneOrDefault,
+    companyTodayYmd,
+} from '@/lib/zonedDateFilterRanges';
 import { Popover, PopoverButton, PopoverPanel, useClose } from '@headlessui/react';
 import { endOfMonth, format, startOfMonth } from 'date-fns';
+import { fromZonedTime } from 'date-fns-tz';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
@@ -23,23 +28,47 @@ function ChevronDownIcon({ className }) {
     );
 }
 
-function buildRangesFromFilters(dateFrom, dateTo) {
+function clampDateToMax(date, maxDate) {
+    if (!date || !maxDate) {
+        return date;
+    }
+    return date.getTime() > maxDate.getTime() ? maxDate : date;
+}
+
+function buildRangesFromFilters(dateFrom, dateTo, maxDate = null) {
     const start = parseYmdToLocalDate(dateFrom);
     const end = parseYmdToLocalDate(dateTo);
     if (start && end) {
-        return [{ startDate: start, endDate: end, key: 'selection', color: FORM_DATE_PICKER_ACCENT }];
+        let endClamped = clampDateToMax(end, maxDate) ?? end;
+        let startClamped = clampDateToMax(start, maxDate) ?? start;
+        if (startClamped.getTime() > endClamped.getTime()) {
+            startClamped = endClamped;
+        }
+        return [{ startDate: startClamped, endDate: endClamped, key: 'selection', color: FORM_DATE_PICKER_ACCENT }];
     }
     if (start && !end) {
-        return [{ startDate: start, endDate: start, key: 'selection', color: FORM_DATE_PICKER_ACCENT }];
+        const s = clampDateToMax(start, maxDate) ?? start;
+        return [{ startDate: s, endDate: s, key: 'selection', color: FORM_DATE_PICKER_ACCENT }];
     }
     if (!start && end) {
-        return [{ startDate: end, endDate: end, key: 'selection', color: FORM_DATE_PICKER_ACCENT }];
+        const e = clampDateToMax(end, maxDate) ?? end;
+        return [{ startDate: e, endDate: e, key: 'selection', color: FORM_DATE_PICKER_ACCENT }];
     }
     const now = new Date();
+    let startDate = startOfMonth(now);
+    let endDate = endOfMonth(now);
+    if (maxDate) {
+        if (endDate.getTime() > maxDate.getTime()) {
+            endDate = maxDate;
+        }
+        if (startDate.getTime() > endDate.getTime()) {
+            startDate = endDate;
+        }
+    }
     return [
         {
-            startDate: startOfMonth(now),
-            endDate: endOfMonth(now),
+            startDate,
+            endDate,
             key: 'selection',
             color: FORM_DATE_PICKER_ACCENT,
         },
@@ -61,7 +90,7 @@ function formatRangeLabel(dateFrom, dateTo) {
     return null;
 }
 
-function DateRangePanel({ ranges, setRanges, onApply, triggerRef, hasAppliedRange, staticRanges, formatYmdForApply }) {
+function DateRangePanel({ ranges, setRanges, onApply, triggerRef, hasAppliedRange, staticRanges, formatYmdForApply, maxDate }) {
     const close = useClose();
 
     function closeKeepingTriggerRing() {
@@ -79,7 +108,18 @@ function DateRangePanel({ ranges, setRanges, onApply, triggerRef, hasAppliedRang
                         if (!sel?.startDate || !sel?.endDate) {
                             return;
                         }
-                        setRanges([{ ...sel, color: FORM_DATE_PICKER_ACCENT }]);
+                        let startDate = sel.startDate;
+                        let endDate = sel.endDate;
+                        if (maxDate) {
+                            endDate = clampDateToMax(endDate, maxDate) ?? endDate;
+                            startDate = clampDateToMax(startDate, maxDate) ?? startDate;
+                            if (startDate.getTime() > endDate.getTime()) {
+                                startDate = endDate;
+                            }
+                        }
+                        setRanges([
+                            { startDate, endDate, key: 'selection', color: FORM_DATE_PICKER_ACCENT },
+                        ]);
                     }}
                     moveRangeOnFirstSelection={false}
                     months={1}
@@ -89,6 +129,7 @@ function DateRangePanel({ ranges, setRanges, onApply, triggerRef, hasAppliedRang
                     rangeColors={[FORM_DATE_PICKER_ACCENT]}
                     staticRanges={staticRanges}
                     inputRanges={[]}
+                    maxDate={maxDate ?? undefined}
                     className="!flex max-w-full flex-col sm:!flex-row"
                 />
             </div>
@@ -146,16 +187,26 @@ export default function FormDateRangeFilter({
     timeZone,
     onApply,
     disabled = false,
+    disableFutureDates = false,
 }) {
     const triggerRef = useRef(null);
     const resolvedTz = companyTimeZoneOrDefault(timeZone);
     const staticRanges = useMemo(() => buildZonedDateFilterStaticRanges(resolvedTz), [resolvedTz]);
     const formatYmdForApply = (d) => formatYmdInTimeZone(d, resolvedTz);
-    const [ranges, setRanges] = useState(() => buildRangesFromFilters(dateFrom, dateTo));
+    const maxSelectableDate = useMemo(() => {
+        if (!disableFutureDates) {
+            return null;
+        }
+        const ymd = companyTodayYmd(resolvedTz);
+        return fromZonedTime(`${ymd} 23:59:59.999`, resolvedTz);
+    }, [disableFutureDates, resolvedTz]);
+    const [ranges, setRanges] = useState(() =>
+        buildRangesFromFilters(dateFrom, dateTo, disableFutureDates ? maxSelectableDate : null),
+    );
 
     useEffect(() => {
-        setRanges(buildRangesFromFilters(dateFrom, dateTo));
-    }, [dateFrom, dateTo]);
+        setRanges(buildRangesFromFilters(dateFrom, dateTo, disableFutureDates ? maxSelectableDate : null));
+    }, [dateFrom, dateTo, disableFutureDates, maxSelectableDate]);
 
     const displayLabel = formatRangeLabel(dateFrom, dateTo);
     const hasAppliedRange = Boolean(String(dateFrom ?? '').trim() || String(dateTo ?? '').trim());
@@ -205,6 +256,7 @@ export default function FormDateRangeFilter({
                         hasAppliedRange={hasAppliedRange}
                         staticRanges={staticRanges}
                         formatYmdForApply={formatYmdForApply}
+                        maxDate={maxSelectableDate}
                     />
                 </PopoverPanel>
             </Popover>
