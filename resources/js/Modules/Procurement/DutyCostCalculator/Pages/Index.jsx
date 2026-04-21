@@ -79,7 +79,6 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                     disableFutureDates
                                     dateFrom={filters?.date_from || ''}
                                     dateTo={filters?.date_to || ''}
-                                    placeholder="All dates"
                                     onApply={({ dateFrom, dateTo }) =>
                                         router.get(
                                             route('procurement.duty-cost-calculations.index'),

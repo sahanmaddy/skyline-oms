@@ -182,7 +182,7 @@ export default function FormDateRangeFilter({
     label = 'Date range',
     dateFrom = '',
     dateTo = '',
-    placeholder = 'All dates',
+    placeholder = 'Select date range',
     /** IANA zone from company settings; presets and Apply use this so filters match the server. */
     timeZone,
     onApply,
