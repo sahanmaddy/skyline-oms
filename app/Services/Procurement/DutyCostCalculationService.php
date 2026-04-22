@@ -36,11 +36,24 @@ class DutyCostCalculationService
             + $otherCostRowsTotal
         );
 
-        $shipmentCidRate = $this->money($this->numOrDefault($payload['cid_rate_per_kg_lkr'] ?? null, 30));
-        $dutyBasePercent = $this->numOrDefault($payload['duty_base_percent'] ?? null, 110);
+        $shipmentCidRate = $this->money($this->numOrDefault($payload['cid_rate_per_kg_lkr'] ?? null, 0));
+        $cidBasis = strtolower(trim((string) ($payload['cid_basis'] ?? 'weight')));
+        if (! in_array($cidBasis, ['weight', 'uom'], true)) {
+            $cidBasis = 'weight';
+        }
+        $shipmentEidRate = $this->money($this->numOrDefault($payload['eid_rate_per_kg_lkr'] ?? null, 0));
+        $eidBasis = strtolower(trim((string) ($payload['eid_basis'] ?? 'weight')));
+        if (! in_array($eidBasis, ['weight', 'uom'], true)) {
+            $eidBasis = 'weight';
+        }
+        $statisticalValueBasis = strtolower(trim((string) ($payload['statistical_value_basis'] ?? 'weight')));
+        if (! in_array($statisticalValueBasis, ['weight', 'uom'], true)) {
+            $statisticalValueBasis = 'weight';
+        }
+        $dutyBasePercent = $this->numOrDefault($payload['duty_base_percent'] ?? null, 0);
         $dutyBaseMultiplier = $dutyBasePercent > 0 ? $dutyBasePercent / 100.0 : 0.0;
-        $vatRate = $this->numOrDefault($payload['vat_rate_percent'] ?? null, 18) / 100.0;
-        $ssclRate = $this->numOrDefault($payload['sscl_rate_percent'] ?? null, 2.5) / 100.0;
+        $vatRate = $this->numOrDefault($payload['vat_rate_percent'] ?? null, 0) / 100.0;
+        $ssclRate = $this->numOrDefault($payload['sscl_rate_percent'] ?? null, 0) / 100.0;
 
         $baseItems = [];
         foreach (($payload['items'] ?? []) as $idx => $row) {
@@ -54,12 +67,17 @@ class DutyCostCalculationService
             $totalProductValueForeign = $this->qty($qty * $unitPrice, 2);
             $productValueLkr = $this->money($totalProductValueForeign * $exchangeRate);
 
-            $statisticalValue = $this->money($customsPreset * $weight * $exchangeRate);
+            $statisticalBaseValue = $statisticalValueBasis === 'uom' ? $qty : $weight;
+            $statisticalValue = $this->money($customsPreset * $statisticalBaseValue * $exchangeRate);
             $customsBase110 = $this->money($statisticalValue * $dutyBaseMultiplier);
-            $cid = $this->money($weight * $shipmentCidRate);
-            $vat = $this->money(($customsBase110 + $cid) * $vatRate);
-            $sscl = $this->money(($customsBase110 + $cid) * $ssclRate);
-            $dutyTotal = $this->money($cid + $vat + $sscl);
+            $cidBaseValue = $cidBasis === 'uom' ? $qty : $weight;
+            $cid = $this->money($cidBaseValue * $shipmentCidRate);
+            $eidBaseValue = $eidBasis === 'uom' ? $qty : $weight;
+            $eid = $this->money($eidBaseValue * $shipmentEidRate);
+            $taxBase = $customsBase110 + $cid + $eid;
+            $vat = $this->money($taxBase * $vatRate);
+            $sscl = $this->money($taxBase * $ssclRate);
+            $dutyTotal = $this->money($cid + $eid + $vat + $sscl);
 
             $baseItems[] = [
                 'line_no' => $lineNo,
@@ -75,9 +93,11 @@ class DutyCostCalculationService
                 'weight_kg' => $this->qty($weight, 3),
                 'customs_preset_value_foreign_or_base' => $this->qty($customsPreset, 2),
                 'cid_rate_per_kg_lkr' => $shipmentCidRate,
+                'eid_rate_per_kg_lkr' => $shipmentEidRate,
                 'statistical_value_lkr' => $statisticalValue,
                 'customs_base_110_lkr' => $customsBase110,
                 'cid_lkr' => $cid,
+                'eid_lkr' => $eid,
                 'vat_lkr' => $vat,
                 'sscl_lkr' => $sscl,
                 'duty_total_lkr' => $dutyTotal,
@@ -156,6 +176,7 @@ class DutyCostCalculationService
             'total_statistical_value_lkr' => $this->money(array_sum(array_column($items, 'statistical_value_lkr'))),
             'total_customs_base_lkr' => $this->money(array_sum(array_column($items, 'customs_base_110_lkr'))),
             'total_cid_lkr' => $this->money(array_sum(array_column($items, 'cid_lkr'))),
+            'total_eid_lkr' => $this->money(array_sum(array_column($items, 'eid_lkr'))),
             'total_vat_lkr' => $this->money(array_sum(array_column($items, 'vat_lkr'))),
             'total_sscl_lkr' => $this->money(array_sum(array_column($items, 'sscl_lkr'))),
             'total_duty_lkr' => $this->money(array_sum(array_column($items, 'duty_total_lkr'))),

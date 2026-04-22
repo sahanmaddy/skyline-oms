@@ -37,11 +37,23 @@ export function calculateDutyCostPreview(data) {
             extraCostTotal,
     );
 
-    const shipmentCidRate = numOrDefault(data.cid_rate_per_kg_lkr, 30);
-    const dutyBasePercent = numOrDefault(data.duty_base_percent, 110);
+    const shipmentCidRate = numOrDefault(data.cid_rate_per_kg_lkr, 0);
+    const cidBasis = ['weight', 'uom'].includes(String(data.cid_basis || '').toLowerCase())
+        ? String(data.cid_basis).toLowerCase()
+        : 'weight';
+    const shipmentEidRate = numOrDefault(data.eid_rate_per_kg_lkr, 0);
+    const eidBasis = ['weight', 'uom'].includes(String(data.eid_basis || '').toLowerCase())
+        ? String(data.eid_basis).toLowerCase()
+        : 'weight';
+    const statisticalValueBasis = ['weight', 'uom'].includes(
+        String(data.statistical_value_basis || '').toLowerCase(),
+    )
+        ? String(data.statistical_value_basis).toLowerCase()
+        : 'weight';
+    const dutyBasePercent = numOrDefault(data.duty_base_percent, 0);
     const dutyBaseMultiplier = dutyBasePercent > 0 ? dutyBasePercent / 100 : 0;
-    const vatRate = numOrDefault(data.vat_rate_percent, 18) / 100;
-    const ssclRate = numOrDefault(data.sscl_rate_percent, 2.5) / 100;
+    const vatRate = numOrDefault(data.vat_rate_percent, 0) / 100;
+    const ssclRate = numOrDefault(data.sscl_rate_percent, 0) / 100;
 
     const baseItems = (data.items || []).map((row, idx) => {
         const quantity = num(row.quantity);
@@ -51,12 +63,17 @@ export function calculateDutyCostPreview(data) {
         const customsPreset = num(row.customs_preset_value_foreign_or_base);
         const totalProductValueForeign = qty(quantity * unitPriceForeign, 2);
         const productValueLkr = money(totalProductValueForeign * exchangeRate);
-        const statisticalValue = money(customsPreset * weightKg * exchangeRate);
+        const statisticalBaseValue = statisticalValueBasis === 'uom' ? quantity : weightKg;
+        const statisticalValue = money(customsPreset * statisticalBaseValue * exchangeRate);
         const customsBase110 = money(statisticalValue * dutyBaseMultiplier);
-        const cid = money(weightKg * shipmentCidRate);
-        const vat = money((customsBase110 + cid) * vatRate);
-        const sscl = money((customsBase110 + cid) * ssclRate);
-        const dutyTotal = money(cid + vat + sscl);
+        const cidBaseValue = cidBasis === 'uom' ? quantity : weightKg;
+        const cid = money(cidBaseValue * shipmentCidRate);
+        const eidBaseValue = eidBasis === 'uom' ? quantity : weightKg;
+        const eid = money(eidBaseValue * shipmentEidRate);
+        const taxBase = customsBase110 + cid + eid;
+        const vat = money(taxBase * vatRate);
+        const sscl = money(taxBase * ssclRate);
+        const dutyTotal = money(cid + eid + vat + sscl);
 
         return {
             ...row,
@@ -67,11 +84,13 @@ export function calculateDutyCostPreview(data) {
             weight_kg: qty(weightKg, 3),
             customs_preset_value_foreign_or_base: qty(customsPreset, 2),
             cid_rate_per_kg_lkr: money(shipmentCidRate),
+            eid_rate_per_kg_lkr: money(shipmentEidRate),
             total_product_value_foreign: totalProductValueForeign,
             product_value_lkr: productValueLkr,
             statistical_value_lkr: statisticalValue,
             customs_base_110_lkr: customsBase110,
             cid_lkr: cid,
+            eid_lkr: eid,
             vat_lkr: vat,
             sscl_lkr: sscl,
             duty_total_lkr: dutyTotal,
@@ -154,6 +173,7 @@ export function calculateDutyCostPreview(data) {
         total_statistical_value_lkr: money(items.reduce((sum, row) => sum + num(row.statistical_value_lkr), 0)),
         total_customs_base_lkr: money(items.reduce((sum, row) => sum + num(row.customs_base_110_lkr), 0)),
         total_cid_lkr: money(items.reduce((sum, row) => sum + num(row.cid_lkr), 0)),
+        total_eid_lkr: money(items.reduce((sum, row) => sum + num(row.eid_lkr), 0)),
         total_vat_lkr: money(items.reduce((sum, row) => sum + num(row.vat_lkr), 0)),
         total_sscl_lkr: money(items.reduce((sum, row) => sum + num(row.sscl_lkr), 0)),
         total_duty_lkr: money(items.reduce((sum, row) => sum + num(row.duty_total_lkr), 0)),

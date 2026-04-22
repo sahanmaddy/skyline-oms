@@ -167,6 +167,7 @@ class UserController extends Controller
             'statusOptions' => ['active', 'inactive'],
             'employeesForLink' => $this->branchScope->employeesAvailableForUserForm($request, $user),
             'activeBranches' => $this->branchScope->branchesForUserAssignmentForms($actor, (int) $user->branch_id),
+            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor, true),
         ]);
     }
 

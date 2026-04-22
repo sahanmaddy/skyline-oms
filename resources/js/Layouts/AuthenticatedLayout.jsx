@@ -39,7 +39,7 @@ export default function AuthenticatedLayout({ header, children }) {
         <div className="min-h-screen bg-gray-50 dark:bg-cursor-bg">
             <BrandingHead />
             <div className="flex min-h-screen">
-                <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white print:hidden dark:border-cursor-border dark:bg-cursor-surface lg:flex">
+                <aside className="hidden w-64 flex-col border-r border-gray-200 bg-white print:hidden dark:border-cursor-border dark:bg-cursor-surface lg:sticky lg:top-0 lg:flex lg:h-screen">
                     <div className="flex h-16 items-center justify-between px-4">
                         <Link href={route('dashboard')} className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                             {companyName}
@@ -49,7 +49,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </span>
                     </div>
 
-                    <nav className="flex-1 space-y-1 px-3 py-4">
+                    <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
                         <Link
                             href={route('dashboard')}
                             className={sidebarItemClass(route().current('dashboard'))}

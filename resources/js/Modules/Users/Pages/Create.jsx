@@ -27,7 +27,7 @@ export default function Create({ roles, statusOptions, employeesForLink, activeB
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="New user" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Create User" />}>
             <Head title="New user · Settings" />
 
             <SettingsModuleLayout

@@ -280,18 +280,15 @@ export default function UserForm({
                                 });
                                 setData('branch_id', v === '' ? '' : Number(v));
                             }}
-                            options={[
-                                { value: '', label: 'Select Branch…' },
-                                ...branchOptions
-                                    .filter((b) => {
-                                        const bid = normId(b.id);
-                                        return bid !== null && branchIdsNorm.includes(bid);
-                                    })
-                                    .map((b) => ({
-                                        value: b.id,
-                                        label: `${b.code} — ${b.name}`,
-                                    })),
-                            ]}
+                            options={branchOptions
+                                .filter((b) => {
+                                    const bid = normId(b.id);
+                                    return bid !== null && branchIdsNorm.includes(bid);
+                                })
+                                .map((b) => ({
+                                    value: b.id,
+                                    label: `${b.code} — ${b.name}`,
+                                }))}
                             placeholder="Select Branch…"
                         />
                         <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">

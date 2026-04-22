@@ -17,7 +17,7 @@ export default function Create({ permissionGroups }) {
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="New role" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Create Role" />}>
             <Head title="New role · Settings" />
             <SettingsModuleLayout breadcrumbs={[{ label: 'Roles', href: route('settings.roles.index') }, { label: 'New role' }]}>
                 <div className="space-y-4">

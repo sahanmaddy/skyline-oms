@@ -59,40 +59,57 @@ export default function CalculationForm({
         () => currencyAddonLabelForIso(localCurrencyCode, company),
         [localCurrencyCode, company],
     );
-    const purchasingCurrencyCode = data.purchasing_currency || 'USD';
+    const purchasingCurrencyCode = data.purchasing_currency || '';
     const purchasingCurrencyAddon = useMemo(
         () => currencyAddonLabelForIso(purchasingCurrencyCode, company),
         [purchasingCurrencyCode, company],
     );
     const freightCurrencyCode = data.freight_currency || '';
     const freightCurrencyAddon = useMemo(
-        () =>
-            currencyAddonLabelForIso(
-                freightCurrencyCode || purchasingCurrencyCode || 'USD',
-                company,
-            ),
-        [freightCurrencyCode, purchasingCurrencyCode, company],
+        () => currencyAddonLabelForIso(freightCurrencyCode, company),
+        [freightCurrencyCode, company],
     );
 
     const formulaHints = useMemo(() => {
-        const basePct = String(Number(data.duty_base_percent) || 110);
-        const vatPct = String(Number(data.vat_rate_percent) || 18);
-        const ssclPct = String(Number(data.sscl_rate_percent) || 2.5);
+        const basePct = String(Number(data.duty_base_percent) || 0);
+        const vatPct = String(Number(data.vat_rate_percent) || 0);
+        const ssclPct = String(Number(data.sscl_rate_percent) || 0);
+        const cidBasisLabel = data.cid_basis === 'uom' ? 'UOM' : 'Weight';
+        const eidBasisLabel = data.eid_basis === 'uom' ? 'UOM' : 'Weight';
+        const statisticalBasisLabel =
+            data.statistical_value_basis === 'uom'
+                ? 'UOM'
+                : data.statistical_value_basis === 'weight'
+                  ? 'Weight'
+                  : 'Statistical Value Basis';
         return [
-            'Statistical Value = Preset Value × Weight × Exchange Rate',
+            `Statistical Value = Preset Value × ${statisticalBasisLabel} × Exchange Rate`,
             `${basePct}% Customs Base Value = Statistical Value × ${basePct}%`,
-            'CID = Weight × CID / KG',
-            `VAT = (${basePct}% Customs Base Value + CID) × ${vatPct}%`,
-            `SSCL = (${basePct}% Customs Base Value + CID) × ${ssclPct}%`,
-            'Duty = CID + VAT + SSCL',
+            `CID = ${cidBasisLabel} × CID Rate`,
+            `EID = ${eidBasisLabel} × EID Rate`,
+            `VAT = (${basePct}% Customs Base Value + CID + EID) × ${vatPct}%`,
+            `SSCL = (${basePct}% Customs Base Value + CID + EID) × ${ssclPct}%`,
+            'Duty = CID + EID + VAT + SSCL',
             'Bank Transfer = 1% of (Shipment Purchase + Freight) in LKR',
             'Bank Interest = (Purchase + Freight) (LKR) × (Interest % p.a. / 100) × (Months / 12)',
             'Bank Charges are split by each product’s share of (Purchase LKR + Allocated Freight LKR)',
             'Freight per CBM = Total Freight (LKR) ÷ Σ Product CBM; Each product receives CBM × that rate',
         ];
-    }, [data.duty_base_percent, data.vat_rate_percent, data.sscl_rate_percent]);
+    }, [data.cid_basis, data.eid_basis, data.statistical_value_basis, data.duty_base_percent, data.vat_rate_percent, data.sscl_rate_percent]);
 
-    const dutyBasePercentDisplay = Number(data.duty_base_percent) || 110;
+    const dutyBasePercentDisplay = Number(data.duty_base_percent) || 0;
+    const cidRateLabel =
+        data.cid_basis === 'uom'
+            ? 'CID Rate / UOM'
+            : data.cid_basis === 'weight'
+              ? 'CID Rate / KG'
+              : 'CID Rate';
+    const eidRateLabel =
+        data.eid_basis === 'uom'
+            ? 'EID Rate / UOM'
+            : data.eid_basis === 'weight'
+              ? 'EID Rate / KG'
+              : 'EID Rate';
 
     const updateField = (key, value) => setData(key, value);
     const updateItem = (idx, key, value) => {
@@ -146,6 +163,14 @@ export default function CalculationForm({
         () => [
             ['No. of Products', preview.summary.item_count],
             [
+                'Total Product Value (Foreign)',
+                formatLocalMoneyDisplay(
+                    preview.summary.total_product_value_foreign,
+                    purchasingCurrencyCode,
+                    company,
+                ),
+            ],
+            [
                 'Total Product Value',
                 formatLocalMoneyDisplay(
                     preview.summary.total_product_value_lkr,
@@ -174,6 +199,10 @@ export default function CalculationForm({
                 formatLocalMoneyDisplay(preview.summary.total_cid_lkr, localCurrencyCode, company),
             ],
             [
+                'Total EID',
+                formatLocalMoneyDisplay(preview.summary.total_eid_lkr, localCurrencyCode, company),
+            ],
+            [
                 'Total VAT',
                 formatLocalMoneyDisplay(preview.summary.total_vat_lkr, localCurrencyCode, company),
             ],
@@ -190,24 +219,12 @@ export default function CalculationForm({
                 ),
             ],
             [
-                'Bank Transfer (1%)',
-                formatLocalMoneyDisplay(preview.summary.bank_transfer_charges_lkr, localCurrencyCode, company),
-            ],
-            [
-                'Bank Interest',
-                formatLocalMoneyDisplay(preview.summary.bank_interest_lkr, localCurrencyCode, company),
-            ],
-            [
-                'Total Bank Charges (Allocated)',
-                formatLocalMoneyDisplay(preview.summary.total_bank_charges_lkr, localCurrencyCode, company),
-            ],
-            [
                 'Weight (KG)',
-                formatMeasuredNumberForDisplay(preview.summary.total_weight_kg, 3) ?? '—',
+                formatMeasuredNumberForDisplay(preview.summary.total_weight_kg, 3) ?? '0',
             ],
             [
                 `Total CBM (${String(preview.summary.item_count ?? 0)} Products)`,
-                formatMeasuredNumberForDisplay(preview.summary.total_cbm, 3) ?? '—',
+                formatMeasuredNumberForDisplay(preview.summary.total_cbm, 3) ?? '0',
             ],
             [
                 'Freight Per CBM',
@@ -226,12 +243,20 @@ export default function CalculationForm({
                 ),
             ],
             [
-                'Total Duty',
-                formatLocalMoneyDisplay(preview.summary.total_duty_lkr, localCurrencyCode, company),
+                'Bank Transfer (1%)',
+                formatLocalMoneyDisplay(preview.summary.bank_transfer_charges_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Bank Interest',
+                formatLocalMoneyDisplay(preview.summary.bank_interest_lkr, localCurrencyCode, company),
             ],
             [
                 'Remittance',
                 formatLocalMoneyDisplay(preview.summary.remittance_lkr, localCurrencyCode, company),
+            ],
+            [
+                'Total Duty',
+                formatLocalMoneyDisplay(preview.summary.total_duty_lkr, localCurrencyCode, company),
             ],
             [
                 'Grand Total',
@@ -242,7 +267,7 @@ export default function CalculationForm({
                 ),
             ],
         ],
-        [preview, localCurrencyCode, company, dutyBasePercentDisplay],
+        [preview, localCurrencyCode, purchasingCurrencyCode, company, dutyBasePercentDisplay],
     );
 
     return (
@@ -311,12 +336,12 @@ export default function CalculationForm({
                             <InputLabel value="Purchasing Currency" />
                             <CurrencyCodeCombobox
                                 className="mt-1"
-                                value={data.purchasing_currency || 'USD'}
+                                value={data.purchasing_currency || ''}
                                 onChange={(v) =>
                                     updateField('purchasing_currency', String(v || '').toUpperCase())
                                 }
                                 options={currencyCodeOptions}
-                                placeholder="Select currency code..."
+                                placeholder="Select currency..."
                             />
                             <InputError className="mt-2" message={errors.purchasing_currency} />
                         </div>
@@ -329,7 +354,7 @@ export default function CalculationForm({
                                     updateField('local_currency', String(v || '').toUpperCase())
                                 }
                                 options={currencyCodeOptions}
-                                placeholder="Select currency code..."
+                                placeholder="Select currency..."
                             />
                             <InputError className="mt-2" message={errors.local_currency} />
                         </div>
@@ -353,7 +378,7 @@ export default function CalculationForm({
                                     updateField('freight_currency', String(v || '').toUpperCase())
                                 }
                                 options={currencyCodeOptions}
-                                placeholder="Select currency code..."
+                                placeholder="Select currency..."
                             />
                             <InputError className="mt-2" message={errors.freight_currency} />
                         </div>
@@ -398,13 +423,64 @@ export default function CalculationForm({
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <AtmMoneyInput
                         id="cid_rate_per_kg_lkr"
-                        label="CID / Kg"
+                        label={cidRateLabel}
                         addon={localCurrencyAddon}
                         value={data.cid_rate_per_kg_lkr ?? ''}
                         onChange={(v) => updateField('cid_rate_per_kg_lkr', v)}
                         error={errors.cid_rate_per_kg_lkr}
                         fractionDigits={2}
                     />
+                    <div>
+                        <InputLabel value="CID Basis" />
+                        <FormSelect
+                            className="mt-1"
+                            value={data.cid_basis || ''}
+                            onChange={(v) => updateField('cid_basis', v)}
+                            placeholder="Select basis..."
+                            options={[
+                                { value: 'weight', label: 'Weight (KG)' },
+                                { value: 'uom', label: 'UOM' },
+                            ]}
+                        />
+                        <InputError className="mt-2" message={errors.cid_basis} />
+                    </div>
+                    <AtmMoneyInput
+                        id="eid_rate_per_kg_lkr"
+                        label={eidRateLabel}
+                        addon={localCurrencyAddon}
+                        value={data.eid_rate_per_kg_lkr ?? ''}
+                        onChange={(v) => updateField('eid_rate_per_kg_lkr', v)}
+                        error={errors.eid_rate_per_kg_lkr}
+                        fractionDigits={2}
+                    />
+                    <div>
+                        <InputLabel value="EID Basis" />
+                        <FormSelect
+                            className="mt-1"
+                            value={data.eid_basis || ''}
+                            onChange={(v) => updateField('eid_basis', v)}
+                            placeholder="Select basis..."
+                            options={[
+                                { value: 'weight', label: 'Weight (KG)' },
+                                { value: 'uom', label: 'UOM' },
+                            ]}
+                        />
+                        <InputError className="mt-2" message={errors.eid_basis} />
+                    </div>
+                    <div>
+                        <InputLabel value="Statistical Value Basis" />
+                        <FormSelect
+                            className="mt-1"
+                            value={data.statistical_value_basis || ''}
+                            onChange={(v) => updateField('statistical_value_basis', v)}
+                            placeholder="Select basis..."
+                            options={[
+                                { value: 'weight', label: 'Weight (KG)' },
+                                { value: 'uom', label: 'UOM' },
+                            ]}
+                        />
+                        <InputError className="mt-2" message={errors.statistical_value_basis} />
+                    </div>
                     <AtmMoneyInput
                         id="duty_base_percent"
                         label="Customs Base Value (%)"
@@ -691,17 +767,22 @@ export default function CalculationForm({
                     <div className="mt-3 space-y-2 text-sm">
                         {shipmentSummaryRows.map(([label, value]) => {
                             const redRow =
-                                label === 'Total Allocated Other Costs' ||
                                 label === 'Total Duty' ||
                                 label === 'Remittance' ||
                                 label === 'Grand Total';
+                            const orangeRow =
+                                label === 'Bank Transfer (1%)' ||
+                                label === 'Bank Interest' ||
+                                label === 'Total Allocated Other Costs';
                             return (
-                                <div key={label} className="flex justify-between gap-3 border-b border-gray-100 py-1.5">
+                                <div key={label} className="flex justify-between gap-3 border-b border-gray-100 py-1.5 dark:border-cursor-border">
                                     <span
                                         className={
                                             redRow
                                                 ? 'font-semibold text-red-600 dark:text-red-400'
-                                                : 'text-gray-600'
+                                                : orangeRow
+                                                  ? 'font-semibold text-[#FA923C]'
+                                                  : 'text-gray-600 dark:text-cursor-muted'
                                         }
                                     >
                                         {label}
@@ -710,7 +791,9 @@ export default function CalculationForm({
                                         className={
                                             redRow
                                                 ? 'text-right font-semibold text-red-600 dark:text-red-400'
-                                                : 'text-right font-medium text-gray-900'
+                                                : orangeRow
+                                                  ? 'text-right font-semibold text-[#FA923C]'
+                                                  : 'text-right font-medium text-gray-900 dark:text-cursor-fg'
                                         }
                                     >
                                         {value}
@@ -791,11 +874,48 @@ export default function CalculationForm({
                                     formatLocalMoneyDisplay(row.customs_base_110_lkr, localCurrencyCode, company),
                                 ],
                                 ['Total CID', formatLocalMoneyDisplay(row.cid_lkr, localCurrencyCode, company)],
+                                ['Total EID', formatLocalMoneyDisplay(row.eid_lkr, localCurrencyCode, company)],
                                 ['Total VAT', formatLocalMoneyDisplay(row.vat_lkr, localCurrencyCode, company)],
                                 ['Total SSCL', formatLocalMoneyDisplay(row.sscl_lkr, localCurrencyCode, company)],
                                 [
+                                    'Duty Per Unit',
+                                    (() => {
+                                        const qty = Number(data.items?.[idx]?.quantity);
+                                        if (!Number.isFinite(qty) || qty <= 0) {
+                                            return formatLocalMoneyDisplay(0, localCurrencyCode, company);
+                                        }
+                                        const perUnit = (Number(row.duty_total_lkr) || 0) / qty;
+                                        return formatLocalMoneyDisplay(perUnit, localCurrencyCode, company);
+                                    })(),
+                                ],
+                                [
                                     'Total Allocated Freight',
                                     formatLocalMoneyDisplay(row.allocated_freight_lkr, localCurrencyCode, company),
+                                ],
+                                [
+                                    'Freight Per Unit',
+                                    (() => {
+                                        const qty = Number(data.items?.[idx]?.quantity);
+                                        if (!Number.isFinite(qty) || qty <= 0) {
+                                            return formatLocalMoneyDisplay(0, localCurrencyCode, company);
+                                        }
+                                        const perUnit = (Number(row.allocated_freight_lkr) || 0) / qty;
+                                        return formatLocalMoneyDisplay(perUnit, localCurrencyCode, company);
+                                    })(),
+                                ],
+                                [
+                                    `Quantity (${(data.items?.[idx]?.unit_of_measure || '').trim() || '—'})`,
+                                    (() => {
+                                        const raw = data.items?.[idx]?.quantity;
+                                        if (raw === null || raw === undefined || raw === '') {
+                                            return '0';
+                                        }
+                                        return formatMeasuredNumberForDisplay(raw, 2) ?? '0';
+                                    })(),
+                                ],
+                                [
+                                    'Total Allocated Other Costs',
+                                    formatLocalMoneyDisplay(row.allocated_other_costs_lkr, localCurrencyCode, company),
                                 ],
                                 [
                                     'Bank Transfer (1%)',
@@ -806,30 +926,12 @@ export default function CalculationForm({
                                     formatLocalMoneyDisplay(lineBankInterest, localCurrencyCode, company),
                                 ],
                                 [
-                                    'Total Bank Charges (Allocated)',
-                                    formatLocalMoneyDisplay(row.allocated_bank_charges_lkr, localCurrencyCode, company),
-                                ],
-                                [
-                                    `Quantity (${(data.items?.[idx]?.unit_of_measure || '').trim() || '—'})`,
-                                    (() => {
-                                        const raw = data.items?.[idx]?.quantity;
-                                        if (raw === null || raw === undefined || raw === '') {
-                                            return '—';
-                                        }
-                                        return formatMeasuredNumberForDisplay(raw, 2) ?? '—';
-                                    })(),
-                                ],
-                                [
-                                    'Total Allocated Other Costs',
-                                    formatLocalMoneyDisplay(row.allocated_other_costs_lkr, localCurrencyCode, company),
+                                    'Remittance',
+                                    formatLocalMoneyDisplay(row.remittance_lkr, localCurrencyCode, company),
                                 ],
                                 [
                                     'Total Duty',
                                     formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company),
-                                ],
-                                [
-                                    'Remittance',
-                                    formatLocalMoneyDisplay(row.remittance_lkr, localCurrencyCode, company),
                                 ],
                                 [
                                     'Grand Total',
@@ -852,31 +954,37 @@ export default function CalculationForm({
                                     <div className="space-y-2 p-3 text-sm">
                                         {productSummaryRows.map(([label, value]) => {
                                             const redRow =
-                                                label === 'Total Allocated Other Costs' ||
                                                 label === 'Total Duty' ||
                                                 label === 'Remittance' ||
                                                 label === 'Grand Total' ||
                                                 label === 'Landed Cost Per Unit';
-                                            const valueHighlight = redRow;
+                                            const orangeRow =
+                                                label === 'Bank Transfer (1%)' ||
+                                                label === 'Bank Interest' ||
+                                                label === 'Total Allocated Other Costs';
                                             return (
                                                 <div
                                                     key={`${idx}-${label}`}
-                                                    className="flex justify-between gap-3 border-b border-gray-100 py-1.5 last:border-b-0"
+                                                    className="flex justify-between gap-3 border-b border-gray-100 py-1.5 last:border-b-0 dark:border-cursor-border"
                                                 >
                                                     <span
                                                         className={
                                                             redRow
                                                                 ? 'font-semibold text-red-600 dark:text-red-400'
-                                                                : 'text-gray-600'
+                                                                : orangeRow
+                                                                  ? 'font-semibold text-[#FA923C]'
+                                                                : 'text-gray-600 dark:text-cursor-muted'
                                                         }
                                                     >
                                                         {label}
                                                     </span>
                                                     <span
                                                         className={
-                                                            valueHighlight
+                                                            redRow
                                                                 ? 'text-right font-semibold text-red-600 dark:text-red-400'
-                                                                : 'text-right font-medium text-gray-900'
+                                                                : orangeRow
+                                                                  ? 'text-right font-semibold text-[#FA923C]'
+                                                                : 'text-right font-medium text-gray-900 dark:text-cursor-fg'
                                                         }
                                                     >
                                                         {value}

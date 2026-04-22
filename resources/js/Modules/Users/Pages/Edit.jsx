@@ -7,13 +7,24 @@ import useToast from '@/feedback/useToast';
 import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { Head, router, useForm } from '@inertiajs/react';
 
-export default function Edit({ user, roles, statusOptions, employeesForLink, activeBranches }) {
+export default function Edit({
+    user,
+    roles,
+    statusOptions,
+    employeesForLink,
+    activeBranches,
+    suggestedBranchId,
+}) {
     const toast = useToast();
+    const defaultBranchId =
+        suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
+            ? suggestedBranchId
+            : (user.branch_id ?? user.branch?.id ?? '');
     const assignedIds =
         user.assigned_branches?.length > 0
             ? user.assigned_branches.map((b) => b.id)
-            : user.branch_id
-              ? [user.branch_id]
+            : defaultBranchId
+              ? [defaultBranchId]
               : [];
     const { data, setData, put, processing, errors } = useForm({
         name: user.name || '',
@@ -23,7 +34,7 @@ export default function Edit({ user, roles, statusOptions, employeesForLink, act
         roles: user.roles?.map((r) => r.name) || (roles?.length ? [roles[0]] : []),
         status: user.status || statusOptions?.[0] || 'active',
         branch_ids: assignedIds,
-        branch_id: user.branch_id ?? user.branch?.id ?? '',
+        branch_id: defaultBranchId,
         employee_id: user.employee?.id ?? '',
     });
 

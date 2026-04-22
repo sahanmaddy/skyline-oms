@@ -57,7 +57,7 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Human Resource" section="Create employee" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Human Resource" section="Create Employee" />}>
             <Head title="Create employee · Human Resource" />
 
             <HrModuleLayout

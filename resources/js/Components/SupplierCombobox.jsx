@@ -48,7 +48,6 @@ function SupplierOptionsPanel({ open, query, setQuery, filtered }) {
                 />
             </div>
             <div className="max-h-52 overflow-y-auto py-1">
-                <ListboxOption value={null} className={dropdownMenuItemClass}>No supplier</ListboxOption>
                 {filtered.map((opt) => (
                     <ListboxOption key={opt.id} value={opt} className={dropdownMenuItemClass}>
                         <div className="min-w-0">
