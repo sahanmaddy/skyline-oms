@@ -23,7 +23,9 @@ function renderPhoneList(phoneNumbers, max = 3) {
             {shown.map((p) => (
                 <div key={p.id} className="leading-5">
                     {p.phone_type ? `${p.phone_type}: ` : ''}
-                    {[p.country_code, p.phone_number].filter(Boolean).join(' ')}
+                    <span className="font-semibold">
+                        {[p.country_code, p.phone_number].filter(Boolean).join(' ')}
+                    </span>
                 </div>
             ))}
             {remaining > 0 ? (
@@ -42,6 +44,8 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
 
             <SettingsModuleLayout breadcrumbs={[{ label: 'Branches' }]}>
                 <ModuleListToolbar
+                    actionsAbove
+                    filtersWrapClassName="w-full max-w-none md:grid-cols-2 md:items-end"
                     filters={
                         <>
                             <div>
@@ -131,7 +135,9 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                     <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
                                         {b.city || b.country ? (
                                             <>
-                                                <div className="text-xs text-gray-500">{b.city || '—'}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    <span className="font-semibold">{b.city || '—'}</span>
+                                                </div>
                                                 <div className="mt-0.5 text-xs text-gray-500">
                                                     {b.country || '—'}
                                                 </div>
@@ -142,7 +148,13 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                     </td>
                                     <td className="min-w-0 px-4 py-3 text-sm text-gray-700">
                                         <div className="break-words text-xs text-gray-500">
-                                            {b.email ? `E-mail: ${b.email}` : 'E-mail: —'}
+                                            {b.email ? (
+                                                <>
+                                                    E-mail: <span className="font-semibold">{b.email}</span>
+                                                </>
+                                            ) : (
+                                                'E-mail: —'
+                                            )}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             {renderPhoneList(b.phone_numbers, 10)}
@@ -150,10 +162,10 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                     </td>
                                     <td className="min-w-0 px-4 py-3">
                                         <div className="text-xs text-gray-500">
-                                            Users: {b.users_count ?? 0}
+                                            Users: <span className="font-semibold">{b.users_count ?? 0}</span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            Employees: {b.employees_count ?? 0}
+                                            Employees: <span className="font-semibold">{b.employees_count ?? 0}</span>
                                         </div>
                                     </td>
                                     <td className="whitespace-nowrap px-4 py-3">

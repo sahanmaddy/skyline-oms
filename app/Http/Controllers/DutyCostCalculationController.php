@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DutyCostCalculationStoreRequest;
 use App\Http\Requests\DutyCostCalculationUpdateRequest;
 use App\Models\DutyCostCalculation;
+use App\Models\Supplier;
 use App\Services\Organization\CompanySettingsPresenter;
 use App\Services\Procurement\DutyCostCalculationService;
 use Carbon\Carbon;
@@ -24,13 +25,17 @@ class DutyCostCalculationController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = DutyCostCalculation::query()->latest('id');
+        $query = DutyCostCalculation::query()->with('supplier')->latest('id');
 
         if ($search = trim((string) $request->string('q'))) {
             $query->where(function ($q) use ($search) {
                 $q->where('calculation_code', 'like', "%{$search}%")
                     ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhere('supplier_name', 'like', "%{$search}%");
+                    ->orWhere('supplier_name', 'like', "%{$search}%")
+                    ->orWhereHas('supplier', function ($supplierQuery) use ($search) {
+                        $supplierQuery->where('display_name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -46,7 +51,7 @@ class DutyCostCalculationController extends Controller
                 $freightLkr = round((float) ($row->freight_cost_total ?? 0) * (float) ($row->freight_exchange_rate ?? 0), 2);
                 $bankBaseLkr = round($purchaseLkr + $freightLkr, 2);
                 $bankTransferLkr = $bankBaseLkr > 0 ? round($bankBaseLkr * 0.01, 2) : 0.0;
-                $remittanceLkr = round($purchaseLkr + $freightLkr + $bankTransferLkr, 2);
+                $remittanceLkr = round($purchaseLkr + $freightLkr, 2);
 
                 $totals = $row->totals;
                 $bankInterestLkr = is_array($totals) ? (float) ($totals['bank_interest_lkr'] ?? 0) : 0.0;
@@ -55,9 +60,11 @@ class DutyCostCalculationController extends Controller
                     'id' => $row->id,
                     'calculation_code' => $row->calculation_code,
                     'title' => $row->title,
-                    'supplier_name' => $row->supplier_name,
+                    'supplier_name' => $row->supplier?->display_name ?? $row->supplier_name,
+                    'supplier_company_name' => $row->supplier?->company_name,
                     'item_count' => $row->item_count,
                     'remittance_lkr' => $remittanceLkr,
+                    'bank_transfer_lkr' => $bankTransferLkr,
                     'total_allocated_other_costs_lkr' => (float) ($row->total_allocated_other_costs_lkr ?? 0),
                     'bank_interest_lkr' => $bankInterestLkr,
                     'total_weight_kg' => (float) $row->total_weight_kg,
@@ -91,6 +98,7 @@ class DutyCostCalculationController extends Controller
         return Inertia::render('Modules/Procurement/DutyCostCalculator/Pages/Create', [
             'nextCode' => $this->nextCode(),
             'statusOptions' => ['draft', 'finalized'],
+            'suppliers' => $this->supplierOptions(),
         ]);
     }
 
@@ -103,6 +111,7 @@ class DutyCostCalculationController extends Controller
             $main = DutyCostCalculation::create([
                 'calculation_code' => $this->nextCode(),
                 'title' => $payload['title'],
+                'supplier_id' => $payload['supplier_id'] ?? null,
                 'supplier_name' => $payload['supplier_name'] ?? null,
                 'purchasing_currency' => $payload['purchasing_currency'],
                 'local_currency' => $payload['local_currency'],
@@ -149,6 +158,7 @@ class DutyCostCalculationController extends Controller
         $dutyCostCalculation->load([
             'items',
             'otherCosts',
+            'supplier',
             'creator:id,name',
             'updater:id,name',
         ]);
@@ -163,11 +173,12 @@ class DutyCostCalculationController extends Controller
 
     public function edit(DutyCostCalculation $dutyCostCalculation): Response
     {
-        $dutyCostCalculation->load(['items', 'otherCosts']);
+        $dutyCostCalculation->load(['items', 'otherCosts', 'supplier']);
 
         return Inertia::render('Modules/Procurement/DutyCostCalculator/Pages/Edit', [
             'calculation' => $dutyCostCalculation,
             'statusOptions' => ['draft', 'finalized'],
+            'suppliers' => $this->supplierOptions(),
         ]);
     }
 
@@ -182,6 +193,7 @@ class DutyCostCalculationController extends Controller
         DB::transaction(function () use ($dutyCostCalculation, $payload, $computed, $request) {
             $dutyCostCalculation->update([
                 'title' => $payload['title'],
+                'supplier_id' => $payload['supplier_id'] ?? null,
                 'supplier_name' => $payload['supplier_name'] ?? null,
                 'purchasing_currency' => $payload['purchasing_currency'],
                 'local_currency' => $payload['local_currency'],
@@ -325,5 +337,19 @@ class DutyCostCalculationController extends Controller
             'total_cbm' => $summary['total_cbm'] ?? 0,
             'freight_cost_per_cbm_lkr' => $summary['freight_cost_per_cbm_lkr'] ?? 0,
         ];
+    }
+
+    private function supplierOptions(): array
+    {
+        return Supplier::query()
+            ->where('is_active', true)
+            ->orderBy('display_name')
+            ->get(['id', 'display_name', 'company_name'])
+            ->map(fn (Supplier $supplier) => [
+                'id' => $supplier->id,
+                'display_name' => $supplier->display_name,
+                'company_name' => $supplier->company_name,
+            ])
+            ->all();
     }
 }

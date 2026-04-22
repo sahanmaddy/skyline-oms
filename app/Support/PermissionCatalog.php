@@ -71,6 +71,30 @@ final class PermissionCatalog
                 'description' => 'Delete customer records where policy allows.',
             ],
             [
+                'name' => 'suppliers.view',
+                'display_name' => 'View suppliers',
+                'module' => 'Suppliers',
+                'description' => 'Browse supplier records and procurement partners.',
+            ],
+            [
+                'name' => 'suppliers.create',
+                'display_name' => 'Create suppliers',
+                'module' => 'Suppliers',
+                'description' => 'Create new supplier records.',
+            ],
+            [
+                'name' => 'suppliers.edit',
+                'display_name' => 'Edit suppliers',
+                'module' => 'Suppliers',
+                'description' => 'Update supplier details and operational fields.',
+            ],
+            [
+                'name' => 'suppliers.delete',
+                'display_name' => 'Delete suppliers',
+                'module' => 'Suppliers',
+                'description' => 'Delete supplier records where policy allows.',
+            ],
+            [
                 'name' => 'calculator.view',
                 'display_name' => 'View duty & cost calculations',
                 'module' => 'Calculator',

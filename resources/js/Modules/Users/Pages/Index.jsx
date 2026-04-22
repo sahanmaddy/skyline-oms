@@ -9,16 +9,44 @@ import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
 
-function formatLinkedEmployee(employee) {
+function formatLinkedEmployee(employee, branch) {
     if (!employee) {
         return null;
     }
+
     const code = employee.employee_code || '';
     const name = employee.display_name || '';
-    if (!code && !name) {
+    const branchCode = branch?.code || '';
+    if (!code && !name && !branchCode) {
         return null;
     }
-    return [code, name].filter(Boolean).join(' - ');
+
+    const details = [];
+    if (code) {
+        details.push(code);
+    }
+    if (branchCode) {
+        details.push(branchCode);
+    }
+
+    if (!name) {
+        return details.length > 0 ? details.join(' · ') : null;
+    }
+
+    return details.length > 0 ? `${name} (${details.join(' · ')})` : name;
+}
+
+function splitLinkedEmployeeLabel(label) {
+    const text = String(label || '');
+    const start = text.indexOf(' (');
+    if (start === -1 || !text.endsWith(')')) {
+        return { name: text, meta: '' };
+    }
+
+    return {
+        name: text.slice(0, start),
+        meta: text.slice(start + 2, -1),
+    };
 }
 
 export default function Index({ users, filters, statusOptions, canCreate }) {
@@ -29,6 +57,8 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
 
             <SettingsModuleLayout breadcrumbs={[{ label: 'Users' }]}>
                 <ModuleListToolbar
+                    actionsAbove
+                    filtersWrapClassName="w-full max-w-none md:grid-cols-2 md:items-end"
                     filters={
                         <>
                             <div>
@@ -98,10 +128,10 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                 <th className="w-[14%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Branch
                                 </th>
-                                <th className="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Roles
                                 </th>
-                                <th className="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <th className="w-[23%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Linked Employee
                                 </th>
                                 <th className="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
@@ -114,7 +144,8 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {users.data.map((u) => {
-                                const linkedLabel = formatLinkedEmployee(u.employee);
+                                const linkedLabel = formatLinkedEmployee(u.employee, u.branch);
+                                const linkedLabelParts = splitLinkedEmployeeLabel(linkedLabel);
                                 return (
                                     <tr key={u.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3">
@@ -122,11 +153,15 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                                 {u.name}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-xs text-gray-500">{u.email}</td>
+                                        <td className="px-4 py-3 text-xs text-gray-500">
+                                            <span className="font-semibold">{u.email}</span>
+                                        </td>
                                         <td className="px-4 py-3">
                                             {u.branch ? (
                                                 <>
-                                                    <div className="text-xs text-gray-500">{u.branch.name}</div>
+                                                    <div className="text-xs text-gray-500">
+                                                        <span className="font-semibold">{u.branch.name}</span>
+                                                    </div>
                                                     <div className="mt-0.5 text-xs text-gray-500">{u.branch.code}</div>
                                                 </>
                                             ) : (
@@ -149,21 +184,37 @@ export default function Index({ users, filters, statusOptions, canCreate }) {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        <td className="px-4 py-3 text-xs">
                                             {linkedLabel ? (
                                                 u.can_view_linked_employee ? (
                                                     <Link
                                                         href={route('hr.employees.show', u.employee.id)}
                                                         className="font-medium text-indigo-600 hover:text-indigo-800"
                                                     >
-                                                        {linkedLabel}
+                                                        {linkedLabelParts.name}
+                                                        {linkedLabelParts.meta ? (
+                                                            <>
+                                                                {' '}
+                                                                <span className="font-normal text-gray-500">
+                                                                    ({linkedLabelParts.meta})
+                                                                </span>
+                                                            </>
+                                                        ) : null}
                                                     </Link>
                                                 ) : (
                                                     <span
                                                         className="text-gray-700"
                                                         title="Switch branch context or ask for access to open this employee."
                                                     >
-                                                        {linkedLabel}
+                                                        {linkedLabelParts.name}
+                                                        {linkedLabelParts.meta ? (
+                                                            <>
+                                                                {' '}
+                                                                <span className="text-gray-500">
+                                                                    ({linkedLabelParts.meta})
+                                                                </span>
+                                                            </>
+                                                        ) : null}
                                                     </span>
                                                 )
                                             ) : (

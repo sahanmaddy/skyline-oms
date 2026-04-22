@@ -62,7 +62,6 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                 (Number(calculation.freight_cost_total || 0) * Number(calculation.freight_exchange_rate || 0)) *
                     100,
             ) / 100;
-        const bankTransfer = Number(t('bank_transfer_charges_lkr')) || 0;
         const remittanceFromTotals = t('remittance_lkr');
         const remittanceLkr =
             remittanceFromTotals !== null &&
@@ -70,7 +69,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
             remittanceFromTotals !== '' &&
             Number.isFinite(Number(remittanceFromTotals))
                 ? Number(remittanceFromTotals)
-                : Math.round((purchaseLkr + freightLkr + bankTransfer) * 100) / 100;
+                : Math.round((purchaseLkr + freightLkr) * 100) / 100;
 
         return [
             ['No. of Products', t('item_count')],
@@ -103,10 +102,6 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
             ],
             ['Bank Interest', formatLocalMoneyDisplay(t('bank_interest_lkr'), localCurrencyCode, company)],
             [
-                'Total Bank Charges (Allocated)',
-                formatLocalMoneyDisplay(t('total_bank_charges_lkr'), localCurrencyCode, company),
-            ],
-            [
                 'Weight (KG)',
                 (() => {
                     const raw = t('total_weight_kg');
@@ -131,8 +126,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                 'Total Allocated Other Costs',
                 formatLocalMoneyDisplay(t('total_allocated_other_costs_lkr'), localCurrencyCode, company),
             ],
-            ['Total Duty', formatLocalMoneyDisplay(t('total_duty_lkr'), localCurrencyCode, company)],
             ['Remittance', formatLocalMoneyDisplay(remittanceLkr, localCurrencyCode, company)],
+            ['Total Duty', formatLocalMoneyDisplay(t('total_duty_lkr'), localCurrencyCode, company)],
             [
                 'Grand Total',
                 formatLocalMoneyDisplay(t('grand_total_landed_cost_lkr'), localCurrencyCode, company),
@@ -259,7 +254,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 calculation.reference_no
                                                     ? `Ref. ${calculation.reference_no}`
                                                     : null,
-                                                `Supplier: ${calculation.supplier_name || '—'}`,
+                                                `Supplier: ${calculation.supplier?.display_name || calculation.supplier_name || '—'}`,
                                             ]
                                                 .filter((p) => (p ?? '').toString().trim().length > 0)
                                                 .join(' · ') || '—'}
@@ -555,10 +550,13 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             <div className="mt-3 space-y-2 text-sm">
                                 {shipmentSummaryRows.map(([label, value]) => {
                                     const redRow =
-                                        label === 'Total Allocated Other Costs' ||
                                         label === 'Total Duty' ||
                                         label === 'Remittance' ||
                                         label === 'Grand Total';
+                                    const orangeRow =
+                                        label === 'Bank Transfer (1%)' ||
+                                        label === 'Bank Interest' ||
+                                        label === 'Total Allocated Other Costs';
                                     return (
                                         <div
                                             key={label}
@@ -568,6 +566,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 className={
                                                     redRow
                                                         ? 'font-semibold text-red-600 dark:text-red-400'
+                                                        : orangeRow
+                                                          ? 'font-semibold text-[#FA923C]'
                                                         : 'text-gray-600 dark:text-cursor-muted'
                                                 }
                                             >
@@ -577,6 +577,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 className={
                                                     redRow
                                                         ? 'text-right font-semibold text-red-600 dark:text-red-400'
+                                                        : orangeRow
+                                                          ? 'text-right font-semibold text-[#FA923C]'
                                                         : 'text-right font-medium text-gray-900 dark:text-cursor-fg'
                                                 }
                                             >
@@ -702,14 +704,6 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                             formatLocalMoneyDisplay(lineBankInterest, localCurrencyCode, company),
                                         ],
                                         [
-                                            'Total Bank Charges (Allocated)',
-                                            formatLocalMoneyDisplay(
-                                                row.allocated_bank_charges_lkr ?? 0,
-                                                localCurrencyCode,
-                                                company,
-                                            ),
-                                        ],
-                                        [
                                             `Quantity (${(row.unit_of_measure || '').trim() || '—'})`,
                                             (() => {
                                                 const q = row.quantity;
@@ -748,21 +742,20 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                             ),
                                         ],
                                         [
-                                            'Total Duty',
-                                            formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company),
-                                        ],
-                                        [
                                             'Remittance',
                                             formatLocalMoneyDisplay(
                                                 Math.round(
                                                     ((Number(row.product_value_lkr) || 0) +
-                                                        (Number(row.allocated_freight_lkr) || 0) +
-                                                        lineBankTransfer) *
+                                                        (Number(row.allocated_freight_lkr) || 0)) *
                                                         100,
                                                 ) / 100,
                                                 localCurrencyCode,
                                                 company,
                                             ),
+                                        ],
+                                        [
+                                            'Total Duty',
+                                            formatLocalMoneyDisplay(row.duty_total_lkr, localCurrencyCode, company),
                                         ],
                                         [
                                             'Grand Total',
@@ -795,12 +788,14 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                             <div className="space-y-2 p-3 text-sm">
                                                 {productSummaryRows.map(([label, value]) => {
                                                     const redRow =
-                                                        label === 'Total Allocated Other Costs' ||
                                                         label === 'Total Duty' ||
                                                         label === 'Remittance' ||
                                                         label === 'Grand Total' ||
                                                         label === 'Landed Cost Per Unit';
-                                                    const valueHighlight = redRow;
+                                                    const orangeRow =
+                                                        label === 'Bank Transfer (1%)' ||
+                                                        label === 'Bank Interest' ||
+                                                        label === 'Total Allocated Other Costs';
                                                     return (
                                                         <div
                                                             key={`${idx}-${label}`}
@@ -810,6 +805,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                                 className={
                                                                     redRow
                                                                         ? 'font-semibold text-red-600 dark:text-red-400'
+                                                                        : orangeRow
+                                                                          ? 'font-semibold text-[#FA923C]'
                                                                         : 'text-gray-600 dark:text-cursor-muted'
                                                                 }
                                                             >
@@ -817,8 +814,10 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                             </span>
                                                             <span
                                                                 className={
-                                                                    valueHighlight
+                                                                    redRow
                                                                         ? 'text-right font-semibold text-red-600 dark:text-red-400'
+                                                                        : orangeRow
+                                                                          ? 'text-right font-semibold text-[#FA923C]'
                                                                         : 'text-right font-medium text-gray-900 dark:text-cursor-fg'
                                                                 }
                                                             >

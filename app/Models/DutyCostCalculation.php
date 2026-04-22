@@ -13,6 +13,7 @@ class DutyCostCalculation extends Model
         'title',
         'reference_no',
         'supplier_name',
+        'supplier_id',
         'purchasing_currency',
         'local_currency',
         'shipment_currency_basis_notes',
@@ -105,6 +106,11 @@ class DutyCostCalculation extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function updater(): BelongsTo

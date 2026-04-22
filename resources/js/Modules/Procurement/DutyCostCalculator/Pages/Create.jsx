@@ -19,13 +19,14 @@ const defaultItem = {
     customs_preset_value_foreign_or_base: '',
 };
 
-export default function Create({ nextCode, statusOptions }) {
+export default function Create({ nextCode, statusOptions, suppliers }) {
     const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultLocalCurrency = String(company.currency_code || 'LKR').toUpperCase();
 
     const form = useForm({
         title: '',
+        supplier_id: '',
         supplier_name: '',
         purchasing_currency: 'USD',
         local_currency: defaultLocalCurrency,
@@ -75,6 +76,7 @@ export default function Create({ nextCode, statusOptions }) {
                             errors={form.errors}
                             processing={form.processing}
                             statusOptions={statusOptions}
+                            suppliers={suppliers}
                             submitLabel="Create calculation"
                             onCancel={() => router.get(route('procurement.duty-cost-calculations.index'))}
                             onSubmit={() =>

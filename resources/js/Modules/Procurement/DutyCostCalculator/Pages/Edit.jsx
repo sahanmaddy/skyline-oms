@@ -6,10 +6,11 @@ import ProcurementModuleLayout from '@/Layouts/ProcurementModuleLayout';
 import CalculationForm from '@/Modules/Procurement/DutyCostCalculator/Components/CalculationForm';
 import { Head, router, useForm } from '@inertiajs/react';
 
-export default function Edit({ calculation, statusOptions }) {
+export default function Edit({ calculation, statusOptions, suppliers }) {
     const toast = useToast();
     const form = useForm({
         title: calculation.title || '',
+        supplier_id: calculation.supplier_id || '',
         supplier_name: calculation.supplier_name || '',
         purchasing_currency: calculation.purchasing_currency || 'USD',
         local_currency: calculation.local_currency || 'LKR',
@@ -79,6 +80,7 @@ export default function Edit({ calculation, statusOptions }) {
                             errors={form.errors}
                             processing={form.processing}
                             statusOptions={statusOptions}
+                            suppliers={suppliers}
                             submitLabel="Update calculation"
                             onCancel={() =>
                                 router.get(route('procurement.duty-cost-calculations.show', calculation.id))

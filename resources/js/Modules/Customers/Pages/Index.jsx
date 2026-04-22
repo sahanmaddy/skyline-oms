@@ -24,7 +24,9 @@ function renderPhoneList(phoneNumbers, max = 3) {
             {shown.map((p) => (
                 <div key={p.id} className="leading-5">
                     {p.phone_type ? `${p.phone_type}: ` : ''}
-                    {[p.country_code, p.phone_number].filter(Boolean).join(' ')}
+                    <span className="font-semibold">
+                        {[p.country_code, p.phone_number].filter(Boolean).join(' ')}
+                    </span>
                 </div>
             ))}
             {remaining > 0 ? (
@@ -66,6 +68,8 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
 
             <SalesModuleLayout breadcrumbs={[{ label: 'Customers' }]}>
                 <ModuleListToolbar
+                    actionsAbove
+                    filtersWrapClassName="w-full max-w-none md:grid-cols-2 md:items-end"
                     filters={
                         <>
                             <div>
@@ -180,7 +184,14 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                         ) : (
                                             <>
                                                 <div className="text-xs text-gray-500">
-                                                    {c.email ? `E-mail: ${c.email}` : 'E-mail: —'}
+                                                    {c.email ? (
+                                                        <>
+                                                            E-mail:{' '}
+                                                            <span className="font-semibold">{c.email}</span>
+                                                        </>
+                                                    ) : (
+                                                        'E-mail: —'
+                                                    )}
                                                 </div>
                                                 <div className="mt-1 text-xs text-gray-500">
                                                     {renderPhoneList(c.phone_numbers, 10)}
@@ -193,8 +204,12 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                             <span className="text-xs text-gray-500">—</span>
                                         ) : (
                                             <>
-                                                <div className="text-xs text-gray-500">{c.city || '—'}</div>
-                                                <div className="mt-1 text-xs text-gray-500">{c.country || '—'}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    <span className="font-semibold">{c.city || '—'}</span>
+                                                </div>
+                                                <div className="mt-1 text-xs text-gray-500">
+                                                    {c.country || '—'}
+                                                </div>
                                             </>
                                         )}
                                     </td>
@@ -213,12 +228,16 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                         </div>
                                         {!isSystemCashCustomer(c) ? (
                                             <div className="mt-2 text-xs text-gray-500">
-                                                Limit: {formatCreditLimit(c.credit_limit, company)}
+                                                Limit:{' '}
+                                                <span className="font-semibold text-[#FA923C]">
+                                                    {formatCreditLimit(c.credit_limit, company)}
+                                                </span>
                                             </div>
                                         ) : null}
                                         {c.guarantor ? (
                                             <div className="mt-1 text-xs text-gray-500">
-                                                Guarantor: {c.guarantor}
+                                                Guarantor:{' '}
+                                                <span className="font-semibold">{c.guarantor}</span>
                                             </div>
                                         ) : null}
                                     </td>

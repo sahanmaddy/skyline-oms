@@ -12,6 +12,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import SupplierCombobox from '@/Components/SupplierCombobox';
 import TextInput from '@/Components/TextInput';
 import { currencyCodes } from '@/data/currencyCodes';
 import { calculateDutyCostPreview } from '@/Modules/Procurement/DutyCostCalculator/lib/calculateDutyCost';
@@ -46,6 +47,7 @@ export default function CalculationForm({
     onSubmit,
     onCancel,
     statusOptions = ['draft', 'finalized'],
+    suppliers = [],
 }) {
     const safeStatusOptions = Array.isArray(statusOptions) ? statusOptions : ['draft', 'finalized'];
     const company = usePage().props.company ?? {};
@@ -286,12 +288,24 @@ export default function CalculationForm({
                             <InputError className="mt-2" message={errors.title} />
                         </div>
                         <div>
-                            <InputLabel value="Supplier Name" />
-                            <TextInput
-                                className="mt-1 block w-full"
-                                value={data.supplier_name || ''}
-                                onChange={(e) => updateField('supplier_name', e.target.value)}
+                            <InputLabel value="Supplier" />
+                            <SupplierCombobox
+                                className="mt-1"
+                                value={data.supplier_id || ''}
+                                onChange={(value) => {
+                                    const selected = (suppliers || []).find(
+                                        (supplier) => Number(supplier.id) === Number(value),
+                                    );
+                                    setData({
+                                        ...data,
+                                        supplier_id: value || '',
+                                        supplier_name: selected?.display_name || '',
+                                    });
+                                }}
+                                options={suppliers || []}
+                                placeholder="Select supplier..."
                             />
+                            <InputError className="mt-2" message={errors.supplier_id} />
                         </div>
                         <div>
                             <InputLabel value="Purchasing Currency" />
