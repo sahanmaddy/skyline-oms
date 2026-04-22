@@ -34,6 +34,7 @@ class DutyCostCalculationStoreRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'supplier_name' => ['nullable', 'string', 'max:255'],
             'purchasing_currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'local_currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],

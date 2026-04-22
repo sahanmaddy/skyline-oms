@@ -16,6 +16,8 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
             <Head title="Roles · Settings" />
             <SettingsModuleLayout breadcrumbs={[{ label: 'Roles' }]}>
                 <ModuleListToolbar
+                    actionsAbove
+                    filtersWrapClassName="w-full max-w-none md:grid-cols-2 md:items-end"
                     filters={
                         <>
                             <div>
@@ -96,9 +98,11 @@ export default function Index({ roles, filters, statusOptions, canCreate }) {
                                         </div>
                                     </td>
                                     <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">
-                                        {role.permissions_count}
+                                        <span className="font-semibold">{role.permissions_count}</span>
                                     </td>
-                                    <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">{role.users_count}</td>
+                                    <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">
+                                        <span className="font-semibold">{role.users_count}</span>
+                                    </td>
                                     <td className="whitespace-nowrap px-4 py-3">
                                         <span
                                             className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${role.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}

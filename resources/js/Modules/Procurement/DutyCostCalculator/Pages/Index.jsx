@@ -142,35 +142,60 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                         <div className="mt-1 break-words text-xs text-gray-500">
                                             {row.calculation_code}
                                             {row.supplier_name ? ` • ${row.supplier_name}` : ''}
+                                            {row.supplier_company_name ? ` (${row.supplier_company_name})` : ''}
                                         </div>
                                     </td>
                                     <td className="align-middle px-2 py-3 text-xs text-gray-500 tabular-nums">
-                                        {row.item_count}
+                                        <span className="font-semibold">{row.item_count}</span>
                                     </td>
                                     <td className="align-middle px-2 py-3 text-xs text-gray-500 tabular-nums">
-                                        {formatMeasuredNumberForDisplay(row.total_weight_kg, 3) ?? '—'}
+                                        <span className="font-semibold">
+                                            {formatMeasuredNumberForDisplay(row.total_weight_kg, 3) ?? '—'}
+                                        </span>
                                     </td>
                                     <td className="align-middle px-2 py-3 text-xs text-gray-500 tabular-nums">
-                                        {formatMeasuredNumberForDisplay(row.total_cbm, 3) ?? '—'}
+                                        <span className="font-semibold">
+                                            {formatMeasuredNumberForDisplay(row.total_cbm, 3) ?? '—'}
+                                        </span>
                                     </td>
                                     <td className="align-middle py-3 pl-2 pr-0 text-sm text-gray-700">
                                         <div className="text-xs text-gray-500 tabular-nums">
                                             Allocated Costs:{' '}
-                                            {formatCompanyCurrency(row.total_allocated_other_costs_lkr, company) || '—'}
+                                            <span className="font-semibold text-[#FA923C]">
+                                                {formatCompanyCurrency(row.total_allocated_other_costs_lkr, company) || '—'}
+                                            </span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 tabular-nums">
-                                            Bank Interest: {formatCompanyCurrency(row.bank_interest_lkr, company) || '—'}
+                                            Bank Transfer (1%):{' '}
+                                            <span className="font-semibold text-[#FA923C]">
+                                                {formatCompanyCurrency(row.bank_transfer_lkr, company) || '—'}
+                                            </span>
+                                        </div>
+                                        <div className="mt-1 text-xs text-gray-500 tabular-nums">
+                                            Bank Interest:{' '}
+                                            <span className="font-semibold text-[#FA923C]">
+                                                {formatCompanyCurrency(row.bank_interest_lkr, company) || '—'}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="align-middle py-3 pl-0 pr-2 text-sm text-gray-700">
                                         <div className="text-xs text-gray-500 tabular-nums">
-                                            Total Duty: {formatCompanyCurrency(row.total_duty_lkr, company) || '—'}
+                                            Remittance:{' '}
+                                            <span className="font-semibold text-red-600 dark:text-red-400">
+                                                {formatCompanyCurrency(row.remittance_lkr, company) || '—'}
+                                            </span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 tabular-nums">
-                                            Remittance: {formatCompanyCurrency(row.remittance_lkr, company) || '—'}
+                                            Total Duty:{' '}
+                                            <span className="font-semibold text-red-600 dark:text-red-400">
+                                                {formatCompanyCurrency(row.total_duty_lkr, company) || '—'}
+                                            </span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 tabular-nums">
-                                            Grand Total: {formatCompanyCurrency(row.grand_total_landed_cost_lkr, company) || '—'}
+                                            Grand Total:{' '}
+                                            <span className="font-semibold text-red-600 dark:text-red-400">
+                                                {formatCompanyCurrency(row.grand_total_landed_cost_lkr, company) || '—'}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="align-middle px-2 py-3">
@@ -186,15 +211,17 @@ export default function Index({ calculations, filters, statusOptions, canCreate 
                                         </span>
                                     </td>
                                     <td className="align-middle whitespace-normal break-words py-3 pl-1 pr-0 text-xs text-gray-500 leading-snug">
-                                        {row.updated_at
-                                            ? formatCompanyDateTime(row.updated_at, company, {
-                                                  day: '2-digit',
-                                                  month: 'short',
-                                                  year: 'numeric',
-                                                  hour: '2-digit',
-                                                  minute: '2-digit',
-                                              })
-                                            : '—'}
+                                        <span className="font-semibold">
+                                            {row.updated_at
+                                                ? formatCompanyDateTime(row.updated_at, company, {
+                                                      day: '2-digit',
+                                                      month: 'short',
+                                                      year: 'numeric',
+                                                      hour: '2-digit',
+                                                      minute: '2-digit',
+                                                  })
+                                                : '—'}
+                                        </span>
                                     </td>
                                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                                         {row.can_view || row.can_edit || row.can_delete || canCreate ? (

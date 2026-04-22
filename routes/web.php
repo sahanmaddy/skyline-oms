@@ -11,6 +11,7 @@ use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -72,6 +73,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', function () {
+            if (request()->user()?->can('suppliers.view')) {
+                return redirect()->route('procurement.suppliers.index');
+            }
+
             if (request()->user()?->can('calculator.view')) {
                 return redirect()->route('procurement.duty-cost-calculations.index');
             }
@@ -89,6 +94,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'duty-cost-calculations/{duty_cost_calculation}/duplicate',
             [DutyCostCalculationController::class, 'duplicate'],
         )->name('duty-cost-calculations.duplicate');
+        Route::resource('suppliers', SupplierController::class);
         Route::resource('duty-cost-calculations', DutyCostCalculationController::class);
     });
 

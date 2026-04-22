@@ -164,7 +164,7 @@ class DutyCostCalculationService
             'bank_transfer_charges_lkr' => $bankTransferCharges,
             'bank_interest_lkr' => $bankInterest,
             'total_bank_charges_lkr' => $this->money(array_sum(array_column($items, 'allocated_bank_charges_lkr'))),
-            'remittance_lkr' => $this->money($purchaseShipmentLkr + $freightCostLocal + $bankTransferCharges),
+            'remittance_lkr' => $this->money($purchaseShipmentLkr + $freightCostLocal),
             'grand_total_landed_cost_lkr' => $this->money(array_sum(array_column($items, 'total_landed_cost_lkr'))),
             'total_weight_kg' => $this->qty($totalWeight, 3),
             'total_cbm' => $this->qty($totalCbm, 3),

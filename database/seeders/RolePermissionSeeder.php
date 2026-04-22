@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
                 'dashboard.view',
                 'employees.view', 'employees.create', 'employees.edit',
                 'customers.view', 'customers.create', 'customers.edit',
+                'suppliers.view', 'suppliers.create', 'suppliers.edit',
                 'users.view',
                 'settings.view',
                 'settings.company.view',

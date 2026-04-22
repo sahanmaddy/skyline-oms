@@ -7,7 +7,7 @@ import Dropdown from '@/Components/Dropdown';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
 import useConfirm from '@/feedback/useConfirm';
-import { formatCompanyDate, formatCompanyDateTime } from '@/lib/companyFormat';
+import { formatCompanyDate } from '@/lib/companyFormat';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 
 function formatJoinedDate(value, company) {
@@ -15,15 +15,21 @@ function formatJoinedDate(value, company) {
         return '—';
     }
 
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        return formatCompanyDate(value, company);
+    const raw = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        return formatCompanyDate(raw, company);
     }
 
-    return formatCompanyDateTime(value, company, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+        return formatCompanyDate(raw, company);
+    }
+
+    const yyyy = parsed.getFullYear();
+    const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+    const dd = String(parsed.getDate()).padStart(2, '0');
+
+    return formatCompanyDate(`${yyyy}-${mm}-${dd}`, company);
 }
 
 function formatPrimaryPhone(phoneNumbers) {
@@ -58,7 +64,9 @@ function renderPhoneList(phoneNumbers, max = 3) {
             {shown.map((p) => (
                 <div key={p.id} className="leading-5">
                     {p.phone_type ? `${p.phone_type}: ` : ''}
-                    {[p.country_code, p.phone_number].filter(Boolean).join(' ')}
+                    <span className="font-semibold">
+                        {[p.country_code, p.phone_number].filter(Boolean).join(' ')}
+                    </span>
                 </div>
             ))}
             {remaining > 0 ? (
@@ -83,6 +91,8 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
 
             <HrModuleLayout breadcrumbs={[{ label: 'Employees' }]}>
                 <ModuleListToolbar
+                    actionsAbove
+                    filtersWrapClassName="w-full max-w-none md:grid-cols-2 md:items-end"
                     filters={
                         <>
                             <div>
@@ -178,7 +188,9 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                     <td className="px-4 py-3">
                                         {e.branch ? (
                                             <>
-                                                <div className="text-xs text-gray-500">{e.branch.name}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    <span className="font-semibold">{e.branch.name}</span>
+                                                </div>
                                                 <div className="mt-1 text-xs text-gray-500">{e.branch.code}</div>
                                             </>
                                         ) : (
@@ -187,7 +199,13 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                     </td>
                                     <td className="px-4 py-3 text-sm text-gray-700">
                                         <div className="text-xs text-gray-500">
-                                            {e.email ? `E-mail: ${e.email}` : 'E-mail: —'}
+                                            {e.email ? (
+                                                <>
+                                                    E-mail: <span className="font-semibold">{e.email}</span>
+                                                </>
+                                            ) : (
+                                                'E-mail: —'
+                                            )}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
                                             {renderPhoneList(e.phone_numbers, 10)}
@@ -195,13 +213,18 @@ export default function Index({ employees, filters, statusOptions, canCreate }) 
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="text-xs text-gray-500">
-                                            {e.department || '—'}
+                                            Department:{' '}
+                                            <span className="font-semibold">{e.department || '—'}</span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            {e.employment_type || '—'}
+                                            Type:{' '}
+                                            <span className="font-semibold">{e.employment_type || '—'}</span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500">
-                                            Joined: {formatJoinedDate(e.joined_date, company)}
+                                            Joined:{' '}
+                                            <span className="font-semibold">
+                                                {formatJoinedDate(e.joined_date, company)}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3">

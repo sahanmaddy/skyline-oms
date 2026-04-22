@@ -16,6 +16,8 @@ export default function Index({ permissions, filters, moduleOptions, canCreate }
             <Head title="Permissions · Settings" />
             <SettingsModuleLayout breadcrumbs={[{ label: 'Permissions' }]}>
                 <ModuleListToolbar
+                    actionsAbove
+                    filtersWrapClassName="w-full max-w-none md:grid-cols-2 md:items-end"
                     filters={
                         <>
                             <div>
@@ -103,10 +105,12 @@ export default function Index({ permissions, filters, moduleOptions, canCreate }
                                         )}
                                     </td>
                                     <td className="min-w-0 px-4 py-3 text-xs text-gray-500">
-                                        {permission.module || 'General'}
+                                        <span className="font-semibold">
+                                            {permission.module || 'General'}
+                                        </span>
                                     </td>
                                     <td className="min-w-0 px-4 py-3 text-xs text-gray-500 tabular-nums">
-                                        {permission.roles_count}
+                                        <span className="font-semibold">{permission.roles_count}</span>
                                     </td>
                                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                                         {permission.can_view || permission.can_edit || permission.can_delete ? (

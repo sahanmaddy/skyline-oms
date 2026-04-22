@@ -170,16 +170,32 @@ export function salesSectionNavItems(permissions = []) {
  */
 export function procurementSectionNavItems(permissions = []) {
     const p = permissions ?? [];
-    if (!p.includes('calculator.view')) {
+    const canViewSuppliers = p.includes('suppliers.view');
+    const canViewCalculator = p.includes('calculator.view');
+
+    if (!canViewSuppliers && !canViewCalculator) {
         return [];
     }
 
-    return [
-        {
+    const items = [];
+
+    if (canViewSuppliers) {
+        items.push({
+            key: 'suppliers',
+            label: 'Suppliers',
+            href: route('procurement.suppliers.index'),
+            activePattern: 'procurement.suppliers.*',
+        });
+    }
+
+    if (canViewCalculator) {
+        items.push({
             key: 'duty-cost-calculator',
             label: 'Duty & Cost Calculator',
             href: route('procurement.duty-cost-calculations.index'),
             activePattern: 'procurement.duty-cost-calculations.*',
-        },
-    ];
+        });
+    }
+
+    return items;
 }

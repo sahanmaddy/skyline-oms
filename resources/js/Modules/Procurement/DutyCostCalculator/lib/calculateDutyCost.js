@@ -107,14 +107,7 @@ export function calculateDutyCostPreview(data) {
                           ((num(row.product_value_lkr) + allocatedFreight) / bankBaseLkr),
                   )
                 : 0;
-        const allocatedBankTransfer =
-            bankBaseLkr > 0 && bankTransferCharges > 0
-                ? money(
-                      bankTransferCharges *
-                          ((num(row.product_value_lkr) + allocatedFreight) / bankBaseLkr),
-                  )
-                : 0;
-        const remittanceLkr = money(num(row.product_value_lkr) + allocatedFreight + allocatedBankTransfer);
+        const remittanceLkr = money(num(row.product_value_lkr) + allocatedFreight);
         const totalLanded = money(
             num(row.product_value_lkr) +
                 num(row.duty_total_lkr) +
@@ -175,7 +168,7 @@ export function calculateDutyCostPreview(data) {
         total_bank_charges_lkr: money(
             items.reduce((sum, row) => sum + num(row.allocated_bank_charges_lkr), 0),
         ),
-        remittance_lkr: money(purchaseShipmentLkr + freightCostLocal + bankTransferCharges),
+        remittance_lkr: money(purchaseShipmentLkr + freightCostLocal),
         grand_total_landed_cost_lkr: money(
             items.reduce((sum, row) => sum + num(row.total_landed_cost_lkr), 0),
         ),
