@@ -84,6 +84,11 @@ export default function FormSelect({
                                 dropdownMenuPanelRingClass
                             }
                         >
+                            {opts.length === 0 ? (
+                                <div className="px-4 py-2 text-sm text-gray-500 dark:text-cursor-muted">
+                                    No matches.
+                                </div>
+                            ) : null}
                             {opts.map((opt, index) => (
                                 <ListboxOption
                                     key={`${String(opt.value)}-${index}`}

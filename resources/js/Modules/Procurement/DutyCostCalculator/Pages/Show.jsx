@@ -17,6 +17,39 @@ import { useCallback, useMemo } from 'react';
 
 const exchangeRateFormatOptions = { locale: 'en-US', minimumFractionDigits: 3 };
 
+function formatCidBasis(value) {
+    if (String(value || '').toLowerCase() === 'uom') {
+        return 'UOM';
+    }
+    if (String(value || '').toLowerCase() === 'weight') {
+        return 'Weight (KG)';
+    }
+
+    return '—';
+}
+
+function formatStatisticalValueBasis(value) {
+    if (String(value || '').toLowerCase() === 'uom') {
+        return 'Preset Value × UOM × Exchange Rate';
+    }
+    if (String(value || '').toLowerCase() === 'weight') {
+        return 'Preset Value × Weight × Exchange Rate';
+    }
+
+    return '—';
+}
+
+function dutyRateLabel(name, basis) {
+    if (String(basis || '').toLowerCase() === 'uom') {
+        return `${name} / UOM`;
+    }
+    if (String(basis || '').toLowerCase() === 'weight') {
+        return `${name} / KG`;
+    }
+
+    return name;
+}
+
 function fmtDate(value) {
     return value ? new Date(value).toLocaleString() : '—';
 }
@@ -43,7 +76,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
     const freightCostForeign = calculation.freight_cost_total;
     const freightPerCbm = totals.freight_cost_per_cbm_lkr ?? calculation.freight_cost_per_cbm_lkr;
 
-    const dutyBasePercentDisplay = Number(calculation.duty_base_percent) || 110;
+    const dutyBasePercentDisplay = Number(calculation.duty_base_percent) || 0;
 
     const t = useCallback((key) => totals[key] ?? calculation[key], [totals, calculation]);
 
@@ -90,6 +123,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                 formatLocalMoneyDisplay(t('total_customs_base_lkr'), localCurrencyCode, company),
             ],
             ['Total CID', formatLocalMoneyDisplay(t('total_cid_lkr'), localCurrencyCode, company)],
+            ['Total EID', formatLocalMoneyDisplay(t('total_eid_lkr'), localCurrencyCode, company)],
             ['Total VAT', formatLocalMoneyDisplay(t('total_vat_lkr'), localCurrencyCode, company)],
             ['Total SSCL', formatLocalMoneyDisplay(t('total_sscl_lkr'), localCurrencyCode, company)],
             [
@@ -97,18 +131,13 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                 formatLocalMoneyDisplay(t('total_allocated_freight_lkr'), localCurrencyCode, company),
             ],
             [
-                'Bank Transfer (1%)',
-                formatLocalMoneyDisplay(t('bank_transfer_charges_lkr'), localCurrencyCode, company),
-            ],
-            ['Bank Interest', formatLocalMoneyDisplay(t('bank_interest_lkr'), localCurrencyCode, company)],
-            [
                 'Weight (KG)',
                 (() => {
                     const raw = t('total_weight_kg');
                     if (raw === null || raw === undefined || raw === '') {
-                        return '—';
+                        return '0';
                     }
-                    return formatMeasuredNumberForDisplay(raw, 3) ?? '—';
+                    return formatMeasuredNumberForDisplay(raw, 3) ?? '0';
                 })(),
             ],
             [
@@ -116,9 +145,9 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                 (() => {
                     const raw = t('total_cbm');
                     if (raw === null || raw === undefined || raw === '') {
-                        return '—';
+                        return '0';
                     }
-                    return formatMeasuredNumberForDisplay(raw, 3) ?? '—';
+                    return formatMeasuredNumberForDisplay(raw, 3) ?? '0';
                 })(),
             ],
             ['Freight Per CBM', formatLocalMoneyDisplay(freightPerCbm, localCurrencyCode, company)],
@@ -126,6 +155,11 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                 'Total Allocated Other Costs',
                 formatLocalMoneyDisplay(t('total_allocated_other_costs_lkr'), localCurrencyCode, company),
             ],
+            [
+                'Bank Transfer (1%)',
+                formatLocalMoneyDisplay(t('bank_transfer_charges_lkr'), localCurrencyCode, company),
+            ],
+            ['Bank Interest', formatLocalMoneyDisplay(t('bank_interest_lkr'), localCurrencyCode, company)],
             ['Remittance', formatLocalMoneyDisplay(remittanceLkr, localCurrencyCode, company)],
             ['Total Duty', formatLocalMoneyDisplay(t('total_duty_lkr'), localCurrencyCode, company)],
             [
@@ -159,12 +193,26 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
             </p>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Info
-                    label="CID / Kg"
+                    label={dutyRateLabel('CID Rate', calculation.cid_basis)}
                     value={formatLocalMoneyDisplay(
                         calculation.cid_rate_per_kg_lkr ?? 0,
                         localCurrencyCode,
                         company,
                     )}
+                />
+                <Info label="CID Basis" value={formatCidBasis(calculation.cid_basis)} />
+                <Info
+                    label={dutyRateLabel('EID Rate', calculation.eid_basis)}
+                    value={formatLocalMoneyDisplay(
+                        calculation.eid_rate_per_kg_lkr ?? 0,
+                        localCurrencyCode,
+                        company,
+                    )}
+                />
+                <Info label="EID Basis" value={formatCidBasis(calculation.eid_basis)} />
+                <Info
+                    label="Statistical Value Basis"
+                    value={formatStatisticalValueBasis(calculation.statistical_value_basis)}
                 />
                 <Info label="Customs Base Value (%)" value={calculation.duty_base_percent ?? '—'} />
                 <Info label="VAT Rate (%)" value={calculation.vat_rate_percent ?? '—'} />
@@ -324,34 +372,35 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
 
                             <div className="flex flex-col gap-4 self-start lg:col-span-4 lg:sticky lg:top-20 lg:z-10">
                                 {dutyRatesSection}
-                                <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
-                                        Bank Charges
-                                    </h3>
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
-                                        {`Bank charges split across products by each product's share of purchase value.`}
-                                    </p>
-                                    <div className="mt-4 grid grid-cols-1 gap-4">
-                                        <Info
-                                            label="Bank Interest Rate (Per Annum)"
-                                            value={
-                                                formatAnnualPercentRateDisplay(calculation.bank_interest_rate_pa) ??
-                                                '—'
-                                            }
-                                        />
-                                        <Info
-                                            label="Number of Months"
-                                            value={
-                                                formatMeasuredNumberForDisplay(
-                                                    calculation.bank_interest_months,
-                                                    2,
-                                                ) ?? '—'
-                                            }
-                                        />
-                                    </div>
-                                </section>
                             </div>
                             </div>
+
+                            <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
+                                    Bank Charges
+                                </h3>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
+                                    {`Bank charges split across products by each product's share of purchase value.`}
+                                </p>
+                                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <Info
+                                        label="Bank Interest Rate (Per Annum)"
+                                        value={
+                                            formatAnnualPercentRateDisplay(calculation.bank_interest_rate_pa) ??
+                                            '—'
+                                        }
+                                    />
+                                    <Info
+                                        label="Number of Months"
+                                        value={
+                                            formatMeasuredNumberForDisplay(
+                                                calculation.bank_interest_months,
+                                                2,
+                                            ) ?? '—'
+                                        }
+                                    />
+                                </div>
+                            </section>
 
                             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
                                 <section className="self-start rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface lg:col-span-8 lg:sticky lg:top-20 lg:z-10">
@@ -680,6 +729,10 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                             formatLocalMoneyDisplay(row.cid_lkr, localCurrencyCode, company),
                                         ],
                                         [
+                                            'Total EID',
+                                            formatLocalMoneyDisplay(row.eid_lkr, localCurrencyCode, company),
+                                        ],
+                                        [
                                             'Total VAT',
                                             formatLocalMoneyDisplay(row.vat_lkr, localCurrencyCode, company),
                                         ],
@@ -688,9 +741,85 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                             formatLocalMoneyDisplay(row.sscl_lkr, localCurrencyCode, company),
                                         ],
                                         [
+                                            'Duty Per Unit',
+                                            (() => {
+                                                const qty = Number(row.quantity);
+                                                if (!Number.isFinite(qty) || qty <= 0) {
+                                                    return formatLocalMoneyDisplay(
+                                                        0,
+                                                        localCurrencyCode,
+                                                        company,
+                                                    );
+                                                }
+                                                const perUnit = (Number(row.duty_total_lkr) || 0) / qty;
+                                                return formatLocalMoneyDisplay(
+                                                    perUnit,
+                                                    localCurrencyCode,
+                                                    company,
+                                                );
+                                            })(),
+                                        ],
+                                        [
                                             'Total Allocated Freight',
                                             formatLocalMoneyDisplay(
                                                 row.allocated_freight_lkr,
+                                                localCurrencyCode,
+                                                company,
+                                            ),
+                                        ],
+                                        [
+                                            'Freight Per Unit',
+                                            (() => {
+                                                const qty = Number(row.quantity);
+                                                if (!Number.isFinite(qty) || qty <= 0) {
+                                                    return formatLocalMoneyDisplay(
+                                                        0,
+                                                        localCurrencyCode,
+                                                        company,
+                                                    );
+                                                }
+                                                const perUnit = (Number(row.allocated_freight_lkr) || 0) / qty;
+                                                return formatLocalMoneyDisplay(
+                                                    perUnit,
+                                                    localCurrencyCode,
+                                                    company,
+                                                );
+                                            })(),
+                                        ],
+                                        [
+                                            `Quantity (${(row.unit_of_measure || '').trim() || '—'})`,
+                                            (() => {
+                                                const q = row.quantity;
+                                                if (q === null || q === undefined || q === '') {
+                                                    return '0';
+                                                }
+                                                return formatMeasuredNumberForDisplay(q, 2) ?? '0';
+                                            })(),
+                                        ],
+                                        [
+                                            'Weight (KG)',
+                                            (() => {
+                                                const raw = row.weight_kg;
+                                                if (raw === null || raw === undefined || raw === '') {
+                                                    return '0';
+                                                }
+                                                return formatMeasuredNumberForDisplay(raw, 3) ?? '0';
+                                            })(),
+                                        ],
+                                        [
+                                            'CBM',
+                                            (() => {
+                                                const raw = row.cbm;
+                                                if (raw === null || raw === undefined || raw === '') {
+                                                    return '0';
+                                                }
+                                                return formatMeasuredNumberForDisplay(raw, 3) ?? '0';
+                                            })(),
+                                        ],
+                                        [
+                                            'Total Allocated Other Costs',
+                                            formatLocalMoneyDisplay(
+                                                row.allocated_other_costs_lkr,
                                                 localCurrencyCode,
                                                 company,
                                             ),
@@ -702,44 +831,6 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                         [
                                             'Bank Interest',
                                             formatLocalMoneyDisplay(lineBankInterest, localCurrencyCode, company),
-                                        ],
-                                        [
-                                            `Quantity (${(row.unit_of_measure || '').trim() || '—'})`,
-                                            (() => {
-                                                const q = row.quantity;
-                                                if (q === null || q === undefined || q === '') {
-                                                    return '—';
-                                                }
-                                                return formatMeasuredNumberForDisplay(q, 2) ?? '—';
-                                            })(),
-                                        ],
-                                        [
-                                            'Weight (KG)',
-                                            (() => {
-                                                const raw = row.weight_kg;
-                                                if (raw === null || raw === undefined || raw === '') {
-                                                    return '—';
-                                                }
-                                                return formatMeasuredNumberForDisplay(raw, 3) ?? '—';
-                                            })(),
-                                        ],
-                                        [
-                                            'CBM',
-                                            (() => {
-                                                const raw = row.cbm;
-                                                if (raw === null || raw === undefined || raw === '') {
-                                                    return '—';
-                                                }
-                                                return formatMeasuredNumberForDisplay(raw, 3) ?? '—';
-                                            })(),
-                                        ],
-                                        [
-                                            'Total Allocated Other Costs',
-                                            formatLocalMoneyDisplay(
-                                                row.allocated_other_costs_lkr,
-                                                localCurrencyCode,
-                                                company,
-                                            ),
                                         ],
                                         [
                                             'Remittance',

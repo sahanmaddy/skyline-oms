@@ -159,6 +159,7 @@ class EmployeeController extends Controller
             'statusOptions' => EmployeeStatus::values(),
             'activeBranches' => $this->branchScope->branchesForAssignmentForms($actor, (int) $employee->branch_id),
             'users' => $this->branchScope->usersAvailableForEmployeeForm($request, $employee),
+            'suggestedBranchId' => $this->branchScope->suggestedDefaultBranchId($request, $actor),
         ]);
     }
 

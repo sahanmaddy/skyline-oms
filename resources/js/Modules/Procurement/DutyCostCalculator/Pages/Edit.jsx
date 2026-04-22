@@ -4,16 +4,18 @@ import useToast from '@/feedback/useToast';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProcurementModuleLayout from '@/Layouts/ProcurementModuleLayout';
 import CalculationForm from '@/Modules/Procurement/DutyCostCalculator/Components/CalculationForm';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 
 export default function Edit({ calculation, statusOptions, suppliers }) {
     const toast = useToast();
+    const company = usePage().props.company ?? {};
+    const defaultLocalCurrency = String(company.currency_code || 'LKR').toUpperCase();
     const form = useForm({
         title: calculation.title || '',
         supplier_id: calculation.supplier_id || '',
         supplier_name: calculation.supplier_name || '',
-        purchasing_currency: calculation.purchasing_currency || 'USD',
-        local_currency: calculation.local_currency || 'LKR',
+        purchasing_currency: calculation.purchasing_currency || '',
+        local_currency: calculation.local_currency || defaultLocalCurrency,
         shipment_currency_basis_notes: calculation.shipment_currency_basis_notes || '',
         exchange_rate: calculation.exchange_rate || '',
         freight_currency: calculation.freight_currency || '',
@@ -28,10 +30,17 @@ export default function Edit({ calculation, statusOptions, suppliers }) {
         cid_rate_per_kg_lkr:
             calculation.cid_rate_per_kg_lkr ??
             calculation.items?.[0]?.cid_rate_per_kg_lkr ??
-            '30',
-        duty_base_percent: calculation.duty_base_percent ?? '110',
-        vat_rate_percent: calculation.vat_rate_percent ?? '18',
-        sscl_rate_percent: calculation.sscl_rate_percent ?? '2.5',
+            '',
+        cid_basis: calculation.cid_basis || '',
+        eid_rate_per_kg_lkr:
+            calculation.eid_rate_per_kg_lkr ??
+            calculation.items?.[0]?.eid_rate_per_kg_lkr ??
+            '',
+        eid_basis: calculation.eid_basis || '',
+        statistical_value_basis: calculation.statistical_value_basis || '',
+        duty_base_percent: calculation.duty_base_percent ?? '',
+        vat_rate_percent: calculation.vat_rate_percent ?? '',
+        sscl_rate_percent: calculation.sscl_rate_percent ?? '',
         bank_interest_rate_pa: calculation.bank_interest_rate_pa ?? '',
         bank_interest_months: calculation.bank_interest_months ?? '',
         notes: calculation.notes || '',

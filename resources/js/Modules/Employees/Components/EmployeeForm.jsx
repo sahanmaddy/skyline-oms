@@ -394,13 +394,12 @@ export default function EmployeeForm({
                             className="mt-1"
                             value={data.branch_id ?? ''}
                             onChange={(v) => setData('branch_id', v === '' ? '' : Number(v))}
-                            options={[
-                                { value: '', label: 'Select branch…' },
-                                ...(activeBranches?.map((b) => ({
+                            options={
+                                activeBranches?.map((b) => ({
                                     value: b.id,
                                     label: `${b.code} — ${b.name}`,
-                                })) ?? []),
-                            ]}
+                                })) ?? []
+                            }
                             placeholder="Select branch…"
                         />
                         <InputError className="mt-2" message={errors.branch_id} />

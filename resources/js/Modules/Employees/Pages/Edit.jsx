@@ -9,13 +9,17 @@ import { scrollToFirstError } from '@/lib/scrollToFirstError';
 import { normalizeDateInputForForm } from '@/utils/employeeDates';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 
-export default function Edit({ employee, statusOptions, users, activeBranches }) {
+export default function Edit({ employee, statusOptions, users, activeBranches, suggestedBranchId }) {
     const toast = useToast();
     const company = usePage().props.company ?? {};
     const companyTz = company.time_zone || 'UTC';
     const defaultCountry = getCompanyDefaultCountry(company);
+    const defaultBranchId =
+        suggestedBranchId && activeBranches?.some((b) => b.id === suggestedBranchId)
+            ? suggestedBranchId
+            : (employee.branch_id ?? employee.branch?.id ?? '');
     const { data, setData, put, processing, errors } = useForm({
-        branch_id: employee.branch_id ?? employee.branch?.id ?? '',
+        branch_id: defaultBranchId,
         employee_code: employee.employee_code || '',
         first_name: employee.first_name || '',
         last_name: employee.last_name || '',
