@@ -58,7 +58,7 @@ export default function Create({ nextCode, statusOptions, suppliers }) {
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Procurement" section="Duty & Cost Calculator" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Procurement" section="Create Duty & Cost Calculation" />}>
             <Head title="Create Calculation · Duty & Cost Calculator" />
             <ProcurementModuleLayout
                 breadcrumbs={[

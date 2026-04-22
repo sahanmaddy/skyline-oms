@@ -17,7 +17,7 @@ export default function Create() {
     });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="New permission" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Create Permission" />}>
             <Head title="New permission · Settings" />
             <SettingsModuleLayout breadcrumbs={[{ label: 'Permissions', href: route('settings.permissions.index') }, { label: 'New permission' }]}>
                 <div className="space-y-4">

@@ -45,7 +45,7 @@ export default function Create({ statusOptions, nextCustomerCode }) {
     const { data, setData, post, processing, errors } = form;
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Sales" section="Create customer" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Sales" section="Create Customer" />}>
             <Head title="Create customer · Sales" />
 
             <SalesModuleLayout

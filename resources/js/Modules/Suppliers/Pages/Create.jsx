@@ -12,7 +12,7 @@ export default function Create({ nextSupplierCode }) {
     const form = useForm({ supplier_code: nextSupplierCode || '', company_name: '', display_name: '', contact_person: '', email: '', website: '', primary_phone_country_code: '', primary_phone_number: '', whatsapp_country_code: '', whatsapp_number: '', address_line_1: '', address_line_2: '', city: '', state_province: '', postal_code: '', country: '', registration_number: '', tax_number: '', payment_terms_days: '', currency: 'USD', credit_limit: '', notes: '', is_active: true });
 
     return (
-        <AuthenticatedLayout header={<ModuleStickyTitle module="Procurement" section="Create supplier" />}>
+        <AuthenticatedLayout header={<ModuleStickyTitle module="Procurement" section="Create Supplier" />}>
             <Head title="Create supplier · Procurement" />
             <ProcurementModuleLayout breadcrumbs={[{ label: 'Suppliers', href: route('procurement.suppliers.index') }, { label: 'Create supplier' }]}>
                 <div className="flex flex-col gap-4">
