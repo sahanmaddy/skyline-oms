@@ -75,7 +75,7 @@ export default function EmployeeForm({
         const last = (data.last_name || '').trim();
         const auto = `${first} ${last}`.trim();
 
-        if (!displayNameTouched && auto && data.display_name !== auto) {
+        if (!displayNameTouched && data.display_name !== auto) {
             setData('display_name', auto);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
