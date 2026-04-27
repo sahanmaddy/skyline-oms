@@ -125,7 +125,7 @@ export default function PhoneNumberWithCountryField({
     phoneNumberError = '',
 }) {
     const [query, setQuery] = useState('');
-    const emptyOption = { name: 'Select country code', iso2: '', callingCode: '' };
+    const emptyOption = { name: 'Select code...', iso2: '', callingCode: '' };
 
     const selected = useMemo(() => {
         return resolveCountryCallingOption(options, countryCode, countryIso2) ?? emptyOption;
@@ -162,7 +162,7 @@ export default function PhoneNumberWithCountryField({
     };
 
     return (
-        <div className={'flex items-start gap-2 ' + (disabled ? 'opacity-60 ' : '') + className}>
+        <div className={'flex items-start gap-4 ' + (disabled ? 'opacity-60 ' : '') + className}>
             <div className="w-36 shrink-0">
                 <div className="mb-1 block text-sm font-medium text-gray-700 dark:text-cursor-fg">
                     Code
@@ -195,7 +195,7 @@ export default function PhoneNumberWithCountryField({
                                             : 'font-normal text-gray-400 dark:text-cursor-muted')
                                     }
                                 >
-                                    {selected?.callingCode || 'Select country code...'}
+                                    {selected?.callingCode || 'Select code...'}
                                 </span>
                                 <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-400" />
                             </ListboxButton>

@@ -17,6 +17,8 @@ export default function Edit({ branch }) {
         address_line_1: branch.address_line_1 || '',
         address_line_2: branch.address_line_2 || '',
         city: branch.city || '',
+        state_province: branch.state_province || '',
+        postal_code: branch.postal_code || '',
         country: branch.country || defaultCountry,
         email: branch.email || '',
         phone_numbers: (branch.phone_numbers || []).map((p) => ({

@@ -9,7 +9,39 @@ import { Head, router, useForm } from '@inertiajs/react';
 
 export default function Create({ nextSupplierCode }) {
     const toast = useToast();
-    const form = useForm({ supplier_code: nextSupplierCode || '', company_name: '', display_name: '', contact_person: '', email: '', website: '', primary_phone_country_code: '', primary_phone_number: '', whatsapp_country_code: '', whatsapp_number: '', address_line_1: '', address_line_2: '', city: '', state_province: '', postal_code: '', country: '', registration_number: '', tax_number: '', payment_terms_days: '', currency: 'USD', credit_limit: '', notes: '', is_active: true });
+    const form = useForm({
+        supplier_code: nextSupplierCode || '',
+        company_name: '',
+        display_name: '',
+        contact_person: '',
+        email: '',
+        website: '',
+        primary_phone_country_code: '',
+        primary_phone_number: '',
+        whatsapp_country_code: '',
+        whatsapp_number: '',
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        state_province: '',
+        postal_code: '',
+        country: '',
+        tax_number: '',
+        vat_number: '',
+        bank_accounts: [
+            {
+                bank_name: '',
+                branch_name: '',
+                account_number: '',
+                account_name: '',
+                swift_bic_code: '',
+                display_order: 0,
+                is_primary: true,
+            },
+        ],
+        notes: '',
+        is_active: true,
+    });
 
     return (
         <AuthenticatedLayout header={<ModuleStickyTitle module="Procurement" section="Create Supplier" />}>

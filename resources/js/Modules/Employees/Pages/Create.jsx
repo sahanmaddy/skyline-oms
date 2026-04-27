@@ -39,6 +39,8 @@ export default function Create({ statusOptions, users, nextEmployeeCode, activeB
         address_line_1: '',
         address_line_2: '',
         city: '',
+        state_province: '',
+        postal_code: '',
         country: defaultCountry,
         bank_name: '',
         bank_branch: '',

@@ -36,6 +36,12 @@ class UpdateCompanySettingsAction
             $setting->fill([
                 'company_name' => $validated['company_name'],
                 'registered_address' => $validated['registered_address'],
+                'address_line_1' => $validated['address_line_1'] ?? null,
+                'address_line_2' => $validated['address_line_2'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'state_province' => $validated['state_province'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'country' => $validated['country'] ?? null,
                 'company_email' => $validated['company_email'] ?? null,
                 'tin_number' => $validated['tin_number'] ?? null,
                 'vat_number' => $validated['vat_number'] ?? null,
@@ -119,6 +125,7 @@ class UpdateCompanySettingsAction
                     'branch_name' => ($v = trim((string) ($r['branch_name'] ?? ''))) !== '' ? $v : null,
                     'account_number' => trim((string) ($r['account_number'] ?? '')),
                     'account_name' => ($v = trim((string) ($r['account_name'] ?? ''))) !== '' ? $v : null,
+                    'swift_bic_code' => ($v = trim((string) ($r['swift_bic_code'] ?? ''))) !== '' ? $v : null,
                     'display_order' => (int) ($r['display_order'] ?? $index),
                     'is_primary' => (bool) ($r['is_primary'] ?? false),
                 ];

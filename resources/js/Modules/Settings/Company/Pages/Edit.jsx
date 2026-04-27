@@ -39,6 +39,7 @@ function emptyBankRow(order) {
         branch_name: '',
         account_number: '',
         account_name: '',
+        swift_bic_code: '',
         display_order: order,
         is_primary: order === 0,
     };
@@ -54,22 +55,8 @@ function currencyPreview(pattern, symbol, code) {
         .trim();
 }
 
-function parseRegisteredAddress(value) {
-    const lines = String(value || '')
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean);
-
-    return {
-        address_line_1: lines[0] || '',
-        address_line_2: lines[1] || '',
-        city: lines[2] || '',
-        country: lines[3] || '',
-    };
-}
-
-function buildRegisteredAddress(addressLine1, addressLine2, city, country) {
-    return [addressLine1, addressLine2, city, country]
+function buildRegisteredAddress(addressLine1, addressLine2, city, stateProvince, postalCode, country) {
+    return [addressLine1, addressLine2, city, stateProvince, postalCode, country]
         .map((line) => String(line || '').trim())
         .filter(Boolean)
         .join('\n');
@@ -151,8 +138,6 @@ export default function Edit({
     const [iconLoadFailed, setIconLoadFailed] = useState(false);
     const [phoneRemoveWarning, setPhoneRemoveWarning] = useState('');
     const [bankRemoveWarning, setBankRemoveWarning] = useState('');
-    const initialAddress = parseRegisteredAddress(companySetting?.registered_address ?? '');
-
     const initialPhones =
         companySetting?.phone_numbers?.length > 0
             ? companySetting.phone_numbers.map((r, i) => ({
@@ -172,6 +157,7 @@ export default function Edit({
                 branch_name: r.branch_name || '',
                 account_number: r.account_number || '',
                 account_name: r.account_name || '',
+                swift_bic_code: r.swift_bic_code || '',
                 display_order: r.display_order ?? i,
                 is_primary: !!r.is_primary,
             }));
@@ -193,10 +179,12 @@ export default function Edit({
     const form = useForm({
         company_name: companySetting?.name ?? '',
         registered_address: companySetting?.registered_address ?? '',
-        address_line_1: initialAddress.address_line_1,
-        address_line_2: initialAddress.address_line_2,
-        city: initialAddress.city,
-        country: initialAddress.country,
+        address_line_1: companySetting?.address_line_1 ?? '',
+        address_line_2: companySetting?.address_line_2 ?? '',
+        city: companySetting?.city ?? '',
+        state_province: companySetting?.state_province ?? '',
+        postal_code: companySetting?.postal_code ?? '',
+        country: companySetting?.country ?? '',
         company_email: companySetting?.email ?? '',
         tin_number: companySetting?.tin_number ?? '',
         vat_number: companySetting?.vat_number ?? '',
@@ -218,6 +206,8 @@ export default function Edit({
                 payload.address_line_1,
                 payload.address_line_2,
                 payload.city,
+                payload.state_province,
+                payload.postal_code,
                 payload.country,
             ),
             phone_numbers: (payload.phone_numbers || []).filter(
@@ -237,6 +227,7 @@ export default function Edit({
                         r.branch_name,
                         r.account_number,
                         r.account_name,
+                        r.swift_bic_code,
                     ].some((value) => String(value || '').trim() !== ''),
             ),
         }));
@@ -555,7 +546,7 @@ export default function Edit({
                                 <InputError className="mt-2" message={errors.address_line_2} />
                             </div>
                             <div>
-                                <InputLabel htmlFor="city" value="City/District" />
+                                <InputLabel htmlFor="city" value="City" />
                                 <TextInput
                                     id="city"
                                     className="mt-1 block w-full"
@@ -564,6 +555,28 @@ export default function Edit({
                                     disabled={!canEdit}
                                 />
                                 <InputError className="mt-2" message={errors.city} />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="state_province" value="State / Province" />
+                                <TextInput
+                                    id="state_province"
+                                    className="mt-1 block w-full"
+                                    value={data.state_province || ''}
+                                    onChange={(e) => setData('state_province', e.target.value)}
+                                    disabled={!canEdit}
+                                />
+                                <InputError className="mt-2" message={errors.state_province} />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="postal_code" value="Postal Code" />
+                                <TextInput
+                                    id="postal_code"
+                                    className="mt-1 block w-full"
+                                    value={data.postal_code || ''}
+                                    onChange={(e) => setData('postal_code', e.target.value)}
+                                    disabled={!canEdit}
+                                />
+                                <InputError className="mt-2" message={errors.postal_code} />
                             </div>
                             <div>
                                 <InputLabel htmlFor="country" value="Country" />
@@ -609,13 +622,13 @@ export default function Edit({
                                     </PrimaryButton>
                                 ) : null}
                             </div>
-                            <div className="mt-3 space-y-3">
+                            <div className="mt-3 space-y-4">
                                 {data.phone_numbers.map((row, idx) => (
                                     <div
                                         key={`ph-${idx}`}
                                         className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
                                     >
-                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                                             <div className="md:col-span-3">
                                                 <InputLabel value="Type" className="mb-1" />
                                                 <FormSelect
@@ -720,14 +733,14 @@ export default function Edit({
                             ) : null}
                         </div>
 
-                        <div className="mt-4 space-y-3">
+                        <div className="mt-4 space-y-4">
                             {data.bank_accounts.map((row, idx) => (
                                 <div
                                     key={`bk-${idx}`}
                                     className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
                                 >
-                                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-                                        <div className="lg:col-span-3">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                                        <div className="md:col-span-6">
                                             <InputLabel value="Bank Name" />
                                             <TextInput
                                                 className="mt-1 block w-full"
@@ -740,7 +753,7 @@ export default function Edit({
                                                 message={errors[`bank_accounts.${idx}.bank_name`]}
                                             />
                                         </div>
-                                        <div className="lg:col-span-3">
+                                        <div className="md:col-span-6">
                                             <InputLabel value="Branch" />
                                             <TextInput
                                                 className="mt-1 block w-full"
@@ -753,7 +766,7 @@ export default function Edit({
                                                 message={errors[`bank_accounts.${idx}.branch_name`]}
                                             />
                                         </div>
-                                        <div className="lg:col-span-3">
+                                        <div className="md:col-span-6">
                                             <InputLabel value="Account Number" />
                                             <TextInput
                                                 className="mt-1 block w-full"
@@ -766,7 +779,7 @@ export default function Edit({
                                                 message={errors[`bank_accounts.${idx}.account_number`]}
                                             />
                                         </div>
-                                        <div className="lg:col-span-3">
+                                        <div className="md:col-span-6">
                                             <InputLabel value="Account Name" />
                                             <TextInput
                                                 className="mt-1 block w-full"
@@ -779,7 +792,20 @@ export default function Edit({
                                                 message={errors[`bank_accounts.${idx}.account_name`]}
                                             />
                                         </div>
-                                        <div className="flex flex-col gap-2 lg:col-span-12 lg:flex-row lg:items-center lg:justify-between">
+                                        <div className="md:col-span-6">
+                                            <InputLabel value="SWIFT/BIC Code" />
+                                            <TextInput
+                                                className="mt-1 block w-full"
+                                                value={row.swift_bic_code || ''}
+                                                onChange={(e) => updateBank(idx, { swift_bic_code: e.target.value })}
+                                                disabled={!canEdit}
+                                            />
+                                            <InputError
+                                                className="mt-2"
+                                                message={errors[`bank_accounts.${idx}.swift_bic_code`]}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-2 md:col-span-12 md:flex-row md:items-center md:justify-between">
                                             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-cursor-fg">
                                                 <Checkbox
                                                     checked={!!row.is_primary}

@@ -19,6 +19,8 @@ class BranchStoreRequest extends FormRequest
             'address_line_1' => ['required', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:120'],
+            'state_province' => ['nullable', 'string', 'max:120'],
+            'postal_code' => ['nullable', 'string', 'max:40'],
             'country' => ['required', 'string', 'max:120'],
             'phone_numbers' => ['required', 'array', 'min:1'],
             'phone_numbers.*.phone_type' => ['nullable', 'string', Rule::in(['Land Phone', 'Mobile', 'WhatsApp']), 'required_with:phone_numbers.*.country_code,phone_numbers.*.phone_number'],

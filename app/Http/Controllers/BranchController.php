@@ -39,6 +39,9 @@ class BranchController extends Controller
                 $q->where('code', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%")
                     ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('state_province', 'like', "%{$search}%")
+                    ->orWhere('postal_code', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%")
                     ->orWhereHas(
                         'phoneNumbers',
                         fn ($p) => $p->where('phone_number', 'like', "%{$search}%"),

@@ -10,7 +10,7 @@ export default function CountryCallingCodeCombobox({
     value,
     onChange,
     options,
-    placeholder = 'Select country code...',
+    placeholder = 'Select code...',
     className = '',
 }) {
     const [query, setQuery] = useState('');

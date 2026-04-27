@@ -11,6 +11,12 @@ class CompanySetting extends Model
     protected $fillable = [
         'company_name',
         'registered_address',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state_province',
+        'postal_code',
+        'country',
         'company_email',
         'tin_number',
         'vat_number',

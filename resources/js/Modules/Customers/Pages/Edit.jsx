@@ -25,6 +25,8 @@ export default function Edit({ customer, statusOptions }) {
         address_line_1: customer.address_line_1 || '',
         address_line_2: customer.address_line_2 || '',
         city: customer.city || '',
+        state_province: customer.state_province || '',
+        postal_code: customer.postal_code || '',
         country: customer.country || defaultCountry,
         credit_eligible: !!customer.credit_eligible,
         credit_limit:

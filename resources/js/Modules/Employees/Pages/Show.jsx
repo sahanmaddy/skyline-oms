@@ -390,12 +390,11 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Info
-                                label="Address"
-                                value={[employee.address_line_1, employee.address_line_2].filter(Boolean).join(', ') || '—'}
-                                className="sm:col-span-2"
-                            />
-                            <Info label="City/District" value={employee.city || '—'} />
+                            <Info label="Address Line 1" value={employee.address_line_1 || '—'} />
+                            <Info label="Address Line 2" value={employee.address_line_2 || '—'} />
+                            <Info label="City" value={employee.city || '—'} />
+                            <Info label="State / Province" value={employee.state_province || '—'} />
+                            <Info label="Postal Code" value={employee.postal_code || '—'} />
                             <Info label="Country" value={employee.country || '—'} />
                         </div>
                     </section>

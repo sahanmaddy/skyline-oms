@@ -275,13 +275,13 @@ export default function CustomerForm({
                         </PrimaryButton>
                     </div>
 
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-3 space-y-4">
                         {phoneRows.map((row, idx) => (
                             <div
                                 key={idx}
                                 className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
                             >
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                                     <div className="md:col-span-3">
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
@@ -367,7 +367,7 @@ export default function CustomerForm({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="city" value="City/District" />
+                        <InputLabel htmlFor="city" value="City" />
                         <TextInput
                             id="city"
                             className="mt-1 block w-full"
@@ -375,6 +375,28 @@ export default function CustomerForm({
                             onChange={(e) => setData('city', e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.city} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="state_province" value="State / Province" />
+                        <TextInput
+                            id="state_province"
+                            className="mt-1 block w-full"
+                            value={data.state_province || ''}
+                            onChange={(e) => setData('state_province', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.state_province} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="postal_code" value="Postal Code" />
+                        <TextInput
+                            id="postal_code"
+                            className="mt-1 block w-full"
+                            value={data.postal_code || ''}
+                            onChange={(e) => setData('postal_code', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.postal_code} />
                     </div>
 
                     <div>

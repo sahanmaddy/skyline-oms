@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CompanyBankAccount extends Model
+class SupplierBankAccount extends Model
 {
     protected $fillable = [
-        'company_setting_id',
+        'supplier_id',
         'bank_name',
         'branch_name',
         'account_number',
@@ -18,15 +18,14 @@ class CompanyBankAccount extends Model
         'is_primary',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'is_primary' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'display_order' => 'integer',
+        'is_primary' => 'boolean',
+    ];
 
-    public function companySetting(): BelongsTo
+    public function supplier(): BelongsTo
     {
-        return $this->belongsTo(CompanySetting::class);
+        return $this->belongsTo(Supplier::class);
     }
 }
+

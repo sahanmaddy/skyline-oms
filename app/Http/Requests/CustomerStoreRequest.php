@@ -28,8 +28,10 @@ class CustomerStoreRequest extends FormRequest
             'status' => ['required', Rule::in(CustomerStatus::values())],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'country' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:120'],
+            'state_province' => ['nullable', 'string', 'max:120'],
+            'postal_code' => ['nullable', 'string', 'max:40'],
+            'country' => ['nullable', 'string', 'max:120'],
             'credit_eligible' => ['boolean'],
             'credit_limit' => [
                 new RequiredIf(fn () => $this->boolean('credit_eligible')),

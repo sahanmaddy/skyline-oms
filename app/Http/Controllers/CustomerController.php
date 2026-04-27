@@ -43,6 +43,9 @@ class CustomerController extends Controller
                     ->orWhere('tin_number', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('state_province', 'like', "%{$search}%")
+                    ->orWhere('postal_code', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%")
                     ->orWhere('notes', 'like', "%{$search}%")
                     ->orWhereHas('phoneNumbers', function ($p) use ($phoneTerm) {
                         $p->where('phone_number', 'like', "%{$phoneTerm}%");

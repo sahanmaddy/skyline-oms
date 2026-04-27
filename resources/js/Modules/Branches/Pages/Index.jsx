@@ -63,7 +63,7 @@ export default function Index({ branches, filters, statusOptions, canCreate }) {
                                             { preserveState: true, replace: true },
                                         )
                                     }
-                                    placeholder="Search by code, name, city, or phone…"
+                                    placeholder="Search by code, name, address, or phone…"
                                 />
                             </div>
                             <div>

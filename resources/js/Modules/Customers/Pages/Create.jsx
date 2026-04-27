@@ -25,6 +25,8 @@ export default function Create({ statusOptions, nextCustomerCode }) {
         address_line_1: '',
         address_line_2: '',
         city: '',
+        state_province: '',
+        postal_code: '',
         country: defaultCountry,
         credit_eligible: false,
         credit_limit: '',

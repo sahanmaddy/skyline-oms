@@ -31,6 +31,8 @@ class Employee extends Model
         'address_line_1',
         'address_line_2',
         'city',
+        'state_province',
+        'postal_code',
         'country',
         'profile_photo_path',
         'bank_name',
