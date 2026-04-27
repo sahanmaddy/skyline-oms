@@ -57,6 +57,7 @@ class CompanySettingsPresenter
      */
     private function fromModel(CompanySetting $row): array
     {
+        $addressParts = $this->structuredAddressFromRow($row);
         $iconUrl = null;
         if ($row->site_icon_path && Storage::disk('public')->exists($row->site_icon_path)) {
             $iconUrl = route('company.site-icon', ['v' => optional($row->updated_at)->timestamp ?? time()]);
@@ -78,6 +79,12 @@ class CompanySettingsPresenter
             'id' => (int) $row->id,
             'name' => $row->company_name,
             'registered_address' => $row->registered_address,
+            'address_line_1' => $addressParts['address_line_1'],
+            'address_line_2' => $addressParts['address_line_2'],
+            'city' => $addressParts['city'],
+            'state_province' => $addressParts['state_province'],
+            'postal_code' => $addressParts['postal_code'],
+            'country' => $addressParts['country'],
             'email' => $row->company_email,
             'tin_number' => $row->tin_number,
             'vat_number' => $row->vat_number,
@@ -104,6 +111,7 @@ class CompanySettingsPresenter
                 'branch_name' => $b->branch_name,
                 'account_number' => $b->account_number,
                 'account_name' => $b->account_name,
+                'swift_bic_code' => $b->swift_bic_code,
                 'display_order' => (int) $b->display_order,
                 'is_primary' => (bool) $b->is_primary,
             ])->values()->all(),
@@ -119,6 +127,12 @@ class CompanySettingsPresenter
             'id' => null,
             'name' => config('app.name', 'Skyline OMS'),
             'registered_address' => '',
+            'address_line_1' => null,
+            'address_line_2' => null,
+            'city' => null,
+            'state_province' => null,
+            'postal_code' => null,
+            'country' => null,
             'email' => null,
             'tin_number' => null,
             'vat_number' => null,
@@ -132,6 +146,26 @@ class CompanySettingsPresenter
             'primary_phone' => null,
             'phone_numbers' => [],
             'bank_accounts' => [],
+        ];
+    }
+
+    /**
+     * @return array{address_line_1:?string,address_line_2:?string,city:?string,state_province:?string,postal_code:?string,country:?string}
+     */
+    private function structuredAddressFromRow(CompanySetting $row): array
+    {
+        $lines = collect(preg_split('/\r\n|\r|\n/', (string) ($row->registered_address ?? '')) ?: [])
+            ->map(fn (string $line) => trim($line))
+            ->filter()
+            ->values();
+
+        return [
+            'address_line_1' => $row->address_line_1 ?: ($lines[0] ?? null),
+            'address_line_2' => $row->address_line_2 ?: ($lines[1] ?? null),
+            'city' => $row->city ?: ($lines[2] ?? null),
+            'state_province' => $row->state_province,
+            'postal_code' => $row->postal_code,
+            'country' => $row->country ?: ($lines[3] ?? null),
         ];
     }
 }

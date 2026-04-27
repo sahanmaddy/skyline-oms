@@ -214,16 +214,11 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Info
-                                label="Address"
-                                value={
-                                    [customer.address_line_1, customer.address_line_2]
-                                        .filter(Boolean)
-                                        .join(', ') || '—'
-                                }
-                                className="sm:col-span-2"
-                            />
-                            <Info label="City/District" value={customer.city || '—'} />
+                            <Info label="Address Line 1" value={customer.address_line_1 || '—'} />
+                            <Info label="Address Line 2" value={customer.address_line_2 || '—'} />
+                            <Info label="City" value={customer.city || '—'} />
+                            <Info label="State / Province" value={customer.state_province || '—'} />
+                            <Info label="Postal Code" value={customer.postal_code || '—'} />
                             <Info label="Country" value={customer.country || '—'} />
                         </div>
                     </section>

@@ -12,6 +12,11 @@ class Employee extends Model
 {
     use SoftDeletes;
 
+    /**
+     * Validates {@see $fillable basic_salary} against the database column DECIMAL(12,2).
+     */
+    public const BASIC_SALARY_VALIDATION_REGEX = '/^(0|[1-9]\d{0,9})(\.\d{1,2})?$/';
+
     protected $fillable = [
         'employee_code',
         'first_name',
@@ -31,6 +36,8 @@ class Employee extends Model
         'address_line_1',
         'address_line_2',
         'city',
+        'state_province',
+        'postal_code',
         'country',
         'profile_photo_path',
         'bank_name',

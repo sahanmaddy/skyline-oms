@@ -31,6 +31,9 @@ class SupplierController extends Controller
                     ->orWhere('display_name', 'like', "%{$search}%")
                     ->orWhere('company_name', 'like', "%{$search}%")
                     ->orWhere('contact_person', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('state_province', 'like', "%{$search}%")
+                    ->orWhere('postal_code', 'like', "%{$search}%")
                     ->orWhere('country', 'like', "%{$search}%")
                     ->orWhere('primary_phone_number', 'like', "%{$search}%");
 
@@ -91,7 +94,7 @@ class SupplierController extends Controller
 
     public function show(Supplier $supplier): Response
     {
-        $supplier->load(['creator:id,name', 'updater:id,name']);
+        $supplier->load(['creator:id,name', 'updater:id,name', 'bankAccounts']);
 
         return Inertia::render('Modules/Suppliers/Pages/Show', [
             'supplier' => $supplier,
@@ -103,7 +106,7 @@ class SupplierController extends Controller
     public function edit(Supplier $supplier): Response
     {
         return Inertia::render('Modules/Suppliers/Pages/Edit', [
-            'supplier' => $supplier,
+            'supplier' => $supplier->load('bankAccounts'),
         ]);
     }
 

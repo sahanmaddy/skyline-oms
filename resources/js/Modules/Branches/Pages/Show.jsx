@@ -116,16 +116,11 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Address</h3>
                                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    <Info
-                                        label="Address"
-                                        value={
-                                            [branch.address_line_1, branch.address_line_2]
-                                                .filter(Boolean)
-                                                .join(', ') || '—'
-                                        }
-                                        className="sm:col-span-2"
-                                    />
-                                    <Info label="City/District" value={branch.city || '—'} />
+                                    <Info label="Address Line 1" value={branch.address_line_1 || '—'} />
+                                    <Info label="Address Line 2" value={branch.address_line_2 || '—'} />
+                                    <Info label="City" value={branch.city || '—'} />
+                                    <Info label="State / Province" value={branch.state_province || '—'} />
+                                    <Info label="Postal Code" value={branch.postal_code || '—'} />
                                     <Info label="Country" value={branch.country || '—'} />
                                 </div>
                             </section>

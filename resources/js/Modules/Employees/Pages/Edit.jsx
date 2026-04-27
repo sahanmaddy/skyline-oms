@@ -44,6 +44,8 @@ export default function Edit({ employee, statusOptions, users, activeBranches, s
         address_line_1: employee.address_line_1 || '',
         address_line_2: employee.address_line_2 || '',
         city: employee.city || '',
+        state_province: employee.state_province || '',
+        postal_code: employee.postal_code || '',
         country: employee.country || defaultCountry,
         bank_name: employee.bank_name || '',
         bank_branch: employee.bank_branch || '',

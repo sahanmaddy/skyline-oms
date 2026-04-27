@@ -31,6 +31,8 @@ class CompanySettingsUpdateRequest extends FormRequest
             'address_line_1' => ['required', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:120'],
+            'state_province' => ['nullable', 'string', 'max:120'],
+            'postal_code' => ['nullable', 'string', 'max:40'],
             'country' => ['required', 'string', 'max:120'],
             'company_email' => ['required', 'email', 'max:255'],
             'tin_number' => ['nullable', 'string', 'max:100'],
@@ -70,6 +72,7 @@ class CompanySettingsUpdateRequest extends FormRequest
             'bank_accounts.*.branch_name' => ['required_with:bank_accounts', 'string', 'max:255'],
             'bank_accounts.*.account_number' => ['required_with:bank_accounts', 'string', 'max:100'],
             'bank_accounts.*.account_name' => ['required_with:bank_accounts', 'string', 'max:255'],
+            'bank_accounts.*.swift_bic_code' => ['nullable', 'string', 'max:50'],
             'bank_accounts.*.display_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
             'bank_accounts.*.is_primary' => ['nullable', 'boolean'],
         ];
@@ -105,7 +108,7 @@ class CompanySettingsUpdateRequest extends FormRequest
         return [
             'company_name.required' => 'Company name is required.',
             'address_line_1.required' => 'Address Line 1 is required.',
-            'city.required' => 'City/District is required.',
+            'city.required' => 'City is required.',
             'country.required' => 'Country is required.',
             'company_email.required' => 'Company email is required.',
             'company_email.email' => 'Enter a valid company email address.',

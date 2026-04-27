@@ -315,6 +315,14 @@ export default function EmployeeForm({
         if (!String(data.employment_type || '').trim()) nextErrors.employment_type = 'Employment type is required.';
         if (!String(data.joined_date || '').trim()) nextErrors.joined_date = 'Joined date is required.';
         if (!String(data.basic_salary || '').trim()) nextErrors.basic_salary = 'Basic salary is required.';
+        else {
+            const salaryRaw = String(data.basic_salary || '').replace(/,/g, '').trim();
+            const salaryPattern = /^(0|[1-9]\d{0,9})(\.\d{1,2})?$/;
+            if (!salaryPattern.test(salaryRaw)) {
+                nextErrors.basic_salary =
+                    'Basic salary may not exceed 9,999,999,999.99 and may have at most two decimal places.';
+            }
+        }
         if (!String(data.email || '').trim()) nextErrors.email = 'Email is required.';
         else if (!emailRegex.test(String(data.email || '').trim())) nextErrors.email = 'Enter a valid email address.';
         if (!String(data.address_line_1 || '').trim()) nextErrors.address_line_1 = 'Address Line 1 is required.';
@@ -828,13 +836,13 @@ export default function EmployeeForm({
                         </PrimaryButton>
                     </div>
 
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-3 space-y-4">
                         {phoneRows.map((row, idx) => (
                             <div
                                 key={idx}
                                 className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
                             >
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                                     <div className="md:col-span-3">
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
@@ -923,13 +931,13 @@ export default function EmployeeForm({
                         </PrimaryButton>
                     </div>
 
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-3 space-y-4">
                         {emergencyPhoneRows.map((row, idx) => (
                             <div
                                 key={`em-${idx}`}
                                 className="rounded-md border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface"
                             >
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
                                     <div className="md:col-span-3">
                                         <InputLabel value="Type" className="mb-1" />
                                         <FormSelect
@@ -1015,7 +1023,7 @@ export default function EmployeeForm({
                         <InputError className="mt-2" message={errors.address_line_2} />
                     </div>
                     <div>
-                        <InputLabel htmlFor="city" value="City/District" />
+                        <InputLabel htmlFor="city" value="City" />
                         <TextInput
                             id="city"
                             className="mt-1 block w-full"
@@ -1023,6 +1031,26 @@ export default function EmployeeForm({
                             onChange={(e) => setData('city', e.target.value)}
                         />
                         <InputError className="mt-2" message={mergedErrors.city} />
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="state_province" value="State / Province" />
+                        <TextInput
+                            id="state_province"
+                            className="mt-1 block w-full"
+                            value={data.state_province || ''}
+                            onChange={(e) => setData('state_province', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.state_province} />
+                    </div>
+                    <div>
+                        <InputLabel htmlFor="postal_code" value="Postal Code" />
+                        <TextInput
+                            id="postal_code"
+                            className="mt-1 block w-full"
+                            value={data.postal_code || ''}
+                            onChange={(e) => setData('postal_code', e.target.value)}
+                        />
+                        <InputError className="mt-2" message={errors.postal_code} />
                     </div>
                     <div>
                         <InputLabel htmlFor="country" value="Country" />

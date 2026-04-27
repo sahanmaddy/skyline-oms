@@ -17,6 +17,8 @@ export default function Create({ nextCode }) {
         address_line_1: '',
         address_line_2: '',
         city: '',
+        state_province: '',
+        postal_code: '',
         country: defaultCountry,
         email: '',
         phone_numbers: [],

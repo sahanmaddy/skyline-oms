@@ -30,6 +30,7 @@ class Supplier extends Model
         'country',
         'registration_number',
         'tax_number',
+        'vat_number',
         'payment_terms_days',
         'currency',
         'credit_limit',
@@ -48,6 +49,11 @@ class Supplier extends Model
     public function calculations(): HasMany
     {
         return $this->hasMany(DutyCostCalculation::class);
+    }
+
+    public function bankAccounts(): HasMany
+    {
+        return $this->hasMany(SupplierBankAccount::class)->orderBy('display_order')->orderBy('id');
     }
 
     public function creator(): BelongsTo

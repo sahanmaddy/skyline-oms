@@ -87,7 +87,7 @@ export default function Index({ customers, filters, statusOptions, canCreate }) 
                                             { preserveState: true, replace: true },
                                         )
                                     }
-                                    placeholder="Search by code, name, company, email, or phone…"
+                                    placeholder="Search by code, name, company, address, email, or phone…"
                                 />
                             </div>
                             <div>
