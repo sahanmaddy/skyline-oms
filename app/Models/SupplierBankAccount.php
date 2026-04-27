@@ -28,4 +28,3 @@ class SupplierBankAccount extends Model
         return $this->belongsTo(Supplier::class);
     }
 }
-

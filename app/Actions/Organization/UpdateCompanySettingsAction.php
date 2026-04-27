@@ -4,6 +4,7 @@ namespace App\Actions\Organization;
 
 use App\Models\CompanySetting;
 use App\Models\User;
+use App\Services\Employees\PhoneNumberNormalizer;
 use App\Services\Organization\CompanySettingsPresenter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -13,7 +14,10 @@ use Illuminate\Support\Str;
 
 class UpdateCompanySettingsAction
 {
-    public function __construct(private readonly CompanySettingsPresenter $presenter) {}
+    public function __construct(
+        private readonly CompanySettingsPresenter $presenter,
+        private readonly PhoneNumberNormalizer $phoneNumberNormalizer,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $validated

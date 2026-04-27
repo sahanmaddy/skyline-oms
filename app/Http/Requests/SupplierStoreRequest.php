@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Models\Supplier;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 
 class SupplierStoreRequest extends FormRequest
 {

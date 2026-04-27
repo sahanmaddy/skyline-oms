@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\EmployeeDepartment;
 use App\Enums\EmployeeStatus;
+use App\Models\Employee;
 use App\Models\User;
 use App\Services\Branches\BranchScopeService;
 use Illuminate\Contracts\Validation\Validator;
@@ -42,7 +43,7 @@ class EmployeeStoreRequest extends FormRequest
             'designation' => ['required', 'string', 'max:150'],
             'department' => ['required', 'string', Rule::in(EmployeeDepartment::values())],
             'employment_type' => ['required', 'string', Rule::in($employmentTypes)],
-            'basic_salary' => ['required', 'numeric', 'min:0'],
+            'basic_salary' => ['required', 'numeric', 'min:0', 'regex:'.Employee::BASIC_SALARY_VALIDATION_REGEX],
             'is_overtime_eligible' => ['boolean'],
             'nic' => ['required', 'string', 'max:50'],
             'status' => ['required', Rule::in(EmployeeStatus::values())],
@@ -125,6 +126,7 @@ class EmployeeStoreRequest extends FormRequest
             'employment_type.required' => 'Employment type is required.',
             'joined_date.required' => 'Joined date is required.',
             'basic_salary.required' => 'Basic salary is required.',
+            'basic_salary.regex' => 'Basic salary may not exceed 9,999,999,999.99 and may have at most two decimal places.',
             'email.required' => 'Email is required.',
             'address_line_1.required' => 'Address Line 1 is required.',
             'city.required' => 'City is required.',

@@ -14,8 +14,10 @@ return new class extends Migration
 
         Schema::create('duty_cost_calculation_other_costs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('duty_cost_calculation_id')
-                ->constrained('duty_cost_calculations')
+            $table->unsignedBigInteger('duty_cost_calculation_id');
+            $table->foreign('duty_cost_calculation_id', 'dcc_other_costs_calc_fk')
+                ->references('id')
+                ->on('duty_cost_calculations')
                 ->cascadeOnDelete();
             $table->string('cost_name');
             $table->decimal('amount_lkr', 15, 2)->default(0);
@@ -30,4 +32,3 @@ return new class extends Migration
         Schema::dropIfExists('duty_cost_calculation_other_costs');
     }
 };
-

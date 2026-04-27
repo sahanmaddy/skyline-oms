@@ -315,6 +315,14 @@ export default function EmployeeForm({
         if (!String(data.employment_type || '').trim()) nextErrors.employment_type = 'Employment type is required.';
         if (!String(data.joined_date || '').trim()) nextErrors.joined_date = 'Joined date is required.';
         if (!String(data.basic_salary || '').trim()) nextErrors.basic_salary = 'Basic salary is required.';
+        else {
+            const salaryRaw = String(data.basic_salary || '').replace(/,/g, '').trim();
+            const salaryPattern = /^(0|[1-9]\d{0,9})(\.\d{1,2})?$/;
+            if (!salaryPattern.test(salaryRaw)) {
+                nextErrors.basic_salary =
+                    'Basic salary may not exceed 9,999,999,999.99 and may have at most two decimal places.';
+            }
+        }
         if (!String(data.email || '').trim()) nextErrors.email = 'Email is required.';
         else if (!emailRegex.test(String(data.email || '').trim())) nextErrors.email = 'Enter a valid email address.';
         if (!String(data.address_line_1 || '').trim()) nextErrors.address_line_1 = 'Address Line 1 is required.';
