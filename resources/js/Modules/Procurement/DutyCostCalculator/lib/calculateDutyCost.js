@@ -11,6 +11,33 @@ function qty(v, p = 4) {
     return Number(num(v).toFixed(p));
 }
 
+/** Map inventory UOM names to landed-cost buckets (align with PHP DutyCostCalculationService). */
+function landedCostUomBucket(raw) {
+    const n = String(raw || '')
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '');
+    if (!n || n === '0') {
+        return null;
+    }
+    if (n === 'kg' || n === 'kgs' || n.includes('kilogram')) {
+        return 'kg';
+    }
+    if (['m', 'meter', 'metre', 'meters'].includes(n)) {
+        return 'meter';
+    }
+    if (['yard', 'yards', 'yd'].includes(n)) {
+        return 'yard';
+    }
+    if (['piece', 'pieces', 'pcs', 'pc'].includes(n)) {
+        return 'piece';
+    }
+    if (['set', 'sets'].includes(n)) {
+        return 'set';
+    }
+    return null;
+}
+
 function numOrDefault(v, def) {
     if (v === '' || v === null || v === undefined) {
         return def;
@@ -144,12 +171,12 @@ export function calculateDutyCostPreview(data) {
             landed_cost_per_set_lkr: null,
         };
 
-        const uom = String(row.unit_of_measure || '').toLowerCase();
-        if (uom === 'kg') perUom.landed_cost_per_kg_lkr = perUnit;
-        if (uom === 'meter') perUom.landed_cost_per_meter_lkr = perUnit;
-        if (uom === 'yard') perUom.landed_cost_per_yard_lkr = perUnit;
-        if (uom === 'piece') perUom.landed_cost_per_piece_lkr = perUnit;
-        if (uom === 'set') perUom.landed_cost_per_set_lkr = perUnit;
+        const bucket = landedCostUomBucket(row.unit_of_measure);
+        if (bucket === 'kg') perUom.landed_cost_per_kg_lkr = perUnit;
+        if (bucket === 'meter') perUom.landed_cost_per_meter_lkr = perUnit;
+        if (bucket === 'yard') perUom.landed_cost_per_yard_lkr = perUnit;
+        if (bucket === 'piece') perUom.landed_cost_per_piece_lkr = perUnit;
+        if (bucket === 'set') perUom.landed_cost_per_set_lkr = perUnit;
 
         return {
             ...row,

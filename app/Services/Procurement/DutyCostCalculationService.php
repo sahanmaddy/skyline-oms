@@ -85,7 +85,7 @@ class DutyCostCalculationService
                 'product_code' => trim((string) ($row['product_code'] ?? '')) ?: null,
                 'description' => trim((string) ($row['description'] ?? '')) ?: null,
                 'product_currency' => $purchasingCurrency,
-                'unit_of_measure' => (string) ($row['unit_of_measure'] ?? 'Piece'),
+                'unit_of_measure' => (string) ($row['unit_of_measure'] ?? ''),
                 'quantity' => $this->qty($qty, 2),
                 'unit_price_foreign' => $this->qty($unitPrice, 2),
                 'total_product_value_foreign' => $totalProductValueForeign,
@@ -153,16 +153,16 @@ class DutyCostCalculationService
             $item['landed_cost_per_piece_lkr'] = null;
             $item['landed_cost_per_set_lkr'] = null;
 
-            $uom = strtolower((string) $item['unit_of_measure']);
-            if ($uom === 'kg') {
+            $bucket = $this->landedCostUomBucket((string) $item['unit_of_measure']);
+            if ($bucket === 'kg') {
                 $item['landed_cost_per_kg_lkr'] = $perUnit;
-            } elseif ($uom === 'meter') {
+            } elseif ($bucket === 'meter') {
                 $item['landed_cost_per_meter_lkr'] = $perUnit;
-            } elseif ($uom === 'yard') {
+            } elseif ($bucket === 'yard') {
                 $item['landed_cost_per_yard_lkr'] = $perUnit;
-            } elseif ($uom === 'piece') {
+            } elseif ($bucket === 'piece') {
                 $item['landed_cost_per_piece_lkr'] = $perUnit;
-            } elseif ($uom === 'set') {
+            } elseif ($bucket === 'set') {
                 $item['landed_cost_per_set_lkr'] = $perUnit;
             }
 
@@ -199,6 +199,28 @@ class DutyCostCalculationService
             'other_costs' => $extraCosts,
             'summary' => $summary,
         ];
+    }
+
+    /**
+     * Map inventory UOM display names (e.g. Meter, PCS, KG) to landed-cost column buckets.
+     */
+    private function landedCostUomBucket(string $raw): ?string
+    {
+        $collapsed = preg_replace('/\s+/u', '', $raw);
+        $n = strtolower(trim(is_string($collapsed) ? $collapsed : $raw));
+
+        if ($n === '' || $n === '0') {
+            return null;
+        }
+
+        return match (true) {
+            $n === 'kg' || $n === 'kgs' || str_contains($n, 'kilogram') => 'kg',
+            in_array($n, ['m', 'meter', 'metre', 'meters'], true) => 'meter',
+            in_array($n, ['yard', 'yards', 'yd'], true) => 'yard',
+            in_array($n, ['piece', 'pieces', 'pcs', 'pc'], true) => 'piece',
+            in_array($n, ['set', 'sets'], true) => 'set',
+            default => null,
+        };
     }
 
     private function numOrDefault(mixed $value, float $default): float
