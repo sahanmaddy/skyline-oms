@@ -1,3 +1,4 @@
+import { DetailFieldCard, DetailStatusFieldCard } from '@/Components/DetailFieldCard';
 import Dropdown from '@/Components/Dropdown';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
@@ -152,45 +153,45 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                             </span>
                         </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                            <Info label="Customer Code" value={customer.customer_code || '—'} />
-                            <Info label="Display Name" value={primaryDisplayName} />
-                            <Info label="Customer Name" value={customer.customer_name || '—'} />
-                            <Info label="Company Name" value={customer.company_name || '—'} />
-                            <Info label="NIC" value={customer.nic || '—'} />
-                            <Info label="TIN" value={customer.tin_number || '—'} />
-                            <Info label="VAT" value={customer.vat_number || '—'} />
+                            <DetailFieldCard label="Customer Code" value={customer.customer_code || '—'} />
+                            <DetailFieldCard label="Display Name" value={primaryDisplayName} />
+                            <DetailFieldCard label="Customer Name" value={customer.customer_name || '—'} />
+                            <DetailFieldCard label="Company Name" value={customer.company_name || '—'} />
+                            <DetailFieldCard label="NIC" value={customer.nic || '—'} />
+                            <DetailFieldCard label="TIN" value={customer.tin_number || '—'} />
+                            <DetailFieldCard label="VAT" value={customer.vat_number || '—'} />
                         </div>
                     </section>
 
-                    <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-4 lg:sticky lg:top-20 self-start">
+                    <section className="self-start rounded-lg border border-gray-200 bg-white p-5 lg:sticky lg:top-20 lg:col-span-4">
                         <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
-                        <div className="mt-4">
-                            <Info label="Email" value={customer.email || '—'} />
-                        </div>
-                        <div className="mt-4 rounded-md border border-gray-200 bg-white p-3">
-                            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                Phone Numbers
-                            </div>
-                            <div className="mt-2 space-y-2">
-                                {customer.phone_numbers?.length ? (
-                                    customer.phone_numbers.map((phone) => (
-                                        <div
-                                            key={phone.id}
-                                            className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
-                                        >
-                                            <div className="flex items-center justify-between gap-3 text-sm">
-                                                <div className="font-medium text-gray-900">{phone.phone_type}</div>
-                                                <div className="font-medium text-gray-900">
-                                                    {[phone.country_code, phone.phone_number]
-                                                        .filter(Boolean)
-                                                        .join(' ')}
+                        <div className="mt-4 space-y-3">
+                            <DetailFieldCard label="Email" value={customer.email || '—'} />
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Phone Numbers
+                                </div>
+                                <div className="mt-2 space-y-2">
+                                    {customer.phone_numbers?.length ? (
+                                        customer.phone_numbers.map((phone) => (
+                                            <div
+                                                key={phone.id}
+                                                className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+                                            >
+                                                <div className="flex items-center justify-between gap-3 text-sm">
+                                                    <div className="font-medium text-gray-900">{phone.phone_type}</div>
+                                                    <div className="font-medium text-gray-900">
+                                                        {[phone.country_code, phone.phone_number]
+                                                            .filter(Boolean)
+                                                            .join(' ')}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-sm text-gray-500">No phone numbers.</div>
-                                )}
+                                        ))
+                                    ) : (
+                                        <div className="text-sm text-gray-500">No phone numbers.</div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -201,25 +202,32 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Commercial Information</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <StatusInfo
+                            <DetailStatusFieldCard
                                 label="Credit Eligible"
                                 isPositive={!!customer.credit_eligible}
                                 value={customer.credit_eligible ? 'Yes' : 'No'}
                             />
-                            <Info label="Credit Limit" value={formatCreditLimitDisplay(customer.credit_limit, company)} />
-                            <Info label="Guarantor" value={customer.guarantor || '—'} className="sm:col-span-2" />
+                            <DetailFieldCard
+                                label="Credit Limit"
+                                value={formatCreditLimitDisplay(customer.credit_limit, company)}
+                            />
+                            <DetailFieldCard
+                                label="Guarantor"
+                                value={customer.guarantor || '—'}
+                                className="sm:col-span-2"
+                            />
                         </div>
                     </section>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Info label="Address Line 1" value={customer.address_line_1 || '—'} />
-                            <Info label="Address Line 2" value={customer.address_line_2 || '—'} />
-                            <Info label="City" value={customer.city || '—'} />
-                            <Info label="State / Province" value={customer.state_province || '—'} />
-                            <Info label="Postal Code" value={customer.postal_code || '—'} />
-                            <Info label="Country" value={customer.country || '—'} />
+                            <DetailFieldCard label="Address Line 1" value={customer.address_line_1 || '—'} />
+                            <DetailFieldCard label="Address Line 2" value={customer.address_line_2 || '—'} />
+                            <DetailFieldCard label="City" value={customer.city || '—'} />
+                            <DetailFieldCard label="State / Province" value={customer.state_province || '—'} />
+                            <DetailFieldCard label="Postal Code" value={customer.postal_code || '—'} />
+                            <DetailFieldCard label="Country" value={customer.country || '—'} />
                         </div>
                     </section>
                 </div>
@@ -401,35 +409,6 @@ export default function Show({ customer, documentTypeOptions, canEdit, canDelete
             </div>
             </SalesModuleLayout>
         </AuthenticatedLayout>
-    );
-}
-
-function Info({ label, value, className = '' }) {
-    return (
-        <div className={`rounded-md border border-gray-200 bg-white p-3 ${className}`}>
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</div>
-            <div className="mt-1 text-sm font-medium text-gray-900">{value}</div>
-        </div>
-    );
-}
-
-function StatusInfo({ label, value, isPositive }) {
-    return (
-        <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</div>
-            <div className="mt-2">
-                <span
-                    className={
-                        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
-                        (isPositive
-                            ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
-                            : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
-                    }
-                >
-                    {value}
-                </span>
-            </div>
-        </div>
     );
 }
 

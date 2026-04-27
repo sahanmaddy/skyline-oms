@@ -1084,7 +1084,7 @@ export default function EmployeeForm({
                         <InputError className="mt-2" message={mergedErrors.bank_name} />
                     </div>
                     <div>
-                        <InputLabel htmlFor="bank_branch" value="Bank Branch" />
+                        <InputLabel htmlFor="bank_branch" value="Branch" />
                         <TextInput
                             id="bank_branch"
                             className="mt-1 block w-full"

@@ -1,3 +1,4 @@
+import { DetailFieldCard } from '@/Components/DetailFieldCard';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -13,7 +14,7 @@ export default function Show({ permission, canEdit, canDelete }) {
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Permission" />}>
             <Head title={`${permission.name} · Permissions · Settings`} />
             <SettingsModuleLayout breadcrumbs={[{ label: 'Permissions', href: route('settings.permissions.index') }, { label: permission.name }]}>
-                <div className="space-y-4">
+                <div className="flex flex-col gap-4">
                     <ModuleDetailToolbar
                         backHref={route('settings.permissions.index')}
                         backLabel="← Back to permissions"
@@ -47,13 +48,13 @@ export default function Show({ permission, canEdit, canDelete }) {
                             ) : undefined
                         }
                     />
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                                 <div className="text-lg font-semibold text-gray-900">
                                     {permission.display_name || permission.name}
                                 </div>
-                                <div className="mt-1 text-sm text-gray-500">{permission.name}</div>
+                                <div className="text-sm text-gray-600">{permission.name}</div>
                             </div>
                             <span
                                 className={
@@ -67,17 +68,16 @@ export default function Show({ permission, canEdit, canDelete }) {
                             </span>
                         </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Info label="Module" value={permission.module || 'General'} />
-                            <Info label="Used By Roles" value={String(permission.roles?.length || 0)} />
+                            <DetailFieldCard label="Module" value={permission.module || 'General'} />
+                            <DetailFieldCard label="Used By Roles" value={String(permission.roles?.length || 0)} />
                         </div>
-                        <div className="mt-4 rounded-md border border-gray-200 p-3">
-                            <div className="text-xs uppercase tracking-wide text-gray-500">Description</div>
-                            <div className="mt-1 text-sm text-gray-800">{permission.description || '—'}</div>
+                        <div className="mt-4">
+                            <DetailFieldCard label="Description" value={permission.description || '—'} />
                         </div>
                     </div>
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">Roles Using This Permission</div>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5">
+                        <h3 className="text-sm font-semibold text-gray-900">Roles Using This Permission</h3>
+                        <div className="mt-4 flex flex-wrap gap-1.5">
                             {(permission.roles || []).length ? (
                                 permission.roles.map((role) => (
                                     <Link
@@ -96,14 +96,5 @@ export default function Show({ permission, canEdit, canDelete }) {
                 </div>
             </SettingsModuleLayout>
         </AuthenticatedLayout>
-    );
-}
-
-function Info({ label, value }) {
-    return (
-        <div className="rounded-md border border-gray-200 p-3">
-            <div className="text-xs uppercase tracking-wide text-gray-500">{label}</div>
-            <div className="mt-1 text-sm font-semibold text-gray-900">{value}</div>
-        </div>
     );
 }

@@ -1,3 +1,4 @@
+import { DetailFieldCard } from '@/Components/DetailFieldCard';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
@@ -52,17 +53,6 @@ function dutyRateLabel(name, basis) {
 
 function fmtDate(value) {
     return value ? new Date(value).toLocaleString() : '—';
-}
-
-function Info({ label, value, className = '' }) {
-    return (
-        <div className={`rounded-md border border-gray-200 bg-white p-3 dark:border-cursor-border dark:bg-cursor-surface ${className}`}>
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-cursor-muted">
-                {label}
-            </div>
-            <div className="mt-1 text-sm font-medium text-gray-900 dark:text-cursor-fg">{value}</div>
-        </div>
-    );
 }
 
 export default function Show({ calculation, canEdit, canDelete, canDuplicate }) {
@@ -191,8 +181,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
             <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                 Customs duty assumptions for this calculation.
             </p>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Info
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <DetailFieldCard
                     label={dutyRateLabel('CID Rate', calculation.cid_basis)}
                     value={formatLocalMoneyDisplay(
                         calculation.cid_rate_per_kg_lkr ?? 0,
@@ -200,8 +190,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                         company,
                     )}
                 />
-                <Info label="CID Basis" value={formatCidBasis(calculation.cid_basis)} />
-                <Info
+                <DetailFieldCard label="CID Basis" value={formatCidBasis(calculation.cid_basis)} />
+                <DetailFieldCard
                     label={dutyRateLabel('EID Rate', calculation.eid_basis)}
                     value={formatLocalMoneyDisplay(
                         calculation.eid_rate_per_kg_lkr ?? 0,
@@ -209,14 +199,14 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                         company,
                     )}
                 />
-                <Info label="EID Basis" value={formatCidBasis(calculation.eid_basis)} />
-                <Info
+                <DetailFieldCard label="EID Basis" value={formatCidBasis(calculation.eid_basis)} />
+                <DetailFieldCard
                     label="Statistical Value Basis"
                     value={formatStatisticalValueBasis(calculation.statistical_value_basis)}
                 />
-                <Info label="Customs Base Value (%)" value={calculation.duty_base_percent ?? '—'} />
-                <Info label="VAT Rate (%)" value={calculation.vat_rate_percent ?? '—'} />
-                <Info label="SSCL Rate (%)" value={calculation.sscl_rate_percent ?? '—'} />
+                <DetailFieldCard label="Customs Base Value (%)" value={calculation.duty_base_percent ?? '—'} />
+                <DetailFieldCard label="VAT Rate (%)" value={calculation.vat_rate_percent ?? '—'} />
+                <DetailFieldCard label="SSCL Rate (%)" value={calculation.sscl_rate_percent ?? '—'} />
             </div>
         </section>
     );
@@ -320,10 +310,10 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                 </div>
 
                                 <div className="mt-6">
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        <Info label="Purchasing Currency" value={calculation.purchasing_currency || '—'} />
-                                        <Info label="Local Currency" value={calculation.local_currency || '—'} />
-                                        <Info
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <DetailFieldCard label="Purchasing Currency" value={calculation.purchasing_currency || '—'} />
+                                        <DetailFieldCard label="Local Currency" value={calculation.local_currency || '—'} />
+                                        <DetailFieldCard
                                             label="Total Product Value (Foreign)"
                                             value={formatLocalMoneyDisplay(
                                                 totalProductValueFcy,
@@ -331,7 +321,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 company,
                                             )}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Exchange Rate"
                                             value={`${formatMoneyInputWithCommas(
                                                 String(Number(calculation.exchange_rate) || 0),
@@ -339,12 +329,12 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 exchangeRateFormatOptions,
                                             )} ${localCurrencyCode} / 1 ${purchasingCurrencyCode}`}
                                         />
-                                        <Info label="Freight Currency" value={calculation.freight_currency || '—'} />
-                                        <Info
+                                        <DetailFieldCard label="Freight Currency" value={calculation.freight_currency || '—'} />
+                                        <DetailFieldCard
                                             label="Freight Cost"
                                             value={formatLocalMoneyDisplay(freightCostForeign, freightCcy, company)}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Freight Exchange Rate"
                                             value={`${formatMoneyInputWithCommas(
                                                 String(Number(calculation.freight_exchange_rate) || 0),
@@ -356,7 +346,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                     : freightCcy || '—'
                                             }`}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label={`Total CBM (${String(t('item_count') ?? items.length ?? 0)} Products)`}
                                             value={(() => {
                                                 const raw = totals.total_cbm ?? calculation.total_cbm;
@@ -382,15 +372,15 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                 <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                                     {`Bank charges split across products by each product's share of purchase value.`}
                                 </p>
-                                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    <Info
+                                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <DetailFieldCard
                                         label="Bank Interest Rate (Per Annum)"
                                         value={
                                             formatAnnualPercentRateDisplay(calculation.bank_interest_rate_pa) ??
                                             '—'
                                         }
                                     />
-                                    <Info
+                                    <DetailFieldCard
                                         label="Number of Months"
                                         value={
                                             formatMeasuredNumberForDisplay(
@@ -411,8 +401,8 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                         Local charges are pooled with other common costs and allocated to each product
                                         by weight.
                                     </p>
-                                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        <Info
+                                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <DetailFieldCard
                                             label="Loading / Unloading"
                                             value={formatLocalMoneyDisplay(
                                                 calculation.loading_unloading_cost_lkr,
@@ -420,7 +410,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 company,
                                             )}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Additional Entry"
                                             value={formatLocalMoneyDisplay(
                                                 calculation.additional_entry_cost_lkr,
@@ -428,7 +418,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 company,
                                             )}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Transport"
                                             value={formatLocalMoneyDisplay(
                                                 calculation.transport_cost_lkr,
@@ -436,7 +426,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 company,
                                             )}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Delivery Order Charges"
                                             value={formatLocalMoneyDisplay(
                                                 calculation.delivery_order_charges_lkr,
@@ -444,7 +434,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 company,
                                             )}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Clearing Charges"
                                             value={formatLocalMoneyDisplay(
                                                 calculation.clearing_charges_lkr,
@@ -452,7 +442,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                                 company,
                                             )}
                                         />
-                                        <Info
+                                        <DetailFieldCard
                                             label="Demurrage"
                                             value={formatLocalMoneyDisplay(
                                                 calculation.demurrage_cost_lkr,
@@ -505,7 +495,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                 </section>
                             </div>
 
-                            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
+                            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-cursor-border dark:bg-cursor-surface">
                                 <div className="border-b border-gray-200 px-4 py-3 dark:border-cursor-border">
                                     <div className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                                         Products
@@ -588,7 +578,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:items-start">
+                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
                         <section className="rounded-lg border border-gray-200 bg-white p-5 xl:sticky xl:top-20 xl:z-10 xl:self-start dark:border-cursor-border dark:bg-cursor-surface">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                                 Shipment Summary
@@ -596,7 +586,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                                 Totals for the shipment based on your entries.
                             </p>
-                            <div className="mt-3 space-y-2 text-sm">
+                            <div className="mt-4 space-y-2 text-sm">
                                 {shipmentSummaryRows.map(([label, value]) => {
                                     const redRow =
                                         label === 'Total Duty' ||
@@ -637,10 +627,10 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                                     );
                                 })}
                             </div>
-                            <div className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600 dark:bg-cursor-raised/50 dark:text-cursor-muted">
+                            <div className="mt-4 rounded-md bg-gray-50 p-3 text-xs text-gray-600 dark:bg-cursor-raised/50 dark:text-cursor-muted">
                                 Freight allocated by CBM. Other common costs allocated by Weight (KG).
                             </div>
-                            <div className="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600 space-y-1.5 dark:bg-cursor-raised/50 dark:text-cursor-muted">
+                            <div className="mt-4 rounded-md bg-gray-50 p-3 text-xs text-gray-600 space-y-1.5 dark:bg-cursor-raised/50 dark:text-cursor-muted">
                                 <div>
                                     Purchasing exchange rate:{' '}
                                     {formatMoneyInputWithCommas(
@@ -673,7 +663,7 @@ export default function Show({ calculation, canEdit, canDelete, canDuplicate }) 
                             <p className="mt-1 text-xs text-gray-500 dark:text-cursor-muted">
                                 Per-product cost breakdown.
                             </p>
-                            <div className="mt-3 flex flex-col gap-4">
+                            <div className="mt-4 flex flex-col gap-4">
                                 {items.map((row, idx) => {
                                     const name = (row.product_name || '').trim();
                                     const productHeading = name
