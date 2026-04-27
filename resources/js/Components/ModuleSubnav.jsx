@@ -11,7 +11,10 @@ export default function ModuleSubnav({ items, ariaLabel = 'Module sections' }) {
                 aria-label={ariaLabel}
             >
                 {items.map((item) => {
-                    const active = route().current(item.activePattern);
+                    const patterns =
+                        item.activePatterns ??
+                        (item.activePattern ? [item.activePattern] : []);
+                    const active = patterns.some((pat) => route().current(pat));
                     return (
                         <Link
                             key={item.key}

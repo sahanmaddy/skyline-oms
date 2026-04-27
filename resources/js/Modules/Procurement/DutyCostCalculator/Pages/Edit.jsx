@@ -6,7 +6,8 @@ import ProcurementModuleLayout from '@/Layouts/ProcurementModuleLayout';
 import CalculationForm from '@/Modules/Procurement/DutyCostCalculator/Components/CalculationForm';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 
-export default function Edit({ calculation, statusOptions, suppliers }) {
+export default function Edit({ calculation, statusOptions, suppliers, unitOfMeasureOptions = [] }) {
+    const firstUom = unitOfMeasureOptions[0]?.value ?? '';
     const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultLocalCurrency = String(company.currency_code || 'LKR').toUpperCase();
@@ -50,7 +51,7 @@ export default function Edit({ calculation, statusOptions, suppliers }) {
             product_name: row.product_name || '',
             product_code: row.product_code || '',
             description: row.description || '',
-            unit_of_measure: row.unit_of_measure || 'Piece',
+            unit_of_measure: row.unit_of_measure || firstUom,
             quantity: row.quantity || '',
             unit_price_foreign: row.unit_price_foreign || '',
             cbm: row.cbm || '',
@@ -90,6 +91,8 @@ export default function Edit({ calculation, statusOptions, suppliers }) {
                             processing={form.processing}
                             statusOptions={statusOptions}
                             suppliers={suppliers}
+                            unitOfMeasureOptions={unitOfMeasureOptions}
+                            defaultUom={firstUom}
                             submitLabel="Update calculation"
                             onCancel={() =>
                                 router.get(route('procurement.duty-cost-calculations.show', calculation.id))

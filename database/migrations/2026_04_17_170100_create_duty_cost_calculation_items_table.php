@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('product_code')->nullable();
             $table->text('description')->nullable();
             $table->string('product_currency', 10);
-            $table->string('unit_of_measure', 20);
+            $table->string('unit_of_measure', 255);
             $table->decimal('quantity', 15, 4);
             $table->decimal('unit_price_foreign', 15, 4)->default(0);
             $table->decimal('total_product_value_foreign', 15, 4)->default(0);
@@ -57,4 +57,3 @@ return new class extends Migration
         Schema::dropIfExists('duty_cost_calculation_items');
     }
 };
-

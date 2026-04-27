@@ -71,7 +71,7 @@ class DutyCostCalculationStoreRequest extends FormRequest
             'items.*.product_name' => ['required', 'string', 'max:255'],
             'items.*.product_code' => ['nullable', 'string', 'max:120'],
             'items.*.description' => ['nullable', 'string'],
-            'items.*.unit_of_measure' => ['required', Rule::in(['Yard', 'Meter', 'KG', 'Set', 'Piece'])],
+            'items.*.unit_of_measure' => ['required', 'string', 'max:255', Rule::exists('unit_of_measures', 'name')],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'items.*.unit_price_foreign' => ['nullable', 'numeric', 'min:0'],
             'items.*.cbm' => ['nullable', 'numeric', 'min:0'],

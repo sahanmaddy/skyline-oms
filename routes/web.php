@@ -9,10 +9,15 @@ use App\Http\Controllers\DutyCostCalculationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeDocumentController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProductAttributesController;
+use App\Http\Controllers\ProductAttributeTypeController;
+use App\Http\Controllers\ProductAttributeValueController;
+use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemSettingsController;
+use App\Http\Controllers\UnitOfMeasureController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -60,16 +65,71 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::permanentRedirect('/profile', '/settings/profile');
     Route::permanentRedirect('/users', '/settings/users');
 
-    Route::get('/inventory', function () {
-        return Inertia::render('Modules/Shared/ModulePlaceholder', [
-            'area' => 'standalone',
-            'moduleTitle' => 'Inventory',
-            'headTitle' => 'Inventory',
-            'breadcrumbs' => [],
-            'title' => 'Inventory',
-            'description' => 'Stock levels, warehouses, and movements will be managed here.',
-        ]);
-    })->name('inventory.index');
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/', function () {
+            $user = request()->user();
+            if ($user?->can('inventory.categories.view')) {
+                return redirect()->route('inventory.categories.index');
+            }
+            if ($user?->can('inventory.attributes.view')) {
+                return redirect()->route('inventory.attributes.index');
+            }
+            if ($user?->can('inventory.units.view')) {
+                return redirect()->route('inventory.units.index');
+            }
+
+            return Inertia::render('Modules/Shared/ModulePlaceholder', [
+                'area' => 'inventory',
+                'moduleTitle' => 'Inventory',
+                'headTitle' => 'Inventory',
+                'breadcrumbs' => [],
+                'title' => 'Inventory',
+                'description' => 'Stock levels, warehouses, and master data will be available here based on your access.',
+            ]);
+        })->name('index');
+
+        Route::get('products', function () {
+            return Inertia::render('Modules/Shared/ModulePlaceholder', [
+                'area' => 'inventory',
+                'moduleTitle' => 'Inventory',
+                'headTitle' => 'Inventory — Products',
+                'breadcrumbs' => [
+                    ['label' => 'Products'],
+                ],
+                'title' => 'Products',
+                'description' => 'Product catalog, variants, and costing will be managed here.',
+            ]);
+        })->name('products.index');
+
+        Route::resource('categories', ProductCategoryController::class)
+            ->parameters(['categories' => 'product_category']);
+
+        Route::get('attributes', [ProductAttributesController::class, 'index'])->name('attributes.index');
+
+        Route::get('attribute-types/create', [ProductAttributeTypeController::class, 'create'])->name('attribute-types.create');
+        Route::post('attribute-types', [ProductAttributeTypeController::class, 'store'])->name('attribute-types.store');
+        Route::get('attribute-types/{product_attribute_type}/edit', [ProductAttributeTypeController::class, 'edit'])->name('attribute-types.edit');
+        Route::put('attribute-types/{product_attribute_type}', [ProductAttributeTypeController::class, 'update'])->name('attribute-types.update');
+        Route::delete('attribute-types/{product_attribute_type}', [ProductAttributeTypeController::class, 'destroy'])->name('attribute-types.destroy');
+
+        Route::get('attribute-values/create', [ProductAttributeValueController::class, 'create'])->name('attribute-values.create');
+        Route::post('attribute-values', [ProductAttributeValueController::class, 'store'])->name('attribute-values.store');
+        Route::get('attribute-values/{product_attribute_value}/edit', [ProductAttributeValueController::class, 'edit'])->name('attribute-values.edit');
+        Route::put('attribute-values/{product_attribute_value}', [ProductAttributeValueController::class, 'update'])->name('attribute-values.update');
+        Route::delete('attribute-values/{product_attribute_value}', [ProductAttributeValueController::class, 'destroy'])->name('attribute-values.destroy');
+
+        Route::resource('units-of-measure', UnitOfMeasureController::class)
+            ->parameters(['units-of-measure' => 'unit_of_measure'])
+            ->names([
+                'index' => 'units.index',
+                'create' => 'units.create',
+                'store' => 'units.store',
+                'show' => 'units.show',
+                'edit' => 'units.edit',
+                'update' => 'units.update',
+                'destroy' => 'units.destroy',
+            ]);
+    });
 
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::get('/', function () {

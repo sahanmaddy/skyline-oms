@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(EnsureCashCustomerSeeder::class);
+        $this->call(InventoryMasterDataSeeder::class);
 
         $user = User::factory()->create([
             'name' => 'Test User',

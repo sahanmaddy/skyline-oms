@@ -57,7 +57,7 @@ class DutyCostCalculationSampleSeeder extends Seeder
                 [
                     'line_no' => 2,
                     'product_name' => 'Buttons - Pack',
-                    'unit_of_measure' => 'Piece',
+                    'unit_of_measure' => 'PCS',
                     'quantity' => 45000,
                     'unit_price_foreign' => 0.05,
                     'cbm' => 3.4,

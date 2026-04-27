@@ -199,3 +199,56 @@ export function procurementSectionNavItems(permissions = []) {
 
     return items;
 }
+
+/**
+ * Inventory master data and future stock areas. Items require matching `inventory.*` permissions.
+ */
+export function inventorySectionNavItems(permissions = []) {
+    const p = permissions ?? [];
+    const hasAny = p.some((name) => typeof name === 'string' && name.startsWith('inventory.'));
+    if (!hasAny) {
+        return [];
+    }
+
+    const items = [
+        {
+            key: 'products',
+            label: 'Products',
+            href: route('inventory.products.index'),
+            activePattern: 'inventory.products.index',
+        },
+    ];
+
+    if (p.includes('inventory.categories.view')) {
+        items.push({
+            key: 'categories',
+            label: 'Product Categories',
+            href: route('inventory.categories.index'),
+            activePattern: 'inventory.categories.*',
+        });
+    }
+
+    if (p.includes('inventory.attributes.view')) {
+        items.push({
+            key: 'attributes',
+            label: 'Product Attributes',
+            href: route('inventory.attributes.index'),
+            activePatterns: [
+                'inventory.attributes.*',
+                'inventory.attribute-types.*',
+                'inventory.attribute-values.*',
+            ],
+        });
+    }
+
+    if (p.includes('inventory.units.view')) {
+        items.push({
+            key: 'units',
+            label: 'Units of Measure',
+            href: route('inventory.units.index'),
+            activePattern: 'inventory.units.*',
+        });
+    }
+
+    return items;
+}

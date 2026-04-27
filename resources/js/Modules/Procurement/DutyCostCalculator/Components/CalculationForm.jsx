@@ -26,14 +26,6 @@ import {
 import { usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 
-const uomOptions = [
-    { value: 'Yard', label: 'Yard' },
-    { value: 'Meter', label: 'Meter' },
-    { value: 'KG', label: 'KG' },
-    { value: 'Set', label: 'Set' },
-    { value: 'Piece', label: 'Piece' },
-];
-
 const exchangeRateFormatOptions = { locale: 'en-US', minimumFractionDigits: 3 };
 
 export default function CalculationForm({
@@ -48,10 +40,18 @@ export default function CalculationForm({
     onCancel,
     statusOptions = ['draft', 'finalized'],
     suppliers = [],
+    unitOfMeasureOptions = [],
+    defaultUom = '',
 }) {
     const safeStatusOptions = Array.isArray(statusOptions) ? statusOptions : ['draft', 'finalized'];
     const company = usePage().props.company ?? {};
     const preview = useMemo(() => calculateDutyCostPreview(data), [data]);
+    const uomSelectOptions = useMemo(() => {
+        if (unitOfMeasureOptions.length > 0) {
+            return unitOfMeasureOptions;
+        }
+        return [{ value: '', label: 'Add units under Inventory → Units of Measure' }];
+    }, [unitOfMeasureOptions]);
     const currencyCodeOptions = useMemo(() => currencyCodes, []);
     const companyLocalCurrency = String(company.currency_code || 'LKR').toUpperCase();
     const localCurrencyCode = data.local_currency || companyLocalCurrency;
@@ -125,7 +125,7 @@ export default function CalculationForm({
                 product_name: '',
                 product_code: '',
                 description: '',
-                unit_of_measure: 'Piece',
+                unit_of_measure: defaultUom || '',
                 quantity: '',
                 unit_price_foreign: '',
                 cbm: '',
@@ -686,9 +686,9 @@ export default function CalculationForm({
                                     </td>
                                     <td className="min-w-[110px] px-2 py-2">
                                         <FormSelect
-                                            value={data.items?.[idx]?.unit_of_measure || 'Piece'}
+                                            value={data.items?.[idx]?.unit_of_measure || defaultUom || ''}
                                             onChange={(v) => updateItem(idx, 'unit_of_measure', v)}
-                                            options={uomOptions}
+                                            options={uomSelectOptions}
                                         />
                                     </td>
                                     <td className="min-w-[120px] px-2 py-2">

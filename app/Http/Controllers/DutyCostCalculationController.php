@@ -6,6 +6,7 @@ use App\Http\Requests\DutyCostCalculationStoreRequest;
 use App\Http\Requests\DutyCostCalculationUpdateRequest;
 use App\Models\DutyCostCalculation;
 use App\Models\Supplier;
+use App\Models\UnitOfMeasure;
 use App\Services\Organization\CompanySettingsPresenter;
 use App\Services\Procurement\DutyCostCalculationService;
 use Carbon\Carbon;
@@ -99,6 +100,7 @@ class DutyCostCalculationController extends Controller
             'nextCode' => $this->nextCode(),
             'statusOptions' => ['draft', 'finalized'],
             'suppliers' => $this->supplierOptions(),
+            'unitOfMeasureOptions' => $this->unitOfMeasureOptions(),
         ]);
     }
 
@@ -183,6 +185,7 @@ class DutyCostCalculationController extends Controller
             'calculation' => $dutyCostCalculation,
             'statusOptions' => ['draft', 'finalized'],
             'suppliers' => $this->supplierOptions(),
+            'unitOfMeasureOptions' => $this->unitOfMeasureOptions(),
         ]);
     }
 
@@ -358,6 +361,24 @@ class DutyCostCalculationController extends Controller
                 'id' => $supplier->id,
                 'display_name' => $supplier->display_name,
                 'company_name' => $supplier->company_name,
+            ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function unitOfMeasureOptions(): array
+    {
+        return UnitOfMeasure::query()
+            ->where('status', 'active')
+            ->ordered()
+            ->get(['name', 'symbol'])
+            ->map(fn (UnitOfMeasure $u) => [
+                'value' => $u->name,
+                'label' => $u->symbol !== '' && $u->symbol !== null
+                    ? "{$u->name} ({$u->symbol})"
+                    : $u->name,
             ])
             ->all();
     }

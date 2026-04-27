@@ -6,20 +6,8 @@ import ProcurementModuleLayout from '@/Layouts/ProcurementModuleLayout';
 import CalculationForm from '@/Modules/Procurement/DutyCostCalculator/Components/CalculationForm';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 
-const defaultItem = {
-    line_no: 1,
-    product_name: '',
-    product_code: '',
-    description: '',
-    unit_of_measure: 'Piece',
-    quantity: '',
-    unit_price_foreign: '',
-    cbm: '',
-    weight_kg: '',
-    customs_preset_value_foreign_or_base: '',
-};
-
-export default function Create({ nextCode, statusOptions, suppliers }) {
+export default function Create({ nextCode, statusOptions, suppliers, unitOfMeasureOptions = [] }) {
+    const firstUom = unitOfMeasureOptions[0]?.value ?? '';
     const toast = useToast();
     const company = usePage().props.company ?? {};
     const defaultLocalCurrency = String(company.currency_code || 'LKR').toUpperCase();
@@ -53,7 +41,20 @@ export default function Create({ nextCode, statusOptions, suppliers }) {
         bank_interest_months: '',
         notes: '',
         calculation_status: 'draft',
-        items: [defaultItem],
+        items: [
+            {
+                line_no: 1,
+                product_name: '',
+                product_code: '',
+                description: '',
+                unit_of_measure: firstUom,
+                quantity: '',
+                unit_price_foreign: '',
+                cbm: '',
+                weight_kg: '',
+                customs_preset_value_foreign_or_base: '',
+            },
+        ],
         other_costs: [],
     });
 
@@ -81,6 +82,8 @@ export default function Create({ nextCode, statusOptions, suppliers }) {
                             processing={form.processing}
                             statusOptions={statusOptions}
                             suppliers={suppliers}
+                            unitOfMeasureOptions={unitOfMeasureOptions}
+                            defaultUom={firstUom}
                             submitLabel="Create calculation"
                             onCancel={() => router.get(route('procurement.duty-cost-calculations.index'))}
                             onSubmit={() =>

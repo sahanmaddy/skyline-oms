@@ -1,6 +1,7 @@
 import ComingSoonState from '@/Components/ComingSoonState';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import HrModuleLayout from '@/Layouts/HrModuleLayout';
+import InventoryModuleLayout from '@/Layouts/InventoryModuleLayout';
 import ModulePageShell from '@/Components/ModulePageShell';
 import ModuleStickyTitle from '@/Components/ModuleStickyTitle';
 import SalesModuleLayout from '@/Layouts/SalesModuleLayout';
@@ -24,15 +25,17 @@ export default function ModulePlaceholder({
         body = <SalesModuleLayout breadcrumbs={breadcrumbs}>{panel}</SalesModuleLayout>;
     } else if (area === 'settings') {
         body = <SettingsModuleLayout breadcrumbs={breadcrumbs}>{panel}</SettingsModuleLayout>;
+    } else if (area === 'inventory') {
+        body = <InventoryModuleLayout breadcrumbs={breadcrumbs}>{panel}</InventoryModuleLayout>;
     } else {
         body = <ModulePageShell>{panel}</ModulePageShell>;
     }
 
     const header =
-        area === 'hr' || area === 'sales' || area === 'settings' ? (
+        area === 'hr' || area === 'sales' || area === 'settings' || area === 'inventory' ? (
             <ModuleStickyTitle module={moduleTitle} section={title} />
         ) : (
-            <span className="text-base font-semibold text-gray-900">{moduleTitle}</span>
+            <span className="text-base font-semibold text-gray-900 dark:text-cursor-bright">{moduleTitle}</span>
         );
 
     return (
