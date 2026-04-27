@@ -1,3 +1,4 @@
+import { DetailFieldCard } from '@/Components/DetailFieldCard';
 import Dropdown from '@/Components/Dropdown';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
@@ -14,7 +15,7 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
         <AuthenticatedLayout header={<ModuleStickyTitle module="Settings" section="Role" />}>
             <Head title={`${role.name} · Roles · Settings`} />
             <SettingsModuleLayout breadcrumbs={[{ label: 'Roles', href: route('settings.roles.index') }, { label: role.name }]}>
-                <div className="space-y-4">
+                <div className="flex flex-col gap-4">
                     <ModuleDetailToolbar
                         backHref={route('settings.roles.index')}
                         backLabel="← Back to roles"
@@ -46,11 +47,11 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                             ) : undefined
                         }
                     />
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                                 <div className="text-lg font-semibold text-gray-900">{role.name}</div>
-                                <div className="mt-1 text-sm text-gray-600">{role.description || '—'}</div>
+                                <div className="text-sm text-gray-600">{role.description || '—'}</div>
                             </div>
                             <span
                                 className={
@@ -64,16 +65,16 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                             </span>
                         </div>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Info label="Permissions" value={String(role.permissions?.length || 0)} />
-                            <Info label="Users" value={String(role.users?.length || 0)} />
+                            <DetailFieldCard label="Permissions" value={String(role.permissions?.length || 0)} />
+                            <DetailFieldCard label="Users" value={String(role.users?.length || 0)} />
                         </div>
                     </div>
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">Assigned Permissions</div>
-                        <div className="mt-3 space-y-3">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5">
+                        <h3 className="text-sm font-semibold text-gray-900">Assigned Permissions</h3>
+                        <div className="mt-4 space-y-3">
                             {Object.keys(permissionsGrouped || {}).map((module) => (
                                 <div key={module}>
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">{module}</div>
+                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{module}</div>
                                     <div className="mt-2 flex flex-wrap gap-1.5">
                                         {(permissionsGrouped[module] || []).map((permission) => (
                                             <span key={permission.id} className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">{permission.display_name || permission.name}</span>
@@ -83,14 +84,14 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
                             ))}
                         </div>
                     </div>
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="text-sm font-semibold text-gray-900">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5">
+                        <h3 className="text-sm font-semibold text-gray-900">
                             Assigned Users ({(assignedUsers || []).length})
-                        </div>
-                        <div className="mt-2 space-y-2">
+                        </h3>
+                        <div className="mt-4 space-y-2">
                             {(assignedUsers || []).length ? (
                                 assignedUsers.map((user) => (
-                                    <div key={user.id} className="flex items-center justify-between gap-3 rounded-md border border-gray-100 px-3 py-2">
+                                    <div key={user.id} className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
                                         <div className="min-w-0 flex-1">
                                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
                                             <div className="truncate text-xs text-gray-500">{user.email}</div>
@@ -136,8 +137,4 @@ export default function Show({ role, assignedUsers, permissionsGrouped, canEdit,
             </SettingsModuleLayout>
         </AuthenticatedLayout>
     );
-}
-
-function Info({ label, value }) {
-    return <div className="rounded-md border border-gray-200 p-3"><div className="text-xs uppercase tracking-wide text-gray-500">{label}</div><div className="mt-1 text-sm font-semibold text-gray-900">{value}</div></div>;
 }

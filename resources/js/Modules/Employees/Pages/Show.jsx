@@ -1,3 +1,4 @@
+import { DetailFieldCard, DetailStatusFieldCard } from '@/Components/DetailFieldCard';
 import Dropdown from '@/Components/Dropdown';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
@@ -194,22 +195,6 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                             </div>
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                    Full name
-                                </div>
-                                <div className="mt-2 text-sm font-medium text-gray-900">
-                                    {fullNameWithGivenNames || '—'}
-                                </div>
-                                <div className="mt-3 border-t border-gray-100 pt-2">
-                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                        Display name
-                                    </div>
-                                    <div className="mt-1 text-sm font-medium text-gray-900">
-                                        {employee.display_name?.trim() || '—'}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="rounded-md border border-gray-200 bg-white p-3">
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Employee Code
                                 </div>
                                 <div className="mt-2 text-sm font-medium text-gray-900">
@@ -232,17 +217,33 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                     </div>
                                 </div>
                             </div>
-                            <Info label="Gender" value={employee.gender || '—'} />
-                            <Info
+                            <div className="rounded-md border border-gray-200 bg-white p-3">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    Full name
+                                </div>
+                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                    {fullNameWithGivenNames || '—'}
+                                </div>
+                                <div className="mt-3 border-t border-gray-100 pt-2">
+                                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                        Display name
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-gray-900">
+                                        {employee.display_name?.trim() || '—'}
+                                    </div>
+                                </div>
+                            </div>
+                            <DetailFieldCard label="Gender" value={employee.gender || '—'} />
+                            <DetailFieldCard
                                 label="Marital Status"
                                 value={employee.marital_status || '—'}
                             />
-                            <Info label="NIC" value={employee.nic || '—'} />
-                            <Info
+                            <DetailFieldCard label="NIC" value={employee.nic || '—'} />
+                            <DetailFieldCard
                                 label="Date of Birth"
                                 value={formatDisplayDate(employee.date_of_birth, company)}
                             />
-                            <Info
+                            <DetailFieldCard
                                 label="Linked User"
                                 value={
                                     employee.user ? (
@@ -269,27 +270,27 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                             </div>
 
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                <Info
+                                <DetailFieldCard
                                     label="Designation"
                                     value={employee.designation || '—'}
                                 />
-                                <Info
+                                <DetailFieldCard
                                     label="Department"
                                     value={employee.department || '—'}
                                 />
-                                <Info
+                                <DetailFieldCard
                                     label="Employment Type"
                                     value={employee.employment_type || '—'}
                                 />
-                                <Info
+                                <DetailFieldCard
                                     label="Joined Date"
                                     value={formatDisplayDate(employee.joined_date, company)}
                                 />
-                                <Info
+                                <DetailFieldCard
                                     label="Basic Salary"
                                     value={formatSalaryDisplay(employee.basic_salary, company)}
                                 />
-                                <StatusInfo
+                                <DetailStatusFieldCard
                                     label="Sales Commission Eligible"
                                     isPositive={!!employee.is_sales_commission_eligible}
                                     value={
@@ -298,7 +299,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                                             : 'No'
                                     }
                                 />
-                                <StatusInfo
+                                <DetailStatusFieldCard
                                     label="Overtime Eligibility"
                                     isPositive={!!employee.is_overtime_eligible}
                                     value={
@@ -313,7 +314,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                         <section className="rounded-lg border border-gray-200 bg-white p-5">
                             <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
                             <div className="mt-4 space-y-3">
-                                <Info label="Email" value={employee.email || '—'} />
+                                <DetailFieldCard label="Email" value={employee.email || '—'} />
                                 <div className="rounded-md border border-gray-200 bg-white p-3">
                                     <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                         Phone Numbers
@@ -348,7 +349,7 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                         <section className="rounded-lg border border-gray-200 bg-white p-5">
                             <h3 className="text-sm font-semibold text-gray-900">Emergency Contact</h3>
                             <div className="mt-4 space-y-3">
-                                <Info
+                                <DetailFieldCard
                                     label="Contact Person"
                                     value={employee.emergency_contact_person || '—'}
                                 />
@@ -390,44 +391,44 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Address</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <Info label="Address Line 1" value={employee.address_line_1 || '—'} />
-                            <Info label="Address Line 2" value={employee.address_line_2 || '—'} />
-                            <Info label="City" value={employee.city || '—'} />
-                            <Info label="State / Province" value={employee.state_province || '—'} />
-                            <Info label="Postal Code" value={employee.postal_code || '—'} />
-                            <Info label="Country" value={employee.country || '—'} />
+                            <DetailFieldCard label="Address Line 1" value={employee.address_line_1 || '—'} />
+                            <DetailFieldCard label="Address Line 2" value={employee.address_line_2 || '—'} />
+                            <DetailFieldCard label="City" value={employee.city || '—'} />
+                            <DetailFieldCard label="State / Province" value={employee.state_province || '—'} />
+                            <DetailFieldCard label="Postal Code" value={employee.postal_code || '—'} />
+                            <DetailFieldCard label="Country" value={employee.country || '—'} />
                         </div>
                     </section>
 
                     <section className="rounded-lg border border-gray-200 bg-white p-5 lg:col-span-6">
                         <h3 className="text-sm font-semibold text-gray-900">Payroll & Statutory Details</h3>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-6">
-                            <Info
+                            <DetailFieldCard
                                 label="Bank Name"
                                 value={employee.bank_name || '—'}
                                 className="sm:col-span-2"
                             />
-                            <Info
+                            <DetailFieldCard
                                 label="Branch"
                                 value={employee.bank_branch || '—'}
                                 className="sm:col-span-2"
                             />
-                            <Info
+                            <DetailFieldCard
                                 label="Account Number"
                                 value={employee.bank_account_number || '—'}
                                 className="sm:col-span-2"
                             />
-                            <Info
+                            <DetailFieldCard
                                 label="TIN"
                                 value={employee.tin_number || '—'}
                                 className="sm:col-span-2"
                             />
-                            <Info
+                            <DetailFieldCard
                                 label="EPF Number"
                                 value={employee.epf_number || '—'}
                                 className="sm:col-span-2"
                             />
-                            <Info
+                            <DetailFieldCard
                                 label="ETF Number"
                                 value={employee.etf_number || '—'}
                                 className="sm:col-span-2"
@@ -642,17 +643,6 @@ export default function Show({ employee, documentTypeOptions, canEdit, canDelete
     );
 }
 
-function Info({ label, value, className = '' }) {
-    return (
-        <div className={`rounded-md border border-gray-200 bg-white p-3 ${className}`}>
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                {label}
-            </div>
-            <div className="mt-1 text-sm font-medium text-gray-900">{value}</div>
-        </div>
-    );
-}
-
 function formatDisplayDate(value, company) {
     if (!value) {
         return '—';
@@ -710,28 +700,6 @@ function formatUploadedDateTime(value, company) {
         minute: '2-digit',
         hour12: true,
     });
-}
-
-function StatusInfo({ label, value, isPositive }) {
-    return (
-        <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                {label}
-            </div>
-            <div className="mt-2">
-                <span
-                    className={
-                        'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ' +
-                        (isPositive
-                            ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
-                            : 'bg-gray-100 text-gray-700 ring-1 ring-gray-200')
-                    }
-                >
-                    {value}
-                </span>
-            </div>
-        </div>
-    );
 }
 
 function inferDocumentTitleFromFileName(fileName) {

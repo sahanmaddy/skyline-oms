@@ -1,3 +1,4 @@
+import { DetailFieldCard } from '@/Components/DetailFieldCard';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -62,7 +63,7 @@ export default function Show({ user, canEdit, canDelete }) {
                         }
                     />
 
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border border-gray-200 bg-white p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                                 <div className="text-lg font-semibold text-gray-900">{user.name}</div>
@@ -80,20 +81,16 @@ export default function Show({ user, canEdit, canDelete }) {
                             </span>
                         </div>
 
-                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <Info label="Name" value={user.name} />
-                            <Info label="Email" value={user.email || '—'} />
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            <DetailFieldCard label="Name" value={user.name} />
+                            <DetailFieldCard label="Email" value={user.email || '—'} />
                             <div className="rounded-md border border-gray-200 bg-white p-3">
                                 <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                     Default Branch
                                 </div>
-                                <div className="mt-2 text-sm font-medium text-gray-900">
+                                <div className="mt-1 text-sm font-medium text-gray-900">
                                     {user.branch ? (
-                                        <>
-                                            <span className="font-mono text-xs text-gray-600">{user.branch.code}</span>
-                                            <span className="text-gray-500"> — </span>
-                                            {user.branch.name}
-                                        </>
+                                        `${user.branch.code} — ${user.branch.name}`
                                     ) : (
                                         <span className="text-gray-400">—</span>
                                     )}
@@ -163,33 +160,5 @@ export default function Show({ user, canEdit, canDelete }) {
                 </div>
             </SettingsModuleLayout>
         </AuthenticatedLayout>
-    );
-}
-
-function Info({ label, value, badge }) {
-    if (badge) {
-        return (
-            <div className="rounded-md border border-gray-200 bg-white p-3">
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                    {label}
-                </div>
-                <div className="mt-2 flex min-h-6 items-center">
-                    <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${badge}`}
-                    >
-                        {value}
-                    </span>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                {label}
-            </div>
-            <div className="mt-1 text-sm font-medium text-gray-900">{value}</div>
-        </div>
     );
 }

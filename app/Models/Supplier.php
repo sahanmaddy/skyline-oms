@@ -28,12 +28,8 @@ class Supplier extends Model
         'state_province',
         'postal_code',
         'country',
-        'registration_number',
         'tax_number',
         'vat_number',
-        'payment_terms_days',
-        'currency',
-        'credit_limit',
         'notes',
         'is_active',
         'created_by',
@@ -41,8 +37,6 @@ class Supplier extends Model
     ];
 
     protected $casts = [
-        'payment_terms_days' => 'integer',
-        'credit_limit' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

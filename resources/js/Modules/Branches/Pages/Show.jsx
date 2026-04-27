@@ -1,3 +1,4 @@
+import { DetailFieldCard } from '@/Components/DetailFieldCard';
 import Dropdown from '@/Components/Dropdown';
 import DangerButton from '@/Components/DangerButton';
 import ModuleDetailToolbar from '@/Components/ModuleDetailToolbar';
@@ -7,23 +8,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SettingsModuleLayout from '@/Layouts/SettingsModuleLayout';
 import useConfirm from '@/feedback/useConfirm';
 import { Head, Link, router } from '@inertiajs/react';
-
-function Info({ label, value, className = '', valueClassName = '' }) {
-    return (
-        <div
-            className={`rounded-md border border-gray-200 bg-white p-3 dark:border-cursor-border dark:bg-cursor-bg ${className}`}
-        >
-            <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-cursor-muted">
-                {label}
-            </div>
-            <div
-                className={`mt-1 text-sm font-medium text-gray-900 dark:text-cursor-bright ${valueClassName}`}
-            >
-                {value}
-            </div>
-        </div>
-    );
-}
 
 export default function Show({ branch, recentUsers, recentEmployees, canEdit, canDelete }) {
     const { confirm } = useConfirm();
@@ -78,7 +62,7 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                     />
 
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                        <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-cursor-border dark:bg-cursor-surface lg:col-span-12">
+                        <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface lg:col-span-12">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="text-lg font-semibold text-gray-900 dark:text-cursor-bright">
@@ -100,12 +84,12 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                                 </span>
                             </div>
                             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <Info
+                                <DetailFieldCard
                                     label="Branch Code"
                                     value={branch.code || '—'}
                                     valueClassName="font-mono text-xs text-gray-800 dark:text-cursor-bright"
                                 />
-                                <Info label="Branch Name" value={branch.name || '—'} />
+                                <DetailFieldCard label="Branch Name" value={branch.name || '—'} />
                             </div>
                         </section>
 
@@ -116,23 +100,23 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                             <section className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
                                 <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">Address</h3>
                                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    <Info label="Address Line 1" value={branch.address_line_1 || '—'} />
-                                    <Info label="Address Line 2" value={branch.address_line_2 || '—'} />
-                                    <Info label="City" value={branch.city || '—'} />
-                                    <Info label="State / Province" value={branch.state_province || '—'} />
-                                    <Info label="Postal Code" value={branch.postal_code || '—'} />
-                                    <Info label="Country" value={branch.country || '—'} />
+                                    <DetailFieldCard label="Address Line 1" value={branch.address_line_1 || '—'} />
+                                    <DetailFieldCard label="Address Line 2" value={branch.address_line_2 || '—'} />
+                                    <DetailFieldCard label="City" value={branch.city || '—'} />
+                                    <DetailFieldCard label="State / Province" value={branch.state_province || '—'} />
+                                    <DetailFieldCard label="Postal Code" value={branch.postal_code || '—'} />
+                                    <DetailFieldCard label="Country" value={branch.country || '—'} />
                                 </div>
                             </section>
 
                             {branch.notes ? (
-                                <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
+                                <section className="rounded-lg border border-gray-200 bg-white p-4 dark:border-cursor-border dark:bg-cursor-surface">
                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                                         Notes
                                     </h3>
-                                    <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-cursor-bright">
+                                    <div className="mt-2 whitespace-pre-wrap text-sm text-gray-700 dark:text-cursor-fg">
                                         {branch.notes}
-                                    </p>
+                                    </div>
                                 </section>
                             ) : null}
                         </div>
@@ -142,7 +126,7 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                                 Contact Information
                             </h3>
                             <div className="mt-4 space-y-3">
-                                <Info label="Email" value={branch.email || '—'} />
+                                <DetailFieldCard label="Email" value={branch.email || '—'} />
                                 <div className="rounded-md border border-gray-200 bg-white p-3 dark:border-cursor-border dark:bg-cursor-bg">
                                     <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-cursor-muted">
                                         Phone Numbers
@@ -179,16 +163,16 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
 
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                         <div className="grid grid-cols-1 gap-4 lg:col-span-12 lg:grid-cols-2">
-                            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
-                                <div className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
+                            <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                                     Users ({branch.users_count ?? 0})
-                                </div>
-                                <div className="mt-2 space-y-2">
+                                </h3>
+                                <div className="mt-4 space-y-2">
                                     {(recentUsers || []).length ? (
                                         recentUsers.map((u) => (
                                             <div
                                                 key={u.id}
-                                                className="flex items-center justify-between gap-3 rounded-md border border-gray-100 px-3 py-2 dark:border-cursor-border dark:bg-cursor-bg/40"
+                                                className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 dark:border-cursor-border dark:bg-cursor-raised"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-sm font-medium text-gray-900 dark:text-cursor-bright">
@@ -245,16 +229,16 @@ export default function Show({ branch, recentUsers, recentEmployees, canEdit, ca
                                 </div>
                             </div>
 
-                            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-cursor-border dark:bg-cursor-surface">
-                                <div className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
+                            <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-cursor-border dark:bg-cursor-surface">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-cursor-bright">
                                     Employees ({branch.employees_count ?? 0})
-                                </div>
-                                <div className="mt-2 space-y-2">
+                                </h3>
+                                <div className="mt-4 space-y-2">
                                     {(recentEmployees || []).length ? (
                                         recentEmployees.map((e) => (
                                             <div
                                                 key={e.id}
-                                                className="flex items-center justify-between gap-3 rounded-md border border-gray-100 px-3 py-2 dark:border-cursor-border dark:bg-cursor-bg/40"
+                                                className="flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 dark:border-cursor-border dark:bg-cursor-raised"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-sm font-medium text-gray-900 dark:text-cursor-bright">

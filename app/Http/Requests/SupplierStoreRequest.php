@@ -22,9 +22,6 @@ class SupplierStoreRequest extends FormRequest
             $this->merge(['display_name' => $companyName]);
         }
 
-        if (is_string($this->input('currency'))) {
-            $this->merge(['currency' => strtoupper(trim((string) $this->input('currency')))]);
-        }
     }
 
     public function rules(): array
@@ -45,12 +42,8 @@ class SupplierStoreRequest extends FormRequest
             'state_province' => ['nullable', 'string', 'max:120'],
             'postal_code' => ['nullable', 'string', 'max:40'],
             'country' => ['nullable', 'string', 'max:120'],
-            'registration_number' => ['nullable', 'string', 'max:100'],
             'tax_number' => ['nullable', 'string', 'max:100'],
             'vat_number' => ['nullable', 'string', 'max:100'],
-            'payment_terms_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
-            'currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'credit_limit' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['boolean'],
             'bank_accounts' => ['nullable', 'array'],
